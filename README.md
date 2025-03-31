@@ -6,7 +6,7 @@ Unity project for master's thesis
   - conda 24.11.3 per l'ambiente virtuale
   - Python 3.10.8 per PedPy
   - Python 3.9.6 per ML-Agents
-  - Unity 2022.3.4f1 scaricato tramite l'Unity hub (https://unity.com/download)
+  - Unity 2022.3.60f1 scaricato tramite l'Unity hub (https://unity.com/download)
   - Su macOS potrebbero presentarsi alcuni errori.
 
 - **Ambiente Virtuale - Base Windows**
