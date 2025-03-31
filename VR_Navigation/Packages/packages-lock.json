@@ -92,9 +92,9 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ml-agents": {
-      "version": "file:G:/Tesi Magistrale/Progetti/packages/ml-agents-release_12/com.unity.ml-agents",
+      "version": "git+https://github.com/Unity-Technologies/ml-agents.git?path=com.unity.ml-agents#release_12",
       "depth": 0,
-      "source": "local",
+      "source": "git",
       "dependencies": {
         "com.unity.barracuda": "1.2.1-preview",
         "com.unity.modules.imageconversion": "1.0.0",
@@ -102,7 +102,8 @@
         "com.unity.modules.physics": "1.0.0",
         "com.unity.modules.physics2d": "1.0.0",
         "com.unity.modules.unityanalytics": "1.0.0"
-      }
+      },
+      "hash": "2335fc7cb22f88f2e266cc128c7d66d8858dc73f"
     },
     "com.unity.test-framework": {
       "version": "1.1.33",
