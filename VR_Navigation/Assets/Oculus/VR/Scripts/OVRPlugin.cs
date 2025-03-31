@@ -46,6 +46,10 @@ using Unity.Collections.LowLevel.Unsafe;
 
 public static partial class OVRPlugin
 {
+
+private const string pluginName = "OVRPlugin";
+private static System.Version _versionZero = new System.Version(0, 0, 0);
+
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
     public const bool isSupportedPlatform = false;
 #else
@@ -10183,8 +10187,8 @@ public static partial class OVRPlugin
         }
     }
 
-    private const string pluginName = "OVRPlugin";
-    private static System.Version _versionZero = new System.Version(0, 0, 0);
+    //private const string pluginName = "OVRPlugin";
+    //private static System.Version _versionZero = new System.Version(0, 0, 0);
 
     // Disable all the DllImports when the platform is not supported
 #if !OVRPLUGIN_UNSUPPORTED_PLATFORM

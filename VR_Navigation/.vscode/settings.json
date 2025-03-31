@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "VR_NavigationUp.sln"
+    "dotnet.defaultSolution": "VR_Navigation.sln"
 }
