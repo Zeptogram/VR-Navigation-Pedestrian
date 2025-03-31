@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - waypoint
+  - goal
+  - order
+  - customer
+  - Agente
+  - Target
+  - Muro
+  - evac
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Muro
+  - 
+  - 
+  - Agente
+  - Agent Collision Blocker
+  - Target Collider
+  - 
+  - 
+  - TargetFine
+  - TargetFine1
+  - TargetFine2
+  - TargetMid
+  - 
+  - TargetFine3
+  - TargetFine4
+  - 
+  - TargetMid1
+  - TargetMid2
+  - TargetMid3
+  - TargetMid4
+  - 
+  - 
+  - XR Simulation
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 0
+    path: Assets/Scenes/MainMenu.unity
+    guid: 463c55081b48341409db45eb9c8e1ada
+  - enabled: 1
+    path: Assets/Scenes/FFK_Experiment_Vizzari.unity
+    guid: 656f0377318095645b8fb69dc72a95d9
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 5a171c6db348cf44c8e827731d451db7, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 203b85c7818023948822907557a97dd4, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: ef56bd4dbbf41d8468bfe64f0310fa43, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 35382c529e3d90048b3801810387ce2e, type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: fa01bba238456e8408db5db721280fab, type: 2}
