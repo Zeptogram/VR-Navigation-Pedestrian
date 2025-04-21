@@ -77,7 +77,7 @@ public class RLAgent : Agent
         if (goalAction.Length >= 1 && goalAction[0].goalLocation != null)
         {
             animator.SetTrigger("isWalking");
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[0].goalLocation);
+            //gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[0].goalLocation);
         }
         agentSensorsManager = GetComponent<AgentSensorsManager>();
         agentGizmosDrawer = GetComponent<AgentGizmosDrawer>();
@@ -155,10 +155,10 @@ public class RLAgent : Agent
             float actionAngle;
             if (MyConstants.discrete)
             {
-                /*actionSpeed = vectorAction[0];
+                actionSpeed = vectorAction[0];
                 actionSpeed = (actionSpeed - 5f) / 5f;
                 actionAngle = vectorAction[1];
-                actionAngle = (actionAngle - 5f) / 5f;*/
+                actionAngle = (actionAngle - 5f) / 5f;
             }
             else
             {
@@ -280,7 +280,7 @@ public class RLAgent : Agent
         {
             animator.SetTrigger("isWalking");
             nextTargetCount++;
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
+            //gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
         }
         else
         {
@@ -295,11 +295,11 @@ public class RLAgent : Agent
         GameObject reachedTarget = other.gameObject;
         if(!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
         {
-            if (goalAction[nextTargetCount].animationName != "")
+            /*if (goalAction[nextTargetCount].animationName != "")
             {
                 animator.SetTrigger(goalAction[nextTargetCount].animationName);
             }
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
+            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);*/
             
             Target target = reachedTarget.GetComponent<Target>();
             entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
@@ -310,7 +310,7 @@ public class RLAgent : Agent
                 Finished();
             }
 
-            StartCoroutine(MoveToNextTargetWithDelay(goalAction[nextTargetCount].delay));
+            //StartCoroutine(MoveToNextTargetWithDelay(goalAction[nextTargetCount].delay));
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
         {
@@ -381,12 +381,12 @@ public class RLAgent : Agent
         animator.SetFloat("Speed", 2);
         GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
         fleeing = true;
-        gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount - 1].goalLocation);
+        //gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount - 1].goalLocation);
         foreach(GameObject target in fleeTargets)
         {
             if (target.name.Contains("Flee"))
             {
-                gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(target);
+                //gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(target);
             }
         }
     }

@@ -23,25 +23,8 @@ public class AgentSensorsManager : MonoBehaviour
             }
             return default(RaycastHit);
         }
-
-        // Cast the rays to let the agent perceive its surrounding but ignores the object present in the ignoredTargets array
-        public RaycastHit GetRayInfo(Vector3 startingPos, Vector3 rayDirection, float rayLength, GameObject[] ignoredTargets)
-        {
-            RaycastHit[] hitInfo = Physics.RaycastAll(startingPos + Vector3.up, rayDirection, rayLength, RayLayeredMask);
-            System.Array.Sort(hitInfo, (x, y) => x.distance.CompareTo(y.distance));
-            for (int i = 0; i < hitInfo.Length; i++)
-            {
-                if (!ignoredTargets.Contains(hitInfo[i].collider.gameObject))
-                {
-                    return hitInfo[i];
-                }
-            }
-            return default(RaycastHit);
-
-        }
     }
 
-    [NonSerialized] public List<GameObject> invisibleTargets;
     [SerializeField] private List<Sensore> _sensors = new List<Sensore>();
     private int _viewAngle = MyConstants.viewAngle;
     private int _rayLength = MyConstants.rayLength;
@@ -68,7 +51,6 @@ public class AgentSensorsManager : MonoBehaviour
 
     private void Awake()
     {
-        invisibleTargets = GameObject.FindGameObjectsWithTag("Target").ToList<GameObject>();
         _sensorsObservations = new Dictionary<Sensore, RaycastHit[]>();
         _sensors.ForEach(sensor => _sensorsObservations.Add(sensor, null));
     }
@@ -95,13 +77,13 @@ public class AgentSensorsManager : MonoBehaviour
                 if (i == 0 && sign == -1) { continue; }
 
                 Vector3 rayDirection = CalculateRayDirection(i, sign);
-                Vector3 offSettedPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset) + (rayDirection * MyConstants.rayOffset);
+                Vector3 offSettedPosition = transform.position + (rayDirection * MyConstants.rayOffset);
 
-                //RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
-                RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength, invisibleTargets.ToArray<GameObject>());
+                RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
 
-                if (hit.collider == null) {
-                    //Debug.LogError($"Ray of sensor {sensor.SensorName} returned null!");
+                if (hit.collider == null)
+                {
+                    Debug.LogError($"Ray of sensor {sensor.SensorName} returned null!");
                 }
 
                 sensorResults[currentIndex] = hit;
