@@ -76,7 +76,7 @@ public class RLAgent : Agent
         animator = GetComponent<Animator>();
         if (goalAction.Length >= 1 && goalAction[0].goalLocation != null)
         {
-            animator.SetTrigger("isWalking");
+            SetWalking(true);
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[0].goalLocation);
         }
         agentSensorsManager = GetComponent<AgentSensorsManager>();
@@ -118,7 +118,7 @@ public class RLAgent : Agent
         // Calcola le osservazioni per i muri e gli agenti
         (wallsAndTargetsObservations, wallsAndAgentsObservations) = agentObserver.ComputeObservations(sensorsResults);
 
-        // Calcola la velocit‡ normalizzata
+        // Calcola la velocit√† normalizzata
         float normalizedSpeed = (currentSpeed - minMaxSpeed.x) / (minMaxSpeed.y - minMaxSpeed.x);
 
         // Setta i risultati delle osservazioni per il disegno delle gizmos
@@ -137,7 +137,7 @@ public class RLAgent : Agent
         int observationsCount = wallsAndTargetsObservations.Count + wallsAndAgentsObservations.Count + 1; // +1 per normalizedSpeed
         int requiredObservations = 185;
 
-        // Aggiungi padding se il numero di osservazioni Ë inferiore alla dimensione richiesta
+        // Aggiungi padding se il numero di osservazioni √® inferiore alla dimensione richiesta
         for (int i = 0; i < requiredObservations - observationsCount; i++)
         {
             vectorSensor.AddObservation(0f); // Aggiungi valore neutro per il padding
@@ -262,13 +262,13 @@ public class RLAgent : Agent
     }
     IEnumerator MoveToNextTargetWithDelay(float delay)
     {
-        
-        if (delay>0)
+        if (delay > 0)
         {
             run = false;
             SpeedChange(-rigidBody.velocity.magnitude);
             yield return new WaitForSeconds(delay);
         }
+        SetWalking(true); // Torna a camminare dopo l'azione
         run = true;
         MoveToNextTarget();
     }
@@ -278,13 +278,14 @@ public class RLAgent : Agent
     {
         if (goalAction.Length >= nextTargetCount + 2 && goalAction[nextTargetCount + 1].goalLocation != null)
         {
-            animator.SetTrigger("isWalking");
+            SetWalking(true);
             nextTargetCount++;
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
         }
         else
         {
-            animator.SetTrigger("isIdle");
+            SetWalking(false); // Ferma camminata
+            animator.SetBool("isIdle", true);
         }
     }
 
@@ -295,9 +296,14 @@ public class RLAgent : Agent
         GameObject reachedTarget = other.gameObject;
         if(!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
         {
-            if (goalAction[nextTargetCount].animationName != "")
+            if (!string.IsNullOrEmpty(goalAction[nextTargetCount].animationName))
             {
-                animator.SetTrigger(goalAction[nextTargetCount].animationName);
+                SetWalking(false); 
+                PlayActionTrigger(goalAction[nextTargetCount].animationName); // Lancia l'azione istantanea
+            }
+            else
+            {
+                SetWalking(true); 
             }
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
             
@@ -355,18 +361,18 @@ public class RLAgent : Agent
                 {
                     targetsTaken.Add(reachedTarget);
                     AddReward(MyConstants.new_target_reward);
-                    print("Target intermedio");
+                    print("Target intermedio: " + reachedTarget.name); 
                 }
                 else
                 {
                     AddReward(MyConstants.target_taken_incorrectly_reward);
-                    print("Target intermedio preso in modo scorretto");
+                    print("Target intermedio preso in modo scorretto: " + reachedTarget.name); 
                 }
             }
             else
             {
                 AddReward(MyConstants.already_taken_target_reward);
-                print("Already_taken_target_reward");
+                print("Already_taken_target_reward: " + reachedTarget.name); 
             }
         }
     }
@@ -421,6 +427,12 @@ public class RLAgent : Agent
     {
         bool target = false;
         bool proxemic_small_wall = false;
+
+        // DEBUG: list of walls and targets
+        foreach (var entry in wallsAndTargets)
+        {
+            //Debug.Log("Tag: " + entry.Item1 + " Pos: " + entry.Item2);
+        }
         for (int i = 0; i < wallsAndTargets.Count; i++)
         {
             (GizmosTag wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargets[i];
@@ -540,4 +552,20 @@ public class RLAgent : Agent
 
     }
 
+    private void PlayActionTrigger(string triggerName)
+    {
+        foreach (AnimatorControllerParameter param in animator.parameters)
+        {
+            if (param.type == AnimatorControllerParameterType.Trigger)
+                animator.ResetTrigger(param.name);
+        }
+        if (!string.IsNullOrEmpty(triggerName))
+            animator.SetTrigger(triggerName);
+    }
+
+    private void SetWalking(bool walking)
+    {
+        animator.SetBool("isWalking", walking);
+        animator.SetBool("isIdle", !walking);
+    }
 }
