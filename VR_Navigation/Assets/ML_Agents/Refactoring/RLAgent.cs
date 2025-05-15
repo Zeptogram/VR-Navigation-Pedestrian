@@ -23,13 +23,13 @@ public class RLAgent : Agent
 
     private bool fleeing = false;
 
-
     [NonSerialized] public Vector3 startPosition;
     [NonSerialized] public Quaternion startRotation;
 
     private Rigidbody rigidBody;
 
     private Animator animator;
+    private AgentAnimationManager animationManager;
 
     private Vector2 speedMaxRange = MyConstants.speedMaxRange;
 
@@ -74,9 +74,10 @@ public class RLAgent : Agent
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        animationManager = GetComponent<AgentAnimationManager>();
         if (goalAction.Length >= 1 && goalAction[0].goalLocation != null)
         {
-            SetWalking(true);
+            animationManager.SetWalking(true);
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[0].goalLocation);
         }
         agentSensorsManager = GetComponent<AgentSensorsManager>();
@@ -90,8 +91,7 @@ public class RLAgent : Agent
 
     private void Update()
     {
-        //print(rigidBody.velocity.magnitude);
-        animator.SetFloat("Speed", rigidBody.velocity.magnitude / 10);
+        animationManager.UpdateSpeed(rigidBody.velocity.magnitude / 10);
     }
 
     public override void OnEpisodeBegin()
@@ -144,7 +144,6 @@ public class RLAgent : Agent
         }
     }
 
-
     [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
@@ -193,29 +192,6 @@ public class RLAgent : Agent
             ComputeSteps();
         }
     }
-    //public override void OnActionReceived(ActionBuffers actionBuffers)
-    //{
-    //    float actionSpeed = Mathf.Clamp(actionBuffers.ContinuousActions[0], -1f, 1f);
-    //    float actionAngle = Mathf.Clamp(actionBuffers.ContinuousActions[1], -1f, 1f);
-
-    //    if (!lockPosition)
-    //    {
-    //        SpeedChange(actionSpeed);
-    //        AngleChange(actionAngle);
-    //    }
-    //    ComputeSteps();
-    //    int agentID = gameObject.GetInstanceID();
-    //    numberOfIteraction++;
-    //    StatsWriter.agentStats?.Invoke(
-    //        transform.position.x,
-    //        transform.position.z,
-    //        group,
-    //        currentSpeed,
-    //        (actionAngle * MyConstants.angleRange),
-    //        uniqueID,
-    //        numberOfIteraction
-    //        );
-    //}
 
     public void ComputeSteps()
     {
@@ -260,63 +236,54 @@ public class RLAgent : Agent
         float sigma = (maxValue - mean) / 3.0f;
         return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
     }
-    IEnumerator MoveToNextTargetWithDelay(float delay)
+
+    public void MoveToNextTargetWithDelay(float delay)
     {
-        if (delay > 0)
-        {
-            run = false;
-            SpeedChange(-rigidBody.velocity.magnitude);
-            yield return new WaitForSeconds(delay);
-        }
-        SetWalking(true); // Torna a camminare dopo l'azione
-        run = true;
-        MoveToNextTarget();
+        animationManager.MoveToNextTargetWithDelay(delay);
     }
 
+    public Rigidbody GetRigidBody() => rigidBody;
 
-    private void MoveToNextTarget()
+    public void MoveToNextTarget()
     {
         if (goalAction.Length >= nextTargetCount + 2 && goalAction[nextTargetCount + 1].goalLocation != null)
         {
-            SetWalking(true);
+            animationManager.SetWalking(true);
             nextTargetCount++;
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
         }
         else
         {
-            SetWalking(false); // Ferma camminata
-            animator.SetBool("isIdle", true);
+            animationManager.SetWalking(false);
         }
     }
 
-    // When the agent reach the next target in the action list wait for the set time and perform the animation corresponding to the reached target
-    // and set the agent to reach the following target in the list.
     private void OnTriggerEnter(Collider other)
     {
         GameObject reachedTarget = other.gameObject;
-        if(!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
+        if (!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
         {
             if (!string.IsNullOrEmpty(goalAction[nextTargetCount].animationName))
             {
-                SetWalking(false); 
-                PlayActionTrigger(goalAction[nextTargetCount].animationName); // Lancia l'azione istantanea
+                animationManager.SetWalking(false);
+                animationManager.PlayActionTrigger(goalAction[nextTargetCount].animationName);
             }
             else
             {
-                SetWalking(true); 
+                animationManager.SetWalking(true);
             }
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
-            
+
             Target target = reachedTarget.GetComponent<Target>();
             entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
                 AddReward(MyConstants.finale_target_reward);
-                print("final target");
+                print("Final target");
                 Finished();
             }
 
-            StartCoroutine(MoveToNextTargetWithDelay(goalAction[nextTargetCount].delay));
+            MoveToNextTargetWithDelay(goalAction[nextTargetCount].delay);
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
         {
@@ -325,12 +292,12 @@ public class RLAgent : Agent
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
                 AddReward(MyConstants.finale_target_reward);
-                print("final target");
+                print("Final target");
                 Finished();
             }
         }
-       
     }
+
     private void OnTriggerExit(Collider other)
     {
         // Se ho NavMeshAgent per ora lo ignoro
@@ -361,34 +328,29 @@ public class RLAgent : Agent
                 {
                     targetsTaken.Add(reachedTarget);
                     AddReward(MyConstants.new_target_reward);
-                    print("Target intermedio: " + reachedTarget.name); 
+                    print("Target intermedio: " + reachedTarget.name);
                 }
                 else
                 {
                     AddReward(MyConstants.target_taken_incorrectly_reward);
-                    print("Target intermedio preso in modo scorretto: " + reachedTarget.name); 
+                    print("Target intermedio preso in modo scorretto: " + reachedTarget.name);
                 }
             }
             else
             {
                 AddReward(MyConstants.already_taken_target_reward);
-                print("Already_taken_target_reward: " + reachedTarget.name); 
+                print("Already_taken_target_reward: " + reachedTarget.name);
             }
         }
     }
 
-
-
-
-    // Start the evacuation for the agent by making it follow the evac targets
     public void flee()
     {
-        animator.SetTrigger("isRunning");
-        animator.SetFloat("Speed", 2);
+        animationManager.SetRunning();
         GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
         fleeing = true;
         gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount - 1].goalLocation);
-        foreach(GameObject target in fleeTargets)
+        foreach (GameObject target in fleeTargets)
         {
             if (target.name.Contains("Flee"))
             {
@@ -405,14 +367,13 @@ public class RLAgent : Agent
         continuousActionsOut[0] = Input.GetAxis("Vertical");
         continuousActionsOut[1] = Input.GetAxis("Horizontal");
     }
-    private void SpeedChange(float deltaSpeed)
+
+    public void SpeedChange(float deltaSpeed)
     {
         currentSpeed += (minMaxSpeed.y * deltaSpeed / 2f);
         currentSpeed = Mathf.Clamp(currentSpeed, minMaxSpeed.x, minMaxSpeed.y);
         Vector3 velocityChange = (transform.forward * currentSpeed * 5) - rigidBody.velocity;
         rigidBody.AddForce(velocityChange, ForceMode.VelocityChange);
-        //rigidBody.velocity = transform.forward * currentSpeed;
-        //animator.SetFloat("Speed", currentSpeed);
     }
 
     private void AngleChange(float deltaAngle)
@@ -428,10 +389,8 @@ public class RLAgent : Agent
         bool target = false;
         bool proxemic_small_wall = false;
 
-        // DEBUG: list of walls and targets
         foreach (var entry in wallsAndTargets)
         {
-            //Debug.Log("Tag: " + entry.Item1 + " Pos: " + entry.Item2);
         }
         for (int i = 0; i < wallsAndTargets.Count; i++)
         {
@@ -448,10 +407,6 @@ public class RLAgent : Agent
                    uniqueID
                 );
                 proxemic_small_wall = true;
-                // decommentare qua se vogliamo che la rewards della prossemica si attivi per ogni raggio
-                //AddReward(MyConstants.proxemic_small_wall_reward);
-                //print("proxemic_small_wall_reward");
-
             }
             if (wallsAndTargetTag == GizmosTag.NewTarget)
             {
@@ -469,6 +424,7 @@ public class RLAgent : Agent
             print("proxemic_small_wall_reward");
         }
     }
+
     private void rewardsWallsAndAgentsObservations(List<(GizmosTag, Vector3)> wallsAndAgents)
     {
         bool proxemic_large_agent = false;
@@ -492,10 +448,6 @@ public class RLAgent : Agent
                    uniqueID
                 );
                 proxemic_large_agent = true;
-                // decommentare qua se vogliamo che la rewards della prossemica si attivi per ogni raggio
-
-                //AddReward(MyConstants.proxemic_large_agent_reward);
-                //print("proxemic_large_agent_reward");
             }
             else if ((MyConstants.proxemic_medium_distance + MyConstants.rayOffset >= agentAndWallsAndAgentsDistance)
                && (MyConstants.proxemic_small_distance + MyConstants.rayOffset < agentAndWallsAndAgentsDistance) &&
@@ -509,11 +461,6 @@ public class RLAgent : Agent
                    uniqueID
                 );
                 proxemic_medium_agent = true;
-                // decommentare qua se vogliamo che la rewards della prossemica si attivi per ogni raggio
-
-                //AddReward(MyConstants.proxemic_medium_agent_reward);
-                //print("proxemic_medium_agent_reward");
-
             }
             else if ((MyConstants.proxemic_small_distance + MyConstants.rayOffset >= agentAndWallsAndAgentsDistance) &&
                 (wallsAndAgentsTag == GizmosTag.Agent))
@@ -526,11 +473,6 @@ public class RLAgent : Agent
                    uniqueID
                 );
                 proxemic_small_agent = true;
-                // decommentare qua se vogliamo che la rewards della prossemica si attivi per ogni raggio
-
-                //AddReward(MyConstants.proxemic_small_agent_reward);
-                //print("proxemic_small_agent_reward");
-
             }
         }
         if (proxemic_small_agent)
@@ -548,24 +490,11 @@ public class RLAgent : Agent
             AddReward(MyConstants.proxemic_large_agent_reward);
             print("proxemic_large_agent_reward");
         }
-
-
     }
 
-    private void PlayActionTrigger(string triggerName)
+    public void SetRun(bool value)
     {
-        foreach (AnimatorControllerParameter param in animator.parameters)
-        {
-            if (param.type == AnimatorControllerParameterType.Trigger)
-                animator.ResetTrigger(param.name);
-        }
-        if (!string.IsNullOrEmpty(triggerName))
-            animator.SetTrigger(triggerName);
+        run = value;
     }
-
-    private void SetWalking(bool walking)
-    {
-        animator.SetBool("isWalking", walking);
-        animator.SetBool("isIdle", !walking);
-    }
+   
 }
