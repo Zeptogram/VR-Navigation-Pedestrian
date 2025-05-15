@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AgentAnimationManager : MonoBehaviour
@@ -50,9 +51,25 @@ public class AgentAnimationManager : MonoBehaviour
         if (delay > 0)
         {
             agent.SetRun(false);
-            agent.SpeedChange(-agent.GetRigidBody().velocity.magnitude);
+            agent.GetRigidBody().velocity = Vector3.zero;
             yield return new WaitForSeconds(delay);
         }
+        SetWalking(true);
+        agent.SetRun(true);
+        agent.MoveToNextTarget();
+    }
+
+    public IEnumerator PlayAnimationsSequence(List<RLAgent.AnimationAction> animations, RLAgent agent)
+    {
+        agent.SetRun(false);
+        agent.GetRigidBody().velocity = Vector3.zero;
+
+        foreach (var anim in animations)
+        {
+            PlayActionTrigger(anim.animationName);
+            yield return new WaitForSeconds(anim.delay);
+        }
+
         SetWalking(true);
         agent.SetRun(true);
         agent.MoveToNextTarget();

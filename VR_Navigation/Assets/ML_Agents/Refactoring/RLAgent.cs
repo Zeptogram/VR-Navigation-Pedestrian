@@ -10,6 +10,20 @@ using UnityEngine.AI;
 
 public class RLAgent : Agent
 {
+    [Serializable]
+    public struct AnimationAction
+    {
+        public string animationName;
+        public float delay; // durata massima di questa animazione
+    }
+
+    [Serializable]
+    public struct action
+    {
+        public GameObject goalLocation;
+        public List<AnimationAction> animations; // lista di animazioni per questo target
+    }
+
     public action[] goalAction;
     private bool run = true;
     private int nextTargetCount = 0;
@@ -62,14 +76,6 @@ public class RLAgent : Agent
     float entryValue;
     float exitValue;
     [NonSerialized] public string envID;
-
-    [Serializable]
-    public struct action
-    {
-        public GameObject goalLocation;
-        public float delay;
-        public String animationName;
-    }
 
     private void Awake()
     {
@@ -246,11 +252,17 @@ public class RLAgent : Agent
 
     public void MoveToNextTarget()
     {
+        var sensors = gameObject.GetComponent<AgentSensorsManager>();
+        // Add the current target to invisibleTargets
+        if (goalAction.Length > nextTargetCount && goalAction[nextTargetCount].goalLocation != null)
+            sensors.invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
+
         if (goalAction.Length >= nextTargetCount + 2 && goalAction[nextTargetCount + 1].goalLocation != null)
         {
             animationManager.SetWalking(true);
             nextTargetCount++;
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
+            // Remove the previous target from invisibleTargets
+            sensors.invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
         }
         else
         {
@@ -263,27 +275,27 @@ public class RLAgent : Agent
         GameObject reachedTarget = other.gameObject;
         if (!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
         {
-            if (!string.IsNullOrEmpty(goalAction[nextTargetCount].animationName))
+            Target target = reachedTarget.GetComponent<Target>();
+            entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
+
+            if (goalAction[nextTargetCount].animations != null && goalAction[nextTargetCount].animations.Count > 0)
             {
                 animationManager.SetWalking(false);
-                animationManager.PlayActionTrigger(goalAction[nextTargetCount].animationName);
+                StartCoroutine(animationManager.PlayAnimationsSequence(goalAction[nextTargetCount].animations, this));
             }
             else
             {
                 animationManager.SetWalking(true);
+                MoveToNextTargetWithDelay(0);
             }
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
 
-            Target target = reachedTarget.GetComponent<Target>();
-            entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
+            // final target
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
                 AddReward(MyConstants.finale_target_reward);
                 print("Final target");
                 Finished();
             }
-
-            MoveToNextTargetWithDelay(goalAction[nextTargetCount].delay);
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
         {
@@ -307,7 +319,7 @@ public class RLAgent : Agent
             return;
         }
 
-        // Se non ho un Target
+        // If there is no target, exit
         Target target = other.GetComponent<Target>();
 
         if (target == null)
@@ -315,7 +327,7 @@ public class RLAgent : Agent
             return;
         }
 
-        // Se ho il target
+        // If there is a target
         GameObject reachedTarget = other.gameObject;
         exitValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
         float resultValue = entryValue * exitValue;
