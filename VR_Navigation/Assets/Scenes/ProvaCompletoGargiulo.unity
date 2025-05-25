@@ -970,6 +970,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 9500000, guid: 76101ab1057434476a8453baaeadd4a2, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11397,7 +11401,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299094, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -26.25
+      value: -27.654
       objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299094, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_LocalRotation.w
@@ -11432,6 +11436,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 9000000, guid: 76101ab1057434476a8453baaeadd4a2, type: 3}
     - target: {fileID: 9200512954962299102, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 2d7706d72509d10468af9b5f535ce4c6, type: 2}
+    - target: {fileID: 9200512954962299102, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
@@ -11448,7 +11456,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 9200512954962299093, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1463957345}
+      addedObject: {fileID: 1463957358}
   m_SourcePrefab: {fileID: 100100000, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
 --- !u!1001 &330785915
 PrefabInstance:
@@ -40645,6 +40653,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 488b0bbbdfba64fe09fc11cd45491b7e, type: 2}
+    - target: {fileID: 9500000, guid: d17591ccdd85147668b58267b3d06f5b, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -54160,7 +54172,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9200512954962299094, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
   m_PrefabInstance: {fileID: 329453702}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1463957345
+--- !u!114 &1463957358
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -70597,12 +70609,40 @@ PrefabInstance:
       value: isPointing
       objectReference: {fileID: 0}
     - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[9].animations.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[0].delay
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[1].delay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[2].delay
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[9].animations.Array.data[0].delay
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[0].animationName
+      value: isIdle
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[1].animationName
+      value: isWaking
+      objectReference: {fileID: 0}
+    - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[2].animationName
+      value: isPointing
       objectReference: {fileID: 0}
     - target: {fileID: 650330713734836064, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[9].animations.Array.data[0].animationName
@@ -70614,7 +70654,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299093, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299094, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_RootOrder

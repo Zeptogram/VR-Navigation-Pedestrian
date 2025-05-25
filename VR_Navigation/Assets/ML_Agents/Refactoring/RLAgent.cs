@@ -77,6 +77,8 @@ public class RLAgent : Agent
     float exitValue;
     [NonSerialized] public string envID;
 
+    private float lastYRotation;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -97,7 +99,38 @@ public class RLAgent : Agent
 
     private void Update()
     {
-        animationManager.UpdateSpeed(rigidBody.velocity.magnitude / 10);
+        float speed = rigidBody.velocity.magnitude;
+        animationManager.UpdateSpeed(speed / 10);
+
+        // Idle/Walking
+        if (speed < 0.2f)
+            animationManager.SetWalking(false);
+        else
+            animationManager.SetWalking(true);
+
+        float currentYRotation = transform.eulerAngles.y;
+        float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
+        float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
+
+        // Turn da fermo (rotazione minima) - usa turn speed dinamica
+        if (speed < 0.2f && Mathf.Abs(deltaY) > 10f)
+        {
+            float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.2f); // più naturale, regola a piacere
+            if (deltaY > 0)
+                animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
+            else
+                animationManager.PlayTurn(false, normalizedTurnSpeed); // TurnLeft
+        }
+        // Turn durante camminata SOLO se rotazione molto brusca - usa turn speed fissa
+        else if (speed >= 0.2f && Mathf.Abs(deltaY) > 30f)
+        {
+            if (deltaY > 0)
+                animationManager.PlayTurn(true, 1f); // TurnRight, speed fissa
+            else
+                animationManager.PlayTurn(false, 1f); // TurnLeft, speed fissa
+        }
+
+        lastYRotation = currentYRotation;
     }
 
     public override void OnEpisodeBegin()
@@ -253,15 +286,17 @@ public class RLAgent : Agent
     public void MoveToNextTarget()
     {
         var sensors = gameObject.GetComponent<AgentSensorsManager>();
-        // Add the current target to invisibleTargets
+
+        // Aggiungi il target corrente a invisibleTargets (se non già presente)
         if (goalAction.Length > nextTargetCount && goalAction[nextTargetCount].goalLocation != null)
-            sensors.invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
+            if (!sensors.invisibleTargets.Contains(goalAction[nextTargetCount].goalLocation))
+                sensors.invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
 
         if (goalAction.Length >= nextTargetCount + 2 && goalAction[nextTargetCount + 1].goalLocation != null)
         {
             animationManager.SetWalking(true);
             nextTargetCount++;
-            // Remove the previous target from invisibleTargets
+            // Rimuovi il nuovo target dalla lista invisibleTargets (se presente)
             sensors.invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
         }
         else
