@@ -103,34 +103,35 @@ public class RLAgent : Agent
         animationManager.UpdateSpeed(speed / 10);
 
         // Idle/Walking
-        if (speed < 0.2f)
+        if (speed < 0.25f)
+        {
+            Debug.Log("Animation State: Idle");
             animationManager.SetWalking(false);
+            
+            float currentYRotation = transform.eulerAngles.y;
+            float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
+            float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
+
+            // Turn da fermo (rotazione minima) - usa turn speed dinamica
+            if (Mathf.Abs(deltaY) > 10f)
+            {
+                Debug.Log("Animation State: Turn");
+                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f); 
+                if (deltaY > 0)
+                    animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
+                else
+                    animationManager.PlayTurn(false, normalizedTurnSpeed); // TurnLeft
+            }
+        }
         else
+        {
+            Debug.Log("Animation State: Walking");
+            // Se sta camminando, ferma immediatamente le animazioni di turn
+            animationManager.StopTurn();
             animationManager.SetWalking(true);
-
-        float currentYRotation = transform.eulerAngles.y;
-        float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
-        float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
-
-        // Turn da fermo (rotazione minima) - usa turn speed dinamica
-        if (speed < 0.2f && Mathf.Abs(deltaY) > 10f)
-        {
-            float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.2f); // più naturale, regola a piacere
-            if (deltaY > 0)
-                animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
-            else
-                animationManager.PlayTurn(false, normalizedTurnSpeed); // TurnLeft
         }
-        // Turn durante camminata SOLO se rotazione molto brusca - usa turn speed fissa
-        else if (speed >= 0.2f && Mathf.Abs(deltaY) > 30f)
-        {
-            if (deltaY > 0)
-                animationManager.PlayTurn(true, 1f); // TurnRight, speed fissa
-            else
-                animationManager.PlayTurn(false, 1f); // TurnLeft, speed fissa
-        }
-
-        lastYRotation = currentYRotation;
+        
+        lastYRotation = transform.eulerAngles.y;
     }
 
     public override void OnEpisodeBegin()

@@ -38,6 +38,13 @@ public class AgentAnimationManager : MonoBehaviour
         animator.SetTrigger(right ? "TurnRight" : "TurnLeft");
     }
 
+    public void StopTurn()
+    {
+        // Stop immediately any turn animation
+        animator.ResetTrigger("TurnRight");
+        animator.ResetTrigger("TurnLeft");
+    }
+
     public void PlayActionTrigger(string triggerName)
     {
         if (animator == null)
