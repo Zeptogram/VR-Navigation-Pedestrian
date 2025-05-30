@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class AgentSensorsManager : MonoBehaviour
 {
-    public enum SensorName { WallsAndTargets, WallsAndAgents }
+    public enum SensorName { WallsAndTargets, WallsAndAgents, WallsAndObjectives}
 
     [Serializable]
     public class Sensore
@@ -37,7 +37,6 @@ public class AgentSensorsManager : MonoBehaviour
                 }
             }
             return default(RaycastHit);
-
         }
     }
 
@@ -48,7 +47,7 @@ public class AgentSensorsManager : MonoBehaviour
 
     private int numberOfRaysPerSide = MyConstants.numberOfRaysPerSide;
 
-    private Dictionary<Sensore, RaycastHit[]> _sensorsObservations;
+    private Dictionary<Sensore, RaycastHit[]> _sensorsObservations; // dizionario che contiene i risultati dei sensori
 
 
     //lasciare gia selezionati i target Generici
@@ -66,6 +65,25 @@ public class AgentSensorsManager : MonoBehaviour
 
     }
 
+     //sensore per gli obiettivi
+    public void UpdateObjectiveSensorVision(Group agentGroup)
+    {
+        // Cambia Single() con SingleOrDefault() per evitare l'eccezione
+        Sensore sensorWallsAndObjectives = _sensors.SingleOrDefault(x => x.SensorName == SensorName.WallsAndObjectives);
+        
+        // Controlla se il sensore esiste prima di usarlo
+        if (sensorWallsAndObjectives != null)
+        {
+            String objectiveLayerName = agentGroup.GetObjectiveLayerName();
+            int objectiveLayer = LayerMask.NameToLayer(objectiveLayerName);
+            sensorWallsAndObjectives.RayLayeredMask |= 1 << objectiveLayer;
+        }
+        else
+        {
+            Debug.LogWarning($"Sensor WallsAndObjectives not found in agent {gameObject.name}");
+        }
+    }
+
     private void Awake()
     {
         invisibleTargets = GameObject.FindGameObjectsWithTag("Target").ToList<GameObject>();
@@ -73,6 +91,8 @@ public class AgentSensorsManager : MonoBehaviour
         _sensors.ForEach(sensor => _sensorsObservations.Add(sensor, null));
     }
 
+    // calcola i risultati dei sensori e li memorizza in un dizionario
+    // il dizionario ha come chiave il sensore e come valore un array di RaycastHit
     public Dictionary<Sensore, RaycastHit[]> ComputeSensorResults()
     {
         foreach (Sensore sensor in _sensors)
@@ -128,4 +148,5 @@ public class AgentSensorsManager : MonoBehaviour
         return rayDirection;
     }
 
+    
 }

@@ -25,7 +25,7 @@ public class Startup
     // Change the color of the target in the path of the selected agent to highlight them when selecting the agent in the editor
     static void  HighlightPath()
     {
-        GameObject selected = Selection.activeGameObject;
+        /*GameObject selected = Selection.activeGameObject;
         if(selected != null && selected.GetComponent<RLAgent>() != null)
         {
             GameObject[] allTargets = GameObject.FindGameObjectsWithTag("Target");
@@ -71,6 +71,6 @@ public class Startup
                     target.GetComponent<MeshRenderer>().material = defaultTargetMaterial;
                 }
             }
-        }
+        }*/
     }
 }

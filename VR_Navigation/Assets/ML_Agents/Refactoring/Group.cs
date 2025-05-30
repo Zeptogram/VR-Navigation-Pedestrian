@@ -45,4 +45,23 @@ public static class GroupExtension
                 throw new System.Exception("Group not found : " + group.ToString());
         }
     }
+
+    public static string GetObjectiveLayerName(this Group group)
+    {
+        switch (group)
+        {
+            case Group.Generic:
+                return "Obiettivo";
+            case Group.First:
+                return "ObiettivoGruppo1";
+            case Group.Second:
+                return "ObiettivoGruppo2";
+            case Group.Third:
+                return "ObiettivoGruppo3";
+            case Group.Fourth:
+                return "ObiettivoGruppo4";
+            default:
+                return "Obiettivo";
+        }
+    }
 }

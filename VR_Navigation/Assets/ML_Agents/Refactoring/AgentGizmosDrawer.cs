@@ -12,24 +12,36 @@ public class AgentGizmosDrawer : MonoBehaviour
 
     private List<(GizmosTag, Vector3)> wallsAndTargetsObservations = new List<(GizmosTag, Vector3)>();
     private List<(GizmosTag, Vector3)> wallsAndAgentsObservations = new List<(GizmosTag, Vector3)>();
-    public void SetObservationsResults(List<(GizmosTag, Vector3)> wallsAndTargetsObservations, List<(GizmosTag, Vector3)> wallsAndAgentsObservations)
+    private List<(GizmosTag, Vector3)> wallsAndObjectivesObservations = new List<(GizmosTag, Vector3)>();
+    public void SetObservationsResults(List<(GizmosTag, Vector3)> wallsAndTargetsObservations, List<(GizmosTag, Vector3)> wallsAndAgentsObservations, List<(GizmosTag, Vector3)> wallsAndObjectivesObservations)
     {
         this.wallsAndTargetsObservations = wallsAndTargetsObservations;
         this.wallsAndAgentsObservations = wallsAndAgentsObservations;
+        this.wallsAndObjectivesObservations = wallsAndObjectivesObservations;
     }
 
     private Dictionary<GizmosTag, Color> _tagColorDict = new Dictionary<GizmosTag, Color>()
         {
             {GizmosTag.Wall, _wallColor},
             {GizmosTag.Agent, _agentColor},
-            {GizmosTag.NewTarget, _targetNewColor},
-            {GizmosTag.TakenTarget, _targetTakenColor}
+            {GizmosTag.ValidObjective, _validObjectiveColor},
+            {GizmosTag.InvalidObjective, _invalidObjectiveColor},
+            {GizmosTag.ValidDirectionIntermediateTarget, _validDirectionIntermediateColor},
+            {GizmosTag.InvalidDirectionIntermediateTarget, _invalidDirectionIntermediateColor},
+            {GizmosTag.ValidDirectionFinalTarget, _validDirectionFinalColor},
+            {GizmosTag.InvalidDirectionFinalTarget, _invalidDirectionFinalColor}
         };
 
     private static readonly Color _wallColor = new Color(1, 1, 1, 0.05f);
     private static readonly Color _agentColor = Color.cyan;
-    private static readonly Color _targetNewColor = Color.green;
-    private static readonly Color _targetTakenColor = Color.red;
+    private static readonly Color _validObjectiveColor = Color.blue;
+    private static readonly Color _invalidObjectiveColor = Color.magenta;
+
+    private static readonly Color _validDirectionIntermediateColor = Color.white;
+    private static readonly Color _invalidDirectionIntermediateColor = Color.yellow;
+    private static readonly Color _validDirectionFinalColor = Color.green;
+    private static readonly Color _invalidDirectionFinalColor = Color.red;
+    
 
     private AgentSensorsManager agentSensorsManager;
 
@@ -46,40 +58,46 @@ public class AgentGizmosDrawer : MonoBehaviour
         }
     }
 
-    private void DrawObservationsGizmos()
+    private void DrawObservationsGizmos() 
     {
-        Vector3 newPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset); 
+        Vector3 newPosition = transform.position; 
         newPosition.y += 1;
-        for (int i = 0; i < wallsAndTargetsObservations.Count && i < wallsAndAgentsObservations.Count; i++)
+
+        for (int i = 0; i < wallsAndTargetsObservations.Count && i < wallsAndAgentsObservations.Count && i < wallsAndObjectivesObservations.Count; i++)
         {
             (GizmosTag wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargetsObservations[i];
             (GizmosTag wallsAndAgentTag, Vector3 wallsAndAgentVector) = wallsAndAgentsObservations[i];
+            (GizmosTag wallsAndObjectiveTag, Vector3 wallsAndObjectiveVector) = wallsAndObjectivesObservations[i];
 
             float agentAndWallsAndTargetDistance = Vector3.Distance(newPosition, wallsAndTargetVector);
-            float agentAndwallsAndAgentDistance = Vector3.Distance(newPosition, wallsAndAgentVector);
+            float agentAndWallsAndAgentDistance = Vector3.Distance(newPosition, wallsAndAgentVector);
+            float agentAndWallsAndObjectiveDistance = Vector3.Distance(newPosition, wallsAndObjectiveVector);
 
-            if (agentAndWallsAndTargetDistance < agentAndwallsAndAgentDistance)
+            // Confronta le distanze e disegna i Gizmos
+            if (agentAndWallsAndTargetDistance <= agentAndWallsAndAgentDistance && agentAndWallsAndTargetDistance <= agentAndWallsAndObjectiveDistance)
             {
+                // Disegna per WallsAndTargets
                 Gizmos.color = _tagColorDict[wallsAndTargetTag];
                 Gizmos.DrawLine(newPosition, wallsAndTargetVector);
-
+            }
+            else if (agentAndWallsAndAgentDistance <= agentAndWallsAndTargetDistance && agentAndWallsAndAgentDistance <= agentAndWallsAndObjectiveDistance)
+            {
+                // Disegna per WallsAndAgents
                 Gizmos.color = _tagColorDict[wallsAndAgentTag];
                 Gizmos.DrawLine(newPosition, wallsAndAgentVector);
             }
             else
             {
-                Gizmos.color = _tagColorDict[wallsAndAgentTag];
-                Gizmos.DrawLine(newPosition, wallsAndAgentVector);
-
-                Gizmos.color = _tagColorDict[wallsAndTargetTag];
-                Gizmos.DrawLine(newPosition, wallsAndTargetVector);
+                // Disegna per WallsAndObjectives
+                Gizmos.color = _tagColorDict[wallsAndObjectiveTag];
+                Gizmos.DrawLine(newPosition, wallsAndObjectiveVector);
             }
         }
     }
     private void DrawGizmosProxemics()
     {
         Gizmos.color = Color.red;
-        Vector3 newPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset);
+        Vector3 newPosition = transform.position;
         newPosition.y += 1;
         if (agentSensorsManager != null)
         {
@@ -103,9 +121,5 @@ public class AgentGizmosDrawer : MonoBehaviour
             }
         }
     }
-
-
-
-
 
 }

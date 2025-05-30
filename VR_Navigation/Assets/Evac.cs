@@ -56,7 +56,7 @@ public class Evac : MonoBehaviour
         EvacCamera.SetActive(false);
         foreach(RLAgent agent in GameObject.FindObjectsOfType<RLAgent>())
         {
-            agent.flee();
+            //agent.flee();
         }
         foreach (NavMeshAgent agent in GameObject.FindObjectsOfType<NavMeshAgent>())
         {

@@ -12,6 +12,7 @@ TagManager:
   - Target
   - Muro
   - evac
+  - Obiettivo
   layers:
   - Default
   - TransparentFX
@@ -42,7 +43,7 @@ TagManager:
   - TargetMid3
   - TargetMid4
   - 
-  - 
+  - Obiettivo
   - XR Simulation
   - 
   m_SortingLayers:

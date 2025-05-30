@@ -2,7 +2,8 @@ public enum Tag
 {
     Wall,
     Target,
-    Agent
+    Agent,
+    Objective
 }
 
 public static class MyTagsExtensions
@@ -13,6 +14,7 @@ public static class MyTagsExtensions
             tag == "Muro" ? Tag.Wall :
             tag == "Target" ? Tag.Target :
             tag == "Agente" ? Tag.Agent :
+            tag == "Obiettivo" ? Tag.Objective :
             throw new System.NotImplementedException($"Tag: {tag} not implemented");
     }
 }
