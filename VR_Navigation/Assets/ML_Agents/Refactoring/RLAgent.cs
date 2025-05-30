@@ -490,7 +490,7 @@ public class RLAgent : Agent
                 var hit = kvp.Value[i];
                 if (hit.collider == null)
                 {
-                    Debug.LogWarning($"RaycastHit at index {i} for sensor {kvp.Key.SensorName} has null collider in {gameObject.name}");
+                    //Debug.LogWarning($"RaycastHit at index {i} for sensor {kvp.Key.SensorName} has null collider in {gameObject.name}");
                     kvp.Value[i] = new RaycastHit
                     {
                         distance = MyConstants.rayLength,
@@ -873,7 +873,7 @@ public class RLAgent : Agent
 
         GameObject reachedTarget = other.gameObject;
         
-        // Gestisce gli objectives (nuovo sistema)
+        // Gestisce gli objectives (nuovo sistema) - AGGIUNGI NULL CHECK
         if (objectiveHandler != null && objectiveHandler.IsValidObjective(reachedTarget))
         {
             objectiveHandler.HandleObjectiveTrigger(reachedTarget);
@@ -930,7 +930,7 @@ public class RLAgent : Agent
             }
             else
             {
-                if (env.penaltyTakesTargetsAgain)
+                if (env != null && env.penaltyTakesTargetsAgain)
                 {
                     AddReward(MyConstants.already_taken_target_reward);
                     print("Already_taken_target_reward: " + reachedTarget.name);

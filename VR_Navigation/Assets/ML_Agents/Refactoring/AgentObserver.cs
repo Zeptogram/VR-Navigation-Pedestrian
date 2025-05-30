@@ -110,15 +110,19 @@ public class AgentObserver : MonoBehaviour
         wallsAndTargetsGizmos.Clear();
         foreach (RaycastHit observation in results)
         {
+            if (observation.collider == null) continue; // Controllo null dalla versione old
+            
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
             int hitObjectIndex = -1;
             bool isDirectionValid = false;
+            bool isTargetAlreadyTaken = false;
             Target target = seenObject.GetComponent<Target>();
+            
             // One-hot encoding:
             // 0 = wall
             // 1 = intermediate target, valid
-            // 2 = intermediate target, invalid
+            // 2 = intermediate target, invalid OR already taken
             // 3 = final target, valid
             // 4 = final target, invalid
             switch (objTag)
@@ -127,6 +131,10 @@ public class AgentObserver : MonoBehaviour
                     hitObjectIndex = 0;
                     break;
                 case Tag.Target:
+                    // Controllo se il target è già stato preso (dalla versione old)
+                    var targetsTaken = rlAgent.targetsTaken;
+                    isTargetAlreadyTaken = targetsTaken != null && targetsTaken.Contains(seenObject);
+                    
                     if (target != null)
                     {
                         if (target.targetType == TargetType.Final)
@@ -142,9 +150,16 @@ public class AgentObserver : MonoBehaviour
                         }
                         else
                         {
-                            float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
-                            isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
-                            hitObjectIndex = isDirectionValid ? 1 : 2;
+                            if (isTargetAlreadyTaken)
+                            {
+                                hitObjectIndex = 2; // Target già preso
+                            }
+                            else
+                            {
+                                float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
+                                isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
+                                hitObjectIndex = isDirectionValid ? 1 : 2;
+                            }
                         }
                     }
                     break;
@@ -170,6 +185,8 @@ public class AgentObserver : MonoBehaviour
         wallsAndAgentsGizmos.Clear();
         foreach (RaycastHit observation in results)
         {
+            if (observation.collider == null) continue; // Controllo null dalla versione old
+            
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
 
@@ -215,6 +232,8 @@ public class AgentObserver : MonoBehaviour
         var reachedObjectives = objectiveHandler != null ? objectiveHandler.reachedObjectives : new List<GameObject>();
         foreach (RaycastHit observation in results)
         {
+            if (observation.collider == null) continue; // Controllo null dalla versione old
+            
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
 
