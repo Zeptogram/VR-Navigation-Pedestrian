@@ -27,8 +27,9 @@ public class ObjectiveObserver : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<RLAgent>();
-        // Initialize the last element to 1 (flag for all completed)
-        objectivesObservation[objectivesObservation.Length - 1] = 1;
+        // RIMUOVI: Non impostare l'ultimo elemento a 1 qui!
+        // L'inizializzazione corretta avverrà in InitializeObjectives()
+        Debug.Log($"ObjectiveObserver awakened for {agent.gameObject.name}");
     }
 
     /**
@@ -45,27 +46,59 @@ public class ObjectiveObserver : MonoBehaviour
         // Handle the case where there are no objectives
         if (objectives == null || objectives.Count == 0)
         {
-            agent.taskCompleted = true;
+            if (agent != null)
+            {
+                agent.taskCompleted = true;
+            }
             objectivesObservation[objectivesObservation.Length - 1] = 1; // Set last element to 1 (completed)
+            Debug.Log("No objectives found - task marked as completed");
             return;
         }
 
         // Set indicators for active objectives
+        int activeObjectivesCount = 0;
         foreach (GameObject objective in objectives)
         {
-            if (int.TryParse(objective.name.Split('(', ')')[1], out int index))
+            string objectiveName = objective.name;
+            int startIndex = objectiveName.IndexOf('(');
+            int endIndex = objectiveName.IndexOf(')');
+            
+            if (startIndex != -1 && endIndex != -1 && startIndex < endIndex)
             {
-                if (index < objectivesObservation.Length - 1)
+                string indexStr = objectiveName.Substring(startIndex + 1, endIndex - startIndex - 1);
+                
+                if (int.TryParse(indexStr, out int index))
                 {
-                    objectivesObservation[index] = 1;
-                    Debug.Log($"Objective {objective.name} initialized with index {index}");
+                    if (index < objectivesObservation.Length - 1)
+                    {
+                        objectivesObservation[index] = 1; // 1 = obiettivo attivo
+                        activeObjectivesCount++;
+                        Debug.Log($"Objective {objective.name} initialized as ACTIVE with index {index}");
+                    }
                 }
             }
         }
 
-        // If there are objectives, the agent has tasks to complete
-        agent.taskCompleted = false;
-        // The last element remains 0 (incomplete)
+        // Se ci sono obiettivi attivi, l'agente NON ha completato il task
+        if (activeObjectivesCount > 0)
+        {
+            if (agent != null)
+            {
+                agent.taskCompleted = false;
+            }
+            objectivesObservation[objectivesObservation.Length - 1] = 0; // 0 = task incompleto
+            Debug.Log($"Task initialized as INCOMPLETE - {activeObjectivesCount} objectives to complete");
+        }
+        else
+        {
+            // Nessun obiettivo valido trovato
+            if (agent != null)
+            {
+                agent.taskCompleted = true;
+            }
+            objectivesObservation[objectivesObservation.Length - 1] = 1; // 1 = task completo
+            Debug.Log("No valid objectives found - task marked as completed");
+        }
     }
 
     /**
@@ -78,26 +111,94 @@ public class ObjectiveObserver : MonoBehaviour
     }
 
     /**
-     * \brief Marks an objective as completed in the observation array.
-     * \param objective The completed objective GameObject.
+     * \brief Marks a specific objective as completed in the observation array.
+     * \param objectiveGameObject The objective GameObject that was completed.
      */
-    public void MarkObjectiveAsCompleted(GameObject objective)
+    public void MarkObjectiveAsCompleted(GameObject objectiveGameObject)
     {
-        if (int.TryParse(objective.name.Split('(', ')')[1], out int index))
+        // Estrai l'indice dal nome dell'obiettivo (es. "Objective(0)")
+        string objectiveName = objectiveGameObject.name;
+        
+        // Trova le parentesi e estrai l'indice
+        int startIndex = objectiveName.IndexOf('(');
+        int endIndex = objectiveName.IndexOf(')');
+        
+        if (startIndex != -1 && endIndex != -1 && startIndex < endIndex)
         {
-            if (index < objectivesObservation.Length - 1)
+            string indexStr = objectiveName.Substring(startIndex + 1, endIndex - startIndex - 1);
+            
+            if (int.TryParse(indexStr, out int index))
             {
-                objectivesObservation[index] = 0;
-                Debug.Log($"Objective {objective.name} completed");
+                if (index < objectivesObservation.Length - 1)
+                {
+                    objectivesObservation[index] = 0; // 0 = obiettivo completato
+                    Debug.Log($"Objective {objectiveGameObject.name} marked as COMPLETED at index {index}");
+                }
             }
+            else
+            {
+                Debug.LogWarning($"Could not parse index from objective name: {objectiveName}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid objective name format: {objectiveName}. Expected format: 'Objective(index)'");
+        }
+        
+        // Aggiorna il flag di completamento
+        UpdateCompletionFlag();
+    }
+
+    /**
+     * \brief Updates the completion flag based on current objectives state.
+     */
+    private void UpdateCompletionFlag()
+    {
+        // Conta quanti obiettivi sono ancora attivi (= 1) e quanti sono completati (= 0)
+        int activeObjectives = 0;
+        int completedObjectives = 0;
+        
+        for (int i = 0; i < objectivesObservation.Length - 1; i++) // Escludi l'ultimo elemento (flag)
+        {
+            if (objectivesObservation[i] == 1)
+            {
+                activeObjectives++;
+            }
+            else if (objectivesObservation[i] == 0)
+            {
+                // Questo potrebbe essere un obiettivo completato O un slot vuoto
+                // Per distinguere, dovremmo sapere quanti obiettivi erano inizialmente attivi
+                completedObjectives++;
+            }
+        }
+        
+        Debug.Log($"UpdateCompletionFlag: activeObjectives={activeObjectives}, completedObjectives={completedObjectives}");
+        
+        // Il task è completato solo se:
+        // 1. Non ci sono più obiettivi attivi (activeObjectives == 0)
+        // 2. E c'erano degli obiettivi inizialmente (questo lo verifichiamo dal fatto che agent.taskCompleted era false)
+        if (activeObjectives == 0 && agent != null && !agent.taskCompleted)
+        {
+            SetTaskCompleted();
         }
     }
 
     /**
-     * \brief Sets the last element of the observation array to 1, indicating all objectives are completed.
+     * \brief Sets the task as completed and updates the completion flag.
      */
     public void SetTaskCompleted()
     {
-        objectivesObservation[objectivesObservation.Length - 1] = 1;
+        if (agent != null)
+        {
+            agent.taskCompleted = true;
+        }
+        
+        // Imposta il flag di completamento nell'ultima posizione dell'array
+        if (objectivesObservation.Length > 0)
+        {
+            objectivesObservation[objectivesObservation.Length - 1] = 1f;
+        }
+        
+        Debug.Log("ALL OBJECTIVES COMPLETED - task marked as DONE!");
     }
 }

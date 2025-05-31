@@ -110,63 +110,44 @@ public class AgentObserver : MonoBehaviour
         wallsAndTargetsGizmos.Clear();
         foreach (RaycastHit observation in results)
         {
-            if (observation.collider == null) continue; // Controllo null dalla versione old
+            if (observation.collider == null) continue;
             
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
             int hitObjectIndex = -1;
-            bool isDirectionValid = false;
-            bool isTargetAlreadyTaken = false;
             Target target = seenObject.GetComponent<Target>();
             
-            // One-hot encoding:
-            // 0 = wall
-            // 1 = intermediate target, valid
-            // 2 = intermediate target, invalid OR already taken
-            // 3 = final target, valid
-            // 4 = final target, invalid
             switch (objTag)
             {
                 case Tag.Wall:
                     hitObjectIndex = 0;
                     break;
                 case Tag.Target:
-                    // Controllo se il target è già stato preso (dalla versione old)
                     var targetsTaken = rlAgent.targetsTaken;
-                    isTargetAlreadyTaken = targetsTaken != null && targetsTaken.Contains(seenObject);
-                    
+                    bool isTargetAlreadyTaken = targetsTaken != null && targetsTaken.Contains(seenObject);
+                
                     if (target != null)
                     {
                         if (target.targetType == TargetType.Final)
                         {
-                            if (rlAgent.IsTaskCompleted())
-                            {
-                                hitObjectIndex = 3;
-                            }
-                            else
-                            {
-                                hitObjectIndex = 4;
-                            }
+                            // Target finale: verde se task completato, rosso altrimenti
+                            // AGGIUNGI: Debug per capire cosa sta succedendo
+                            bool taskCompleted = rlAgent.IsTaskCompleted();
+                            Debug.Log($"Final target {seenObject.name}: taskCompleted={taskCompleted}");
+                            hitObjectIndex = taskCompleted ? 3 : 4;
                         }
                         else
                         {
-                            if (isTargetAlreadyTaken)
-                            {
-                                hitObjectIndex = 2; // Target già preso
-                            }
-                            else
-                            {
-                                float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
-                                isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
-                                hitObjectIndex = isDirectionValid ? 1 : 2;
-                            }
+                            // Target intermedio: bianco se valido, giallo se già preso
+                            hitObjectIndex = isTargetAlreadyTaken ? 2 : 1;
                         }
                     }
                     break;
                 default:
-                    Debug.LogError($"Error in {nameof(ComputeWallsAndTargetsObservations)} should't see the tag: " + seenObject.tag);
+                    Debug.LogError($"Error in {nameof(ComputeWallsAndTargetsObservations)} shouldn't see the tag: " + seenObject.tag);
                     break;
             }
+        
             wallsAndTargetsGizmos.Add((objTag.ToMyGizmosTag(hitObjectIndex), observation.point));
             float normalizedDistance = Mathf.Clamp(observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
             wallsAndTargetsObservations.Add(normalizedDistance);

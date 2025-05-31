@@ -82,12 +82,15 @@ public class ObjectiveInteractionHandler : MonoBehaviour
      */
     public void SetObjectives(List<GameObject> newObjectives)
     {
-        objectives = new List<GameObject>(newObjectives ?? new List<GameObject>());
+        objectives = newObjectives ?? new List<GameObject>();
         reachedObjectives.Clear();
-
-        observer.InitializeObjectives(objectives);
-
-        Debug.Log($"Agent {agent.name}: set {objectives.Count} objectives");
+        
+        // Inizializza l'observer con gli obiettivi reali
+        if (observer != null)
+        {
+            observer.InitializeObjectives(objectives);
+            Debug.Log($"Set {objectives.Count} objectives for agent {agent.gameObject.name}");
+        }
     }
 
     /**
@@ -97,8 +100,24 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     {
         if (agent.env != null)
         {
-            List<GameObject> envObjectives = agent.env.GetObjectives();
-            SetObjectives(envObjectives);
+            // Ottieni gli obiettivi dall'environment
+            List<GameObject> envObjectives = agent.env.GetObjectives(); // Assumendo che questo metodo esista
+            
+            if (envObjectives != null && envObjectives.Count > 0)
+            {
+                SetObjectives(envObjectives);
+                Debug.Log($"Initialized {envObjectives.Count} objectives from environment for agent {agent.gameObject.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"No objectives found in environment for agent {agent.gameObject.name}");
+                // Inizializza con lista vuota solo se non ci sono obiettivi nell'environment
+                SetObjectives(new List<GameObject>());
+            }
+        }
+        else
+        {
+            Debug.LogError($"Agent {agent.gameObject.name} has no environment reference");
         }
     }
 
@@ -125,5 +144,42 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             return 0f;
         //Debug.Log($"Agent {agent.name} remaining objectives: {objectives.Count - reachedObjectives.Count} / {objectives.Count}");
         return (float)(objectives.Count - reachedObjectives.Count) / objectives.Count;
+    }
+
+    /**
+     * \brief Returns the list of objectives that have not been reached yet.
+     * \return List of remaining objectives.
+     */
+    public List<GameObject> GetRemainingObjectives()
+    {
+        List<GameObject> remaining = new List<GameObject>();
+        
+        foreach (GameObject objective in objectives)
+        {
+            if (!reachedObjectives.Contains(objective))
+            {
+                remaining.Add(objective);
+            }
+        }
+        
+        return remaining;
+    }
+
+    /**
+     * \brief Returns the total number of objectives assigned to this agent.
+     * \return Total count of objectives.
+     */
+    public int GetTotalObjectivesCount()
+    {
+        return objectives.Count;
+    }
+
+    /**
+     * \brief Returns the number of objectives that have been reached.
+     * \return Count of reached objectives.
+     */
+    public int GetReachedObjectivesCount()
+    {
+        return reachedObjectives.Count;
     }
 }

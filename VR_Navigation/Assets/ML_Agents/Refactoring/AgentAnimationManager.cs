@@ -101,22 +101,4 @@ public class AgentAnimationManager : MonoBehaviour
         agent.SetRun(true);
         agent.MoveToNextTarget();
     }
-
-    public IEnumerator PlayAnimationsSequence(List<RLAgent.AnimationAction> animations, RLAgent agent)
-    {
-        yield return new WaitUntil(() => animator != null);
-
-        agent.SetRun(false);
-        agent.GetRigidBody().velocity = Vector3.zero;
-
-        foreach (var anim in animations)
-        {
-            PlayActionTrigger(anim.animationName);
-            yield return new WaitForSeconds(anim.delay);
-        }
-
-        SetWalking(true);
-        agent.SetRun(true);
-        agent.MoveToNextTarget();
-    }
 }

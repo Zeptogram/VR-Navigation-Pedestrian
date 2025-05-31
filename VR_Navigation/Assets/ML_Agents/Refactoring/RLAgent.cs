@@ -16,23 +16,7 @@ using UnityEngine.AI;
  */
 public class RLAgent : Agent
 {
-    [Serializable]
-    public struct AnimationAction
-    {
-        public string animationName;
-        public float delay; // durata massima di questa animazione
-    }
-
-    [Serializable]
-    public struct action
-    {
-        public GameObject goalLocation;
-        public List<AnimationAction> animations; // lista di animazioni per questo target
-    }
-
-    public action[] goalAction;
     private bool run = true;
-    private int nextTargetCount = 0;
 
     /// <summary>
     /// The group to which the agent belongs.
@@ -190,7 +174,7 @@ public class RLAgent : Agent
     /// <summary>
     /// True if the task is completed.
     /// </summary>
-    [NonSerialized] public bool taskCompleted = true;
+    [NonSerialized] public bool taskCompleted = false; // CAMBIA DA true A false
     /// <summary>
     /// True if the environment is ready.
     /// </summary>
@@ -260,7 +244,7 @@ public class RLAgent : Agent
         if (agentGizmosDrawer == null)
             Debug.LogError($"AgentGizmosDrawer component missing on {gameObject.name}");
         
-        // Assicurati che invisibleTargets sia inizializzato prima di usarlo
+        // Assicurati che invisibleTargets sia inizializzato
         if (agentSensorsManager != null)
         {
             if (agentSensorsManager.invisibleTargets == null)
@@ -269,11 +253,8 @@ public class RLAgent : Agent
                 agentSensorsManager.invisibleTargets = new List<GameObject>();
             }
             
-            if (goalAction.Length >= 1 && goalAction[0].goalLocation != null)
-            {
-                animationManager.SetWalking(true);
-                agentSensorsManager.invisibleTargets.Remove(goalAction[0].goalLocation);
-            }
+            // Tutti i target sono ora sempre visibili - rimuovi tutti gli elementi dalla lista invisibleTargets
+            agentSensorsManager.invisibleTargets.Clear();
             
             // Chiama questi metodi solo se agentSensorsManager è valido
             try
@@ -287,8 +268,17 @@ public class RLAgent : Agent
             }
         }
         
+        // RIMUOVI: Non inizializzare ObjectiveObserver qui!
+        // L'inizializzazione avverrà in MakeListenEnvReady quando l'environment è pronto
+    
         startPosition = transform.position;
         startRotation = transform.rotation;
+        
+        // Imposta l'animazione di walking come default
+        if (animationManager != null)
+        {
+            animationManager.SetWalking(true);
+        }
         
 #if UNITY_EDITOR
         curriculum = FindObjectOfType<Curriculum>();
@@ -747,31 +737,16 @@ public class RLAgent : Agent
 
     public void MoveToNextTargetWithDelay(float delay)
     {
-        animationManager.MoveToNextTargetWithDelay(delay);
+        // Metodo mantenuto per compatibilità ma non più utilizzato
+        Debug.LogWarning("MoveToNextTargetWithDelay is deprecated with the new objectives system");
     }
 
     public Rigidbody GetRigidBody() => rigidBody;
 
     public void MoveToNextTarget()
     {
-        var sensors = gameObject.GetComponent<AgentSensorsManager>();
-
-        // Aggiungi il target corrente a invisibleTargets (se non già presente)
-        if (goalAction.Length > nextTargetCount && goalAction[nextTargetCount].goalLocation != null)
-            if (!sensors.invisibleTargets.Contains(goalAction[nextTargetCount].goalLocation))
-                sensors.invisibleTargets.Add(goalAction[nextTargetCount].goalLocation);
-
-        if (goalAction.Length >= nextTargetCount + 2 && goalAction[nextTargetCount + 1].goalLocation != null)
-        {
-            animationManager.SetWalking(true);
-            nextTargetCount++;
-            // Rimuovi il nuovo target dalla lista invisibleTargets (se presente)
-            sensors.invisibleTargets.Remove(goalAction[nextTargetCount].goalLocation);
-        }
-        else
-        {
-            animationManager.SetWalking(false);
-        }
+        // Metodo mantenuto per compatibilità ma non più utilizzato
+        Debug.LogWarning("MoveToNextTarget is deprecated with the new objectives system");
     }
 
     /**
@@ -782,25 +757,13 @@ public class RLAgent : Agent
     {
         GameObject reachedTarget = other.gameObject;
         
-        // Gestisce i target con sistema di animazioni (versione originale)
-        if (!fleeing && goalAction.Length > nextTargetCount && other.gameObject == goalAction[nextTargetCount].goalLocation)
+        // Gestisce solo i target generici con il nuovo sistema objectives
+        if (other.gameObject.CompareTag("Target"))
         {
-            Target target = reachedTarget.GetComponent<Target>();
-            entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
-
-            if (goalAction[nextTargetCount].animations != null && goalAction[nextTargetCount].animations.Count > 0)
-            {
-                animationManager.SetWalking(false);
-                StartCoroutine(animationManager.PlayAnimationsSequence(goalAction[nextTargetCount].animations, this));
-            }
-            else
-            {
-                animationManager.SetWalking(true);
-                MoveToNextTargetWithDelay(0);
-            }
-
-            // final target
-            if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
+            Target target = other.gameObject.GetComponent<Target>();
+            entryValue = Vector3.Dot(transform.forward, other.gameObject.transform.forward);
+            
+            if (IsFinalTarget(target))
             {
                 if (taskCompleted)
                 {
@@ -832,28 +795,6 @@ public class RLAgent : Agent
                 }
                 print("Final target");
                 Finished();
-            }
-        }
-        // Gestisce i target generici (nuovo sistema objectives)
-        else if (other.gameObject.CompareTag("Target"))
-        {
-            Target target = other.gameObject.GetComponent<Target>();
-            entryValue = Vector3.Dot(transform.forward, other.gameObject.transform.forward);
-            
-            if (IsFinalTarget(target))
-            {
-                if (taskCompleted)
-                {
-                    Debug.Log("Final target and all objectives completed!");
-                    AddReward(MyConstants.finale_target_all_objectives_completed_reward);
-                    Finished();
-                }
-                else
-                {
-                    Debug.Log("Final target reached but not all objectives completed!");
-                    AddReward(MyConstants.finale_target_incomplete_objectives_reward);
-                    Finished();
-                }
             }
         }
     }
@@ -944,15 +885,21 @@ public class RLAgent : Agent
         animationManager.SetRunning();
         GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
         fleeing = true;
-        if (goalAction.Length > nextTargetCount - 1 && nextTargetCount > 0)
-        {
-            gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Add(goalAction[nextTargetCount - 1].goalLocation);
-        }
+        
+        // Nel nuovo sistema, tutti i target normali diventano invisibili durante il flee
+        // e solo i target flee diventano visibili
+        var sensors = gameObject.GetComponent<AgentSensorsManager>();
+        
         foreach (GameObject target in fleeTargets)
         {
             if (target.name.Contains("Flee"))
             {
-                gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(target);
+                sensors.invisibleTargets.Remove(target);
+            }
+            else
+            {
+                if (!sensors.invisibleTargets.Contains(target))
+                    sensors.invisibleTargets.Add(target);
             }
         }
     }
@@ -968,7 +915,11 @@ public class RLAgent : Agent
 
     public List<GameObject> GetObjective()
     {
-        return objectiveHandler.objectives;
+        if (objectiveHandler != null)
+        {
+            return objectiveHandler.GetRemainingObjectives();
+        }
+        return new List<GameObject>();
     }
 
     /**
@@ -978,36 +929,9 @@ public class RLAgent : Agent
      */
     public bool CheckForValidDirection(float[] direction)
     {
-        if (direction == null || direction.Length == 0)
-        {
-            Debug.LogWarning("Direction array is null or empty in CheckForValidDirection");
-            return true; // Considera valido se non ci sono direzioni da controllare
-        }
-        
-        float[] objectives = objectiveObserver.GetObjectivesObservation();
-        
-        if (objectives == null || objectives.Length == 0)
-        {
-            Debug.LogWarning("Objectives array is null or empty in CheckForValidDirection");
-            return true;
-        }
-        
-        int lastIndex = direction.Length - 1;
-
-        if (!taskCompleted)
-        {
-            for (int i = 0; i < direction.Length - 1; i++)
-            {
-                if (i < objectives.Length && direction[i] == 1 && direction[i] == objectives[i])
-                    return true;
-            }
-        }
-        else
-        {
-            if (lastIndex < objectives.Length && direction[lastIndex] == 1 && direction[lastIndex] == objectives[lastIndex])
-                return true;
-        }
-        return false;
+        // Nel nuovo sistema, tutti i target intermedi sono sempre validi se non già presi
+        // La logica di direzione è gestita dagli objectives
+        return true;
     }
 
     /**
@@ -1044,16 +968,8 @@ public class RLAgent : Agent
      */
     public float[] DeterminePassingDirection(GameObject triggerObject)
     {
-        int passDirection = (entryValue > 0) ? 0 : 1;
-        DirectionsObjectives directions = triggerObject.GetComponent<DirectionsObjectives>();
-        if (directions == null)
-        {
-            Debug.LogWarning($"DirectionsObjectives component not found on {triggerObject.name}. Returning empty array.");
-            return new float[0]; // Restituisce un array vuoto invece di causare errori
-        }
-
-        float[] directionObjectives = directions.getDirections(passDirection);
-        return directionObjectives;
+        // Compatibilità con il nuovo sistema
+        return DetermineVisualizationDirection(triggerObject);
     }
 
     /**
@@ -1091,8 +1007,7 @@ public class RLAgent : Agent
      */
     private bool IsFinalTarget(Target target)
     {
-        return target.targetType == TargetType.Final && 
-            (target.group == group || target.group == Group.Generic);
+        return target != null && target.targetType == TargetType.Final;
     }
 
     /**
