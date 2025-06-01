@@ -116,7 +116,12 @@ public class AgentObserver : MonoBehaviour
             Tag objTag = seenObject.tag.ToMyTags();
             int hitObjectIndex = -1;
             Target target = seenObject.GetComponent<Target>();
-            
+            // One-hot encoding:
+            // 0 = wall
+            // 1 = intermediate target, valid
+            // 2 = intermediate target, invalid
+            // 3 = final target, valid
+            // 4 = final target, invalid
             switch (objTag)
             {
                 case Tag.Wall:
@@ -133,7 +138,6 @@ public class AgentObserver : MonoBehaviour
                         }
                         else
                         {
-                            // RIPRISTINA LA LOGICA ORIGINALE: non controllare targetsTaken per la visualizzazione
                             float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
                             bool isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
                             hitObjectIndex = isDirectionValid ? 1 : 2; // Bianco se direzione valida, giallo se no
@@ -151,36 +155,6 @@ public class AgentObserver : MonoBehaviour
             AddOneHotObservation(wallsAndTargetsObservations, hitObjectIndex, 5);
         }
         return wallsAndTargetsObservations;
-    }
-
-    /// <summary>
-    /// Controlla se ci sono obiettivi completati nell'area vicino al target specificato.
-    /// </summary>
-    /// <param name="targetObject">Il target di cui controllare l'area circostante</param>
-    /// <returns>True se ci sono obiettivi completati nell'area</returns>
-    private bool HasCompletedObjectivesNearTarget(GameObject targetObject)
-    {
-        var objectiveHandler = rlAgent.GetComponent<ObjectiveInteractionHandler>();
-        if (objectiveHandler == null || objectiveHandler.reachedObjectives == null)
-            return false;
-        
-        // Definisci un raggio di ricerca intorno al target (regola questo valore secondo necessità)
-        float searchRadius = 5.0f; // Esempio: 5 unità di raggio
-        
-        foreach (GameObject reachedObjective in objectiveHandler.reachedObjectives)
-        {
-            if (reachedObjective != null)
-            {
-                float distance = Vector3.Distance(targetObject.transform.position, reachedObjective.transform.position);
-                if (distance <= searchRadius)
-                {
-                    Debug.Log($"Found completed objective {reachedObjective.name} near target {targetObject.name} (distance: {distance})");
-                    return true;
-                }
-            }
-        }
-        
-        return false;
     }
 
     /// <summary>
@@ -202,6 +176,7 @@ public class AgentObserver : MonoBehaviour
             float normalizedDirection = 0f;
             float normalizedSpeed = 0f;
             float normalizedDistance = -1f;
+            
 
             switch (objTag)
             {

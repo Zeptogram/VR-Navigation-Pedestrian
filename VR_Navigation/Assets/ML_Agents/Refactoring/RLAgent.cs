@@ -247,14 +247,14 @@ public class RLAgent : Agent
         // Assicurati che invisibleTargets sia inizializzato
         if (agentSensorsManager != null)
         {
-            if (agentSensorsManager.invisibleTargets == null)
+            /*if (agentSensorsManager.invisibleTargets == null)
             {
                 Debug.LogWarning($"invisibleTargets was null, initializing empty list for {gameObject.name}");
                 agentSensorsManager.invisibleTargets = new List<GameObject>();
             }
             
             // Tutti i target sono ora sempre visibili - rimuovi tutti gli elementi dalla lista invisibleTargets
-            agentSensorsManager.invisibleTargets.Clear();
+            agentSensorsManager.invisibleTargets.Clear();*/
             
             // Chiama questi metodi solo se agentSensorsManager è valido
             try
@@ -267,9 +267,6 @@ public class RLAgent : Agent
                 Debug.LogError($"Error updating sensor vision for {gameObject.name}: {e.Message}");
             }
         }
-        
-        // RIMUOVI: Non inizializzare ObjectiveObserver qui!
-        // L'inizializzazione avverrà in MakeListenEnvReady quando l'environment è pronto
     
         startPosition = transform.position;
         startRotation = transform.rotation;
@@ -380,7 +377,7 @@ public class RLAgent : Agent
         tempoIniziale = (int)Time.time;
         currentSpeed = 0;
         numberOfIteraction = 0;
-        minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y);
+        // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // Disabilita randomizzazione
         resetAgent?.Invoke(this);
     }
 
@@ -420,7 +417,7 @@ public class RLAgent : Agent
         wallsAndAgents = agentObserver.WallsAndAgentsGizmos;
         wallsAndTargets = agentObserver.WallsAndTargetsGizmos;
         wallsAndObjectives = agentObserver.WallsAndObjectivesGizmos;
-    
+
         (wallsAndTargetsObservations, wallsAndAgentsObservations, wallsAndObjectivesObservations) = agentObserver.ComputeObservations(sensorsResults);
 
         float normalizedSpeed = (currentSpeed - minMaxSpeed.x) / (minMaxSpeed.y - minMaxSpeed.x);
@@ -430,13 +427,10 @@ public class RLAgent : Agent
         vectorSensor.AddObservation(wallsAndAgentsObservations);
         vectorSensor.AddObservation(wallsAndObjectivesObservations);
         vectorSensor.AddObservation(normalizedSpeed);
-        
         vectorSensor.AddObservation(objectiveObserver.GetObjectivesObservation());
-        vectorSensor.AddObservation(taskCompleted); //TODO controllaree se ha senso
         
         rewardsWallsAndTargetsObservations(wallsAndTargets);
         rewardsWallsAndAgentsObservations(wallsAndAgents);
-        //rewardsWallsAndObjectivesObservations(wallsAndObjectives);
     }
 
     /**
@@ -587,13 +581,12 @@ public class RLAgent : Agent
      */
     private void OnTriggerEnter(Collider other)
     {
-        GameObject reachedTarget = other.gameObject;
+        GameObject triggerObject = other.gameObject;
         
-        // Gestisce solo i target generici con il nuovo sistema objectives
-        if (other.gameObject.CompareTag("Target"))
+        entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+        if (triggerObject.CompareTag("Target"))
         {
-            Target target = other.gameObject.GetComponent<Target>();
-            entryValue = Vector3.Dot(transform.forward, other.gameObject.transform.forward);
+            Target target = triggerObject.GetComponent<Target>();
             
             if (IsFinalTarget(target))
             {
@@ -613,8 +606,8 @@ public class RLAgent : Agent
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
         {
-            Target target = reachedTarget.GetComponent<Target>();
-            entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
+            Target target = triggerObject.GetComponent<Target>();
+            entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
                 if (taskCompleted)
@@ -667,12 +660,12 @@ public class RLAgent : Agent
         {
             if (target.name.Contains("Flee"))
             {
-                sensors.invisibleTargets.Remove(target);
+                //sensors.invisibleTargets.Remove(target);
             }
             else
             {
-                if (!sensors.invisibleTargets.Contains(target))
-                    sensors.invisibleTargets.Add(target);
+                //if (!sensors.invisibleTargets.Contains(target))
+                    //sensors.invisibleTargets.Add(target);
             }
         }
     }
@@ -688,11 +681,7 @@ public class RLAgent : Agent
 
     public List<GameObject> GetObjective()
     {
-        if (objectiveHandler != null)
-        {
-            return objectiveHandler.GetRemainingObjectives();
-        }
-        return new List<GameObject>();
+        return objectiveHandler.objectives;
     }
 
     /// <summary>
@@ -764,17 +753,19 @@ public class RLAgent : Agent
         return directions.getDirections(passDirection);
     }
 
-    /**
-     * \brief Determines the passing direction for a trigger object.
-     * \param triggerObject The trigger object.
-     * \return Array of direction objectives.
-     */
     public float[] DeterminePassingDirection(GameObject triggerObject)
     {
-        // Compatibilità con il nuovo sistema
-        return DetermineVisualizationDirection(triggerObject);
-    }
+        int passDirection = (entryValue > 0) ? 0 : 1;
+        DirectionsObjectives directions = triggerObject.GetComponent<DirectionsObjectives>();
+        if (directions == null)
+        {
+            Debug.LogError("DirectionsObjectives component not found on " + triggerObject.name);
+            return new float[0];
+        }
 
+        float[] directionObjectives = directions.getDirections(passDirection);
+        return directionObjectives;
+    }
     /**
      * \brief Provides manual control for the agent (for debugging).
      * \param actionsOut Output actions array.

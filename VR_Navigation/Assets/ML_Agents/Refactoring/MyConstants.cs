@@ -8,7 +8,7 @@ public static class MyConstants
 {
     //settings
     public const int viewAngle = 180;
-    public const int rayLength = 60;
+    public const int rayLength = 30;
     public const int numberOfRaysPerSide = 11;
     //speed
     public static Vector2 minMaxSpeed = new Vector2 (0f, 1.7f);
