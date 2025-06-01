@@ -8,12 +8,12 @@ public static class MyConstants
 {
     //settings
     public const int viewAngle = 180;
-    public const int rayLength = 30;
+    public const int rayLength = 60;
     public const int numberOfRaysPerSide = 11;
     //speed
     public static Vector2 minMaxSpeed = new Vector2 (0f, 1.7f);
     //float randomValue = RLAgent.RandomGaussian(0.65f, 2.15f); centrata in 1.4 con deviazione di 0.25
-    //Range di variazione della velocit� massima (viene sovrascitta la velocit� massima)
+    //Range di variazione della velocità massima (viene sovrascitta la velocità massima)
     public static Vector2 speedMaxRange = new Vector2 (0.9f, 2.1f);
     //angle
     public const int angleRange = 25;
@@ -31,6 +31,7 @@ public static class MyConstants
     public const float already_taken_target_reward = -1f;
     public const float target_taken_incorrectly_reward = -1f;
     public const float not_watching_target_reward = -0.5f;
+    public static float verticalRayOffset = -0.5f;
   
     // reward pianificazione
     public const float objective_completed_reward = 1.5f;
@@ -55,7 +56,6 @@ public static class MyConstants
     public const float proxemic_medium_agent_reward = -0.005f;
     public const float proxemic_small_agent_reward = -0.5f;
     public const float proxemic_small_wall_reward = -0.5f;
-    public static float verticalRayOffset = -0.5f;
     public static float rayOffset = 0.04f;
     //Proxemic
     public static readonly Proxemic[] Proxemics = new Proxemic[]{
@@ -64,4 +64,3 @@ public static class MyConstants
        new Proxemic(proxemic_large_distance, 6),
     };
 }
-

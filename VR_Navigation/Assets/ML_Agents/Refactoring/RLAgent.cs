@@ -318,7 +318,7 @@ public class RLAgent : Agent
         // Idle/Walking
         if (speed < 0.25f)
         {
-            Debug.Log("Animation State: Idle");
+            //Debug.Log("Animation State: Idle");
             animationManager.SetWalking(false);
             
             float currentYRotation = transform.eulerAngles.y;
@@ -338,7 +338,7 @@ public class RLAgent : Agent
         }
         else
         {
-            Debug.Log("Animation State: Walking");
+            //Debug.Log("Animation State: Walking");
             // Se sta camminando, ferma immediatamente le animazioni di turn
             animationManager.StopTurn();
             animationManager.SetWalking(true);
@@ -413,198 +413,30 @@ public class RLAgent : Agent
      * \brief Collects observations from the environment to feed to the neural network.
      * \param vectorSensor The vector sensor for observations.
      */
-    public override void CollectObservations(VectorSensor vectorSensor)
+   public override void CollectObservations(VectorSensor vectorSensor)
     {
-        // Inizializza osservazioni di default per garantire che il numero di osservazioni sia sempre corretto
-        List<float> defaultWallsAndTargetsObs = new List<float>();
-        List<float> defaultWallsAndAgentsObs = new List<float>();
-        List<float> defaultWallsAndObjectivesObs = new List<float>();
-        float defaultSpeed = 0f;
-        float[] defaultObjectives = new float[0];
+        Dictionary<AgentSensorsManager.Sensore, RaycastHit[]> sensorsResults = agentSensorsManager.ComputeSensorResults();
 
-        // Verifica che i componenti necessari siano inizializzati
-        if (agentSensorsManager == null || agentObserver == null || objectiveObserver == null || agentGizmosDrawer == null)
-        {
-            Debug.LogError($"One or more required components are null in {gameObject.name}");
-            
-            // Aggiungi osservazioni di default per mantenere la dimensione corretta
-            vectorSensor.AddObservation(defaultWallsAndTargetsObs);
-            vectorSensor.AddObservation(defaultWallsAndAgentsObs);
-            vectorSensor.AddObservation(defaultWallsAndObjectivesObs);
-            vectorSensor.AddObservation(defaultSpeed);
-            vectorSensor.AddObservation(defaultObjectives);
-            return;
-        }
+        wallsAndAgents = agentObserver.WallsAndAgentsGizmos;
+        wallsAndTargets = agentObserver.WallsAndTargetsGizmos;
+        wallsAndObjectives = agentObserver.WallsAndObjectivesGizmos;
+    
+        (wallsAndTargetsObservations, wallsAndAgentsObservations, wallsAndObjectivesObservations) = agentObserver.ComputeObservations(sensorsResults);
 
-        // Ottieni i risultati dei sensori
-        Dictionary<AgentSensorsManager.Sensore, RaycastHit[]> sensorsResults = null;
-        try
-        {
-            sensorsResults = agentSensorsManager.ComputeSensorResults();
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error in ComputeSensorResults for {gameObject.name}: {e.Message}");
-            
-            // Aggiungi osservazioni di default
-            vectorSensor.AddObservation(defaultWallsAndTargetsObs);
-            vectorSensor.AddObservation(defaultWallsAndAgentsObs);
-            vectorSensor.AddObservation(defaultWallsAndObjectivesObs);
-            vectorSensor.AddObservation(defaultSpeed);
-            vectorSensor.AddObservation(defaultObjectives);
-            return;
-        }
-        
-        // Verifica che i risultati dei sensori siano validi
-        if (sensorsResults == null || sensorsResults.Count == 0)
-        {
-            Debug.LogError($"SensorsResults is null or empty in {gameObject.name}");
-            wallsAndTargetsObservations = defaultWallsAndTargetsObs;
-            wallsAndAgentsObservations = defaultWallsAndAgentsObs;
-            wallsAndObjectivesObservations = defaultWallsAndObjectivesObs;
-            return;
-        }
+        float normalizedSpeed = (currentSpeed - minMaxSpeed.x) / (minMaxSpeed.y - minMaxSpeed.x);
+        agentGizmosDrawer.SetObservationsResults(wallsAndTargets, wallsAndAgents, wallsAndObjectives);
 
-        // Verifica e pulisci ogni array di RaycastHit
-        bool hasValidSensors = true;
-        foreach (var kvp in sensorsResults)
-        {
-            if (kvp.Value == null)
-            {
-                Debug.LogError($"Sensor {kvp.Key.SensorName} has null RaycastHit array in {gameObject.name}");
-                continue;
-            }
-
-            for (int i = 0; i < kvp.Value.Length; i++)
-            {
-                var hit = kvp.Value[i];
-                if (hit.collider == null)
-                {
-                    //Debug.LogWarning($"RaycastHit at index {i} for sensor {kvp.Key.SensorName} has null collider in {gameObject.name}");
-                    kvp.Value[i] = new RaycastHit
-                    {
-                        distance = MyConstants.rayLength,
-                        point = transform.position + transform.forward * MyConstants.rayLength
-                    };
-                }
-            }
-        }
-
-        if (!hasValidSensors)
-        {
-            // Aggiungi osservazioni di default
-            vectorSensor.AddObservation(defaultWallsAndTargetsObs);
-            vectorSensor.AddObservation(defaultWallsAndAgentsObs);
-            vectorSensor.AddObservation(defaultWallsAndObjectivesObs);
-            vectorSensor.AddObservation(defaultSpeed);
-            vectorSensor.AddObservation(defaultObjectives);
-            return;
-        }
-
-        // Calcola le osservazioni per i muri e gli agenti
-        bool observationsComputed = false;
-        try
-        {
-            (wallsAndTargetsObservations, wallsAndAgentsObservations, wallsAndObjectivesObservations) = agentObserver.ComputeObservations(sensorsResults);
-            observationsComputed = true;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error in ComputeObservations for {gameObject.name}: {e.Message}");
-            Debug.LogError($"Stack trace: {e.StackTrace}");
-            
-            // Stampa informazioni dettagliate sui sensori per debug
-            foreach (var kvp in sensorsResults)
-            {
-                Debug.LogError($"Sensor {kvp.Key.SensorName}: Array length = {kvp.Value?.Length ?? -1}");
-                if (kvp.Value != null)
-                {
-                    for (int i = 0; i < Math.Min(kvp.Value.Length, 5); i++) // Stampa solo i primi 5 per evitare spam
-                    {
-                        var hit = kvp.Value[i];
-                        Debug.LogError($"  Hit {i}: collider = {hit.collider?.name ?? "null"}, distance = {hit.distance}");
-                    }
-                }
-            }
-        }
-
-        // Se le osservazioni non sono state calcolate correttamente, usa valori di default
-        if (!observationsComputed)
-        {
-            wallsAndTargetsObservations = defaultWallsAndTargetsObs;
-            wallsAndAgentsObservations = defaultWallsAndAgentsObs;
-            wallsAndObjectivesObservations = defaultWallsAndObjectivesObs;
-        }
-        else
-        {
-            // Aggiorna le osservazioni degli oggetti dopo il calcolo (solo se il calcolo è riuscito)
-            try
-            {
-                wallsAndTargets = agentObserver.WallsAndTargetsGizmos ?? new List<(GizmosTag, Vector3)>();
-                wallsAndAgents = agentObserver.WallsAndAgentsGizmos ?? new List<(GizmosTag, Vector3)>();
-                wallsAndObjectives = agentObserver.WallsAndObjectivesGizmos ?? new List<(GizmosTag, Vector3)>();
-
-                // Setta i risultati delle osservazioni per il disegno delle gizmos
-                agentGizmosDrawer.SetObservationsResults(wallsAndTargets, wallsAndAgents, wallsAndObjectives);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error updating gizmos for {gameObject.name}: {e.Message}");
-            }
-        }
-
-        // Calcola la velocità normalizzata
-        float normalizedSpeed = defaultSpeed;
-        if (minMaxSpeed.y > minMaxSpeed.x)
-        {
-            normalizedSpeed = (currentSpeed - minMaxSpeed.x) / (minMaxSpeed.y - minMaxSpeed.x);
-        }
-        else
-        {
-            Debug.LogWarning($"Invalid speed range in {gameObject.name}: min={minMaxSpeed.x}, max={minMaxSpeed.y}");
-        }
-
-        // Aggiungi le osservazioni (garantendo sempre che vengano aggiunte)
-        vectorSensor.AddObservation(wallsAndTargetsObservations ?? defaultWallsAndTargetsObs);
-        vectorSensor.AddObservation(wallsAndAgentsObservations ?? defaultWallsAndAgentsObs);
-        vectorSensor.AddObservation(wallsAndObjectivesObservations ?? defaultWallsAndObjectivesObs);
+        vectorSensor.AddObservation(wallsAndTargetsObservations);
+        vectorSensor.AddObservation(wallsAndAgentsObservations);
+        vectorSensor.AddObservation(wallsAndObjectivesObservations);
         vectorSensor.AddObservation(normalizedSpeed);
         
-        // Verifica che objectiveObserver non sia null prima di usarlo
-        try
-        {
-            var objectivesObservation = objectiveObserver.GetObjectivesObservation();
-            if (objectivesObservation != null && objectivesObservation.Length > 0)
-            {
-                vectorSensor.AddObservation(objectivesObservation);
-            }
-            else
-            {
-                Debug.LogWarning($"ObjectivesObservation is null or empty in {gameObject.name}");
-                vectorSensor.AddObservation(defaultObjectives);
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error getting ObjectivesObservation for {gameObject.name}: {e.Message}");
-            vectorSensor.AddObservation(defaultObjectives);
-        }
-
-        // Aggiungi ricompense per le osservazioni solo se le osservazioni sono state calcolate correttamente
-        if (observationsComputed)
-        {
-            try
-            {
-                if (wallsAndTargets != null && wallsAndTargets.Count > 0)
-                    rewardsWallsAndTargetsObservations(wallsAndTargets);
-                if (wallsAndAgents != null && wallsAndAgents.Count > 0)
-                    rewardsWallsAndAgentsObservations(wallsAndAgents);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error in rewards calculation for {gameObject.name}: {e.Message}");
-            }
-        }
+        vectorSensor.AddObservation(objectiveObserver.GetObjectivesObservation());
+        vectorSensor.AddObservation(taskCompleted); //TODO controllaree se ha senso
+        
+        rewardsWallsAndTargetsObservations(wallsAndTargets);
+        rewardsWallsAndAgentsObservations(wallsAndAgents);
+        //rewardsWallsAndObjectivesObservations(wallsAndObjectives);
     }
 
     /**
@@ -805,77 +637,18 @@ public class RLAgent : Agent
      */
     private void OnTriggerExit(Collider other)
     {
-        // Se ho NavMeshAgent per ora lo ignoro
-        NavMeshAgent agent = other.GetComponent<NavMeshAgent>();
-        if (agent != null)
+        GameObject triggerObject = other.gameObject;
+                
+        if (objectiveHandler != null && objectiveHandler.IsValidObjective(triggerObject))
         {
-            return;
+            objectiveHandler.HandleObjectiveTrigger(triggerObject);
         }
-
-        GameObject reachedTarget = other.gameObject;
-        
-        // Gestisce gli objectives (nuovo sistema) - AGGIUNGI NULL CHECK
-        if (objectiveHandler != null && objectiveHandler.IsValidObjective(reachedTarget))
+        else if (triggerObject.CompareTag("Target"))
         {
-            objectiveHandler.HandleObjectiveTrigger(reachedTarget);
-            return;
-        }
-
-        // If there is no target, exit
-        Target target = other.GetComponent<Target>();
-
-        if (target == null)
-        {
-            return;
-        }
-
-        // If there is a target
-        exitValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
-        float resultValue = entryValue * exitValue;
-
-        if ((target.group == Group.Generic || target.group == group) && target.targetType == TargetType.Intermediate)
-        {
-            if (!targetsTaken.Contains(reachedTarget))
+            Target target = triggerObject.GetComponent<Target>();
+            if (IsIntermediateTarget(target))
             {
-                if (resultValue >= 0)
-                {
-                    targetsTaken.Add(reachedTarget);
-                    
-                    // Nuovo sistema di direzioni con objectives
-                    float[] directionObjectives = DeterminePassingDirection(reachedTarget);
-                    
-                    if (directionObjectives != null && directionObjectives.Length > 0)
-                    {
-                        if (CheckForValidDirection(directionObjectives))
-                        {
-                            AddReward(MyConstants.new_target_reward);
-                            print("Target intermedio: " + reachedTarget.name);
-                        }
-                        else
-                        {
-                            AddReward(MyConstants.new_target_reward + MyConstants.wrong_direction_reward);
-                            print("Target intermedio con direzione sbagliata: " + reachedTarget.name);
-                        }
-                    }
-                    else
-                    {
-                        AddReward(MyConstants.new_target_reward);
-                        print("Target intermedio: " + reachedTarget.name);
-                    }
-                }
-                else
-                {
-                    AddReward(MyConstants.target_taken_incorrectly_reward);
-                    print("Target intermedio preso in modo scorretto: " + reachedTarget.name);
-                }
-            }
-            else
-            {
-                if (env != null && env.penaltyTakesTargetsAgain)
-                {
-                    AddReward(MyConstants.already_taken_target_reward);
-                    print("Already_taken_target_reward: " + reachedTarget.name);
-                }
+                HandleIntermediateTarget(triggerObject);
             }
         }
     }
@@ -922,23 +695,53 @@ public class RLAgent : Agent
         return new List<GameObject>();
     }
 
-    /**
-     * \brief Checks if the direction is valid.
-     * \param direction Array of direction values.
-     * \return True if direction is valid.
-     */
+    /// <summary>
+    /// Controlla se una direzione è valida basandosi sull'array restituito da DetermineVisualizationDirection.
+    /// </summary>
+    /// <param name="direction">Array con informazioni sulla direzione</param>
+    /// <returns>True se la direzione è valida</returns>
     public bool CheckForValidDirection(float[] direction)
     {
-        // Nel nuovo sistema, tutti i target intermedi sono sempre validi se non già presi
-        // La logica di direzione è gestita dagli objectives
-        return true;
+        if (direction == null || direction.Length == 0)
+        {
+            Debug.LogWarning("Direction array is null or empty in CheckForValidDirection");
+            return false;
+        }
+        
+        float[] objectives = objectiveObserver.GetObjectivesObservation();
+        int lastIndex = direction.Length - 1;
+
+        if (!taskCompleted)
+        {
+            // Controlla se c'è corrispondenza tra direzione e obiettivi rimanenti
+            for (int i = 0; i < direction.Length - 1; i++)
+            {
+                if (direction[i] == 1 && direction[i] == objectives[i])
+                {
+                    Debug.Log($"Valid direction found at index {i}");
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            // Task completato: controlla solo l'ultimo elemento (target finale)
+            if (direction[lastIndex] == 1 && direction[lastIndex] == objectives[lastIndex])
+            {
+                Debug.Log("Valid direction for final target");
+                return true;
+            }
+        }
+        
+        Debug.Log("No valid direction found");
+        return false;
     }
 
-    /**
-     * \brief Determines the visualization direction for a target object.
-     * \param targetObject The target object.
-     * \return Array of direction objectives.
-     */
+    /// <summary>
+    /// Determina se la direzione verso un target è valida basandosi sugli obiettivi rimanenti.
+    /// </summary>
+    /// <param name="targetObject">Il target da valutare</param>
+    /// <returns>Array con informazioni sulla direzione (compatibilità con sistema originale)</returns>
     public float[] DetermineVisualizationDirection(GameObject targetObject)
     {
         Vector3 agentToTarget = targetObject.transform.position - transform.position;
@@ -954,8 +757,8 @@ public class RLAgent : Agent
         DirectionsObjectives directions = targetObject.GetComponent<DirectionsObjectives>();
         if (directions == null)
         {
-            Debug.LogWarning($"DirectionsObjectives component not found on {targetObject.name}. Returning empty array.");
-            return new float[0]; // Restituisce un array vuoto invece di causare errori
+            Debug.LogError("DirectionsObjectives component not found on " + targetObject.name);
+            return new float[0];
         }
 
         return directions.getDirections(passDirection);
@@ -1119,6 +922,47 @@ public class RLAgent : Agent
         {
             float distance = Vector3.Distance(transform.position + Vector3.up, position);
             CheckProxemicRanges(distance, tag, uniqueID, id++);
+        }
+    }
+
+    /**
+     * \brief Handles logic when passing through an intermediate target.
+     * \param triggerObject The target object.
+     */
+    private void HandleIntermediateTarget(GameObject triggerObject)
+    {
+        exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+        float crossingValue = entryValue * exitValue;
+
+        if (crossingValue >= 0)
+        {
+            targetsTaken.Add(triggerObject);
+
+            float[] directionObjectives = DeterminePassingDirection(triggerObject);
+
+            if (directionObjectives != null && directionObjectives.Length > 0)
+            {
+                if (CheckForValidDirection(directionObjectives))
+                {
+                    //Debug.Log($"Correct direction taken (entryValue: {entryValue})");
+                    //AddReward(MyConstants.correct_direction_reward);
+                }
+                else
+                {
+                    //Debug.Log($"Wrong direction taken (entryValue: {entryValue})");
+                    AddReward(MyConstants.wrong_direction_reward);
+                }
+            }
+            /*if (targetsTaken.Contains(triggerObject))
+            {
+                AddReward(MyConstants.already_taken_target_reward);
+                Debug.Log("Target already taken");
+            }*/
+        }
+        else
+        {
+            AddReward(MyConstants.target_taken_incorrectly_reward);
+            Debug.Log("Target taken incorrectly");
         }
     }
 

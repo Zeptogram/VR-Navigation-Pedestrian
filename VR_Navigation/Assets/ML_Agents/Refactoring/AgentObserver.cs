@@ -123,23 +123,20 @@ public class AgentObserver : MonoBehaviour
                     hitObjectIndex = 0;
                     break;
                 case Tag.Target:
-                    var targetsTaken = rlAgent.targetsTaken;
-                    bool isTargetAlreadyTaken = targetsTaken != null && targetsTaken.Contains(seenObject);
-                
                     if (target != null)
                     {
                         if (target.targetType == TargetType.Final)
                         {
                             // Target finale: verde se task completato, rosso altrimenti
-                            // AGGIUNGI: Debug per capire cosa sta succedendo
                             bool taskCompleted = rlAgent.IsTaskCompleted();
-                            Debug.Log($"Final target {seenObject.name}: taskCompleted={taskCompleted}");
                             hitObjectIndex = taskCompleted ? 3 : 4;
                         }
                         else
                         {
-                            // Target intermedio: bianco se valido, giallo se già preso
-                            hitObjectIndex = isTargetAlreadyTaken ? 2 : 1;
+                            // RIPRISTINA LA LOGICA ORIGINALE: non controllare targetsTaken per la visualizzazione
+                            float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
+                            bool isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
+                            hitObjectIndex = isDirectionValid ? 1 : 2; // Bianco se direzione valida, giallo se no
                         }
                     }
                     break;
@@ -154,6 +151,36 @@ public class AgentObserver : MonoBehaviour
             AddOneHotObservation(wallsAndTargetsObservations, hitObjectIndex, 5);
         }
         return wallsAndTargetsObservations;
+    }
+
+    /// <summary>
+    /// Controlla se ci sono obiettivi completati nell'area vicino al target specificato.
+    /// </summary>
+    /// <param name="targetObject">Il target di cui controllare l'area circostante</param>
+    /// <returns>True se ci sono obiettivi completati nell'area</returns>
+    private bool HasCompletedObjectivesNearTarget(GameObject targetObject)
+    {
+        var objectiveHandler = rlAgent.GetComponent<ObjectiveInteractionHandler>();
+        if (objectiveHandler == null || objectiveHandler.reachedObjectives == null)
+            return false;
+        
+        // Definisci un raggio di ricerca intorno al target (regola questo valore secondo necessità)
+        float searchRadius = 5.0f; // Esempio: 5 unità di raggio
+        
+        foreach (GameObject reachedObjective in objectiveHandler.reachedObjectives)
+        {
+            if (reachedObjective != null)
+            {
+                float distance = Vector3.Distance(targetObject.transform.position, reachedObjective.transform.position);
+                if (distance <= searchRadius)
+                {
+                    Debug.Log($"Found completed objective {reachedObjective.name} near target {targetObject.name} (distance: {distance})");
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /// <summary>
