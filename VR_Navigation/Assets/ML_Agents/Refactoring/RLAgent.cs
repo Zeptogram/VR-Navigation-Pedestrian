@@ -222,7 +222,7 @@ public class RLAgent : Agent
      */
     private void Awake()
     {
-        // Inizializza TUTTI i componenti prima di usarli
+        // Init all components
         animator = GetComponent<Animator>();
         animationManager = GetComponent<AgentAnimationManager>();
         agentSensorsManager = GetComponent<AgentSensorsManager>();
@@ -232,7 +232,7 @@ public class RLAgent : Agent
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
         
-        // Verifica che tutti i componenti necessari siano presenti
+        // Check if all required components are present
         if (agentSensorsManager == null)
             Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
         if (agentObserver == null)
@@ -244,7 +244,7 @@ public class RLAgent : Agent
         if (agentGizmosDrawer == null)
             Debug.LogError($"AgentGizmosDrawer component missing on {gameObject.name}");
         
-        // Assicurati che invisibleTargets sia inizializzato
+        // TODO: Keep or not
         if (agentSensorsManager != null)
         {
             /*if (agentSensorsManager.invisibleTargets == null)
@@ -271,7 +271,7 @@ public class RLAgent : Agent
         startPosition = transform.position;
         startRotation = transform.rotation;
         
-        // Imposta l'animazione di walking come default
+        // Default walking state
         if (animationManager != null)
         {
             animationManager.SetWalking(true);
@@ -309,6 +309,12 @@ public class RLAgent : Agent
 
     private void Update()
     {
+        // If the objective handler is executing animations, skip the update
+        if (objectiveHandler != null && objectiveHandler.IsExecutingObjectiveAnimations())
+        {
+            return; // No basic movement or animation updates while executing animations
+        }
+
         float speed = rigidBody.velocity.magnitude;
         animationManager.UpdateSpeed(speed / 10);
 
@@ -322,7 +328,7 @@ public class RLAgent : Agent
             float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
             float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
 
-            // Turn da fermo (rotazione minima) - usa turn speed dinamica
+            // Turn
             if (Mathf.Abs(deltaY) > 10f)
             {
                 Debug.Log("Animation State: Turn");
@@ -336,7 +342,7 @@ public class RLAgent : Agent
         else
         {
             //Debug.Log("Animation State: Walking");
-            // Se sta camminando, ferma immediatamente le animazioni di turn
+            // Stop any turn animations
             animationManager.StopTurn();
             animationManager.SetWalking(true);
         }
@@ -457,7 +463,8 @@ public class RLAgent : Agent
                 actionAngle = Mathf.Clamp(vectorAction[1], -1f, 1f);
             }
             
-            if (!lockPosition)
+            // Non applicare movimenti se le animazioni degli obiettivi sono in corso
+            if (!lockPosition && !(objectiveHandler != null && objectiveHandler.IsExecutingObjectiveAnimations()))
             {
                 AngleChange(actionAngle);
                 SpeedChange(actionSpeed);
@@ -491,7 +498,7 @@ public class RLAgent : Agent
     public void ComputeSteps()
     {
 #if UNITY_EDITOR
-        // Logica screenshot per TRAINING (già presente)
+        // Screenshot logic TRAINING 
         if (curriculum != null && videoRecorderField != null && waitingExtraEpisodesField != null)
         {
             var videoRecorder = videoRecorderField.GetValue(curriculum) as EnvironmentVideoRecorder;
@@ -501,7 +508,7 @@ public class RLAgent : Agent
                 videoRecorder.TakeScreenshot();
             }
         }
-        // Logica screenshot per TESTING
+        // Screenshot logic TESTING
         
         if (testing != null)
         {
@@ -561,17 +568,19 @@ public class RLAgent : Agent
         return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
     }
 
+    // TODO: Remove
     public void MoveToNextTargetWithDelay(float delay)
     {
-        // Metodo mantenuto per compatibilità ma non più utilizzato
+        // Old method
         Debug.LogWarning("MoveToNextTargetWithDelay is deprecated with the new objectives system");
     }
 
     public Rigidbody GetRigidBody() => rigidBody;
 
+    // TODO: Remove
     public void MoveToNextTarget()
     {
-        // Metodo mantenuto per compatibilità ma non più utilizzato
+        // Old method
         Debug.LogWarning("MoveToNextTarget is deprecated with the new objectives system");
     }
 
@@ -648,14 +657,13 @@ public class RLAgent : Agent
 
     public void flee()
     {
-        animationManager.SetRunning();
+        //animationManager.SetRunning();
         GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
         fleeing = true;
         
-        // Nel nuovo sistema, tutti i target normali diventano invisibili durante il flee
-        // e solo i target flee diventano visibili
+       
         var sensors = gameObject.GetComponent<AgentSensorsManager>();
-        
+        // TODo fix
         foreach (GameObject target in fleeTargets)
         {
             if (target.name.Contains("Flee"))
@@ -707,7 +715,7 @@ public class RLAgent : Agent
             {
                 if (direction[i] == 1 && direction[i] == objectives[i])
                 {
-                    Debug.Log($"Valid direction found at index {i}");
+                    //Debug.Log($"Valid direction found at index {i}");
                     return true;
                 }
             }
@@ -717,12 +725,12 @@ public class RLAgent : Agent
             // Task completato: controlla solo l'ultimo elemento (target finale)
             if (direction[lastIndex] == 1 && direction[lastIndex] == objectives[lastIndex])
             {
-                Debug.Log("Valid direction for final target");
+                //Debug.Log("Valid direction for final target");
                 return true;
             }
         }
         
-        Debug.Log("No valid direction found");
+        //Debug.Log("No valid direction found");
         return false;
     }
 
@@ -780,7 +788,7 @@ public class RLAgent : Agent
 
     public void SpeedChange(float deltaSpeed)
     {
-        currentSpeed += (minMaxSpeed.y * deltaSpeed / 2f);
+        currentSpeed += minMaxSpeed.y * deltaSpeed / 2f;
         currentSpeed = Mathf.Clamp(currentSpeed, minMaxSpeed.x, minMaxSpeed.y);
         Vector3 velocityChange = (transform.forward * currentSpeed * 5) - rigidBody.velocity;
         rigidBody.AddForce(velocityChange, ForceMode.VelocityChange);
