@@ -13200,7 +13200,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Name
-      value: Entrance (3)
+      value: TopPathRight
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_IsActive
@@ -33817,7 +33817,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Name
-      value: Entrance (2)
+      value: TopPathMiddle
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_IsActive
@@ -40233,37 +40233,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 75c16d4794f25e84ea8d82ee45dd1937, type: 3}
---- !u!1 &1091052340
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1091052341}
-  m_Layer: 0
-  m_Name: Targets Counter
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1091052341
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1091052340}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.31864893, y: 0.05143447, z: -0.82629627}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1091879185
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -52036,7 +52005,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Name
-      value: Entrance (1)
+      value: MainPathRight
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_IsActive
@@ -59148,7 +59117,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1590577613}
   m_Layer: 0
-  m_Name: Targets Commons
+  m_Name: Targets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -73523,37 +73492,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc2c18e189d423749bcb27809650683d, type: 3}
---- !u!1 &1948658643
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1948658644}
-  m_Layer: 0
-  m_Name: Targets Totem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1948658644
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1948658643}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.5893135, y: -0.0000032797727, z: 19.295033}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1950419417 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6166584487648029287, guid: cc2c18e189d423749bcb27809650683d, type: 3}
@@ -76075,7 +76013,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Name
-      value: Entrance (4)
+      value: FinalTarget
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Layer
@@ -80048,7 +79986,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_Name
-      value: Entrance (5)
+      value: MainPathLeft
       objectReference: {fileID: 0}
     - target: {fileID: 5695143438376696120, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_IsActive
@@ -81979,13 +81917,11 @@ SceneRoots:
   - {fileID: 893066319}
   - {fileID: 1829527031}
   - {fileID: 276234193}
-  - {fileID: 1948658644}
+  - {fileID: 1662257021}
   - {fileID: 1590577613}
-  - {fileID: 1091052341}
   - {fileID: 966474280}
   - {fileID: 228162481}
   - {fileID: 391399817}
   - {fileID: 762927510}
   - {fileID: 67096352}
   - {fileID: 876102087}
-  - {fileID: 1662257021}

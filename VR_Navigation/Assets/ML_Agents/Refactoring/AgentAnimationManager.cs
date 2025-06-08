@@ -2,11 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Manages the animation states and triggers for the RL agent.
+/// Handles walking, idle, turning, and custom animation triggers.
+/// </summary>
 public class AgentAnimationManager : MonoBehaviour
 {
+    /// <summary>
+    /// Reference to the Animator component.
+    /// </summary>
     private Animator animator;
+
+    /// <summary>
+    /// Reference to the RLAgent component.
+    /// </summary>
     private RLAgent agent;
 
+    /// <summary>
+    /// Initializes references to Animator and RLAgent components.
+    /// </summary>
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -15,6 +29,10 @@ public class AgentAnimationManager : MonoBehaviour
             Debug.LogWarning("Animator not found on " + gameObject.name);
     }
 
+    /// <summary>
+    /// Sets the walking animation state.
+    /// </summary>
+    /// <param name="walking">True to set walking, false to unset.</param>
     public void SetWalking(bool walking)
     {
         if (animator == null)
@@ -29,9 +47,13 @@ public class AgentAnimationManager : MonoBehaviour
         
         animator.SetBool("isWalking", walking);
         animator.SetBool("isIdle", !walking);  // Opposite of isWalking
-        Debug.Log($"Set isWalking: {walking}, isIdle: {!walking}");
+        //Debug.Log($"Set isWalking: {walking}, isIdle: {!walking}");
     }
 
+    /// <summary>
+    /// Sets the idle animation state.
+    /// </summary>
+    /// <param name="idle">True to set idle, false to unset.</param>
     public void SetIdle(bool idle)
     {
         if (animator == null)
@@ -49,6 +71,11 @@ public class AgentAnimationManager : MonoBehaviour
         Debug.Log($"Set isIdle: {idle}, isWalking: {!idle}");
     }
 
+    /// <summary>
+    /// Plays the turn animation (left or right) with a specified angular speed.
+    /// </summary>
+    /// <param name="right">True for right turn, false for left turn.</param>
+    /// <param name="angularSpeed">Speed of the turn animation.</param>
     public void PlayTurn(bool right, float angularSpeed = 1f)
     {
         if (animator == null)
@@ -62,9 +89,11 @@ public class AgentAnimationManager : MonoBehaviour
         animator.SetTrigger(right ? "TurnRight" : "TurnLeft");
     }
 
+    /// <summary>
+    /// Stops any turn animation immediately.
+    /// </summary>
     public void StopTurn()
     {
-        // Stop immediately any turn animation
         animator.ResetTrigger("TurnRight");
         animator.ResetTrigger("TurnLeft");
     }
@@ -85,7 +114,7 @@ public class AgentAnimationManager : MonoBehaviour
             }
         }
         
-        // Reset tutti i trigger dell'animator
+        // Reset all triggers in the animator
         foreach (AnimatorControllerParameter param in animator.parameters)
         {
             if (param.type == AnimatorControllerParameterType.Trigger)
@@ -124,25 +153,32 @@ public class AgentAnimationManager : MonoBehaviour
         Debug.Log("Animator reset to idle state");
     }
 
+    /// <summary>
+    /// Plays an animation trigger by name.
+    /// If the trigger name is empty, it resets all triggers.
+    /// For boolean states like walking or idle, it sets them directly.
+    /// If the trigger does not exist, it logs a warning.
+    /// </summary>
+    /// <param name="triggerName">Name of the trigger to play.</param>
     public void PlayActionTrigger(string triggerName)
     {
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            if (animator == null) 
+            if (animator == null)
             {
                 Debug.LogError("Animator not found!");
                 return;
             }
         }
-        
+
         // If no trigger name is provided, reset all triggers
         if (string.IsNullOrEmpty(triggerName))
         {
             ResetAllTriggers();
             return;
         }
-        
+
         // For boolean states like walking or idle, set them directly
         if (triggerName == "isWalking")
         {
@@ -154,7 +190,7 @@ public class AgentAnimationManager : MonoBehaviour
             SetIdle(true);
             return;
         }
-        
+
         // For triggers, check if the trigger exists in the animator
         bool triggerExists = false;
         foreach (AnimatorControllerParameter param in animator.parameters)
@@ -165,22 +201,26 @@ public class AgentAnimationManager : MonoBehaviour
                 break;
             }
         }
-        
+
         if (!triggerExists)
         {
             Debug.LogWarning($"Trigger '{triggerName}' not found in animator controller");
             return;
         }
-        
+
         // Reset for security
         ResetAllTriggers();
-        
+
         // Set the trigger
         animator.SetTrigger(triggerName);
         Debug.Log($"Animation trigger '{triggerName}' set successfully");
     }
 
-    /*public void SetRunning()
+    /*
+    /// <summary>
+    /// Sets the running animation state and speed.
+    /// </summary>
+    public void SetRunning()
     {
         if (animator == null)
         {
@@ -189,8 +229,13 @@ public class AgentAnimationManager : MonoBehaviour
         }
         animator.SetTrigger("isRunning");
         animator.SetFloat("Speed", 2);
-    }*/
+    }
+    */
 
+    /// <summary>
+    /// Updates the speed parameter in the animator.
+    /// </summary>
+    /// <param name="speed">Speed value to set.</param>
     public void UpdateSpeed(float speed)
     {
         if (animator == null)
@@ -201,11 +246,20 @@ public class AgentAnimationManager : MonoBehaviour
         animator.SetFloat("Speed", speed);
     }
 
+    /// <summary>
+    /// Moves the agent to the next target after a specified delay.
+    /// </summary>
+    /// <param name="delay">Delay in seconds before moving to the next target.</param>
     public void MoveToNextTargetWithDelay(float delay)
     {
         agent.StartCoroutine(MoveToNextTargetWithDelayCoroutine(delay));
     }
 
+    /// <summary>
+    /// Coroutine to move the agent to the next target after a delay.
+    /// </summary>
+    /// <param name="delay">Delay in seconds.</param>
+    /// <returns>IEnumerator for coroutine.</returns>
     private IEnumerator MoveToNextTargetWithDelayCoroutine(float delay)
     {
         yield return new WaitUntil(() => animator != null);

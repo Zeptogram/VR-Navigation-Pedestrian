@@ -25,14 +25,20 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     private ObjectiveObserver observer;
 
     /// <summary>
-    /// List of objectives that have been reached by the agent.
+    /// If true, objectives must be completed in the specified order.
     /// </summary>
-    public List<GameObject> reachedObjectives = new List<GameObject>();
+    [Header("Objective Order")]
+    public bool orderedObjectives = false;
 
     /// <summary>
     /// List of all objectives assigned to the agent.
     /// </summary>
     public List<GameObject> objectives = new List<GameObject>();
+
+    /// <summary>
+    /// List of objectives that have been reached by the agent.
+    /// </summary>
+    public List<GameObject> reachedObjectives = new List<GameObject>();
 
     /// <summary>
     /// Reference to the agent's animation manager.
@@ -43,12 +49,6 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     /// Indicates if the agent is currently executing objective animations.
     /// </summary>
     private bool isExecutingObjectiveAnimations = false;
-
-    /// <summary>
-    /// If true, objectives must be completed in the specified order.
-    /// </summary>
-    [Header("Objective Order")]
-    public bool orderedObjectives = false;
 
     /**
      * \brief Initializes references to required components.
@@ -466,10 +466,14 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns the percentage of objectives that have not been reached yet.
-    /// </summary>
-    /// <returns>The percentage (0-1) of remaining objectives, or 0 if there are no objectives.</returns>
+    /**
+     * \brief Returns the percentage of objectives that have been reached.
+     * 
+     * This method calculates the percentage of objectives that have been reached by the agent.
+     * If there are no objectives, it returns 0.
+     * 
+     * \return The percentage (0-1) of reached objectives, or 0 if there are no objectives.
+     */
     public float GetRemainingObjectivesPercentage()
     {
         if (objectives.Count == 0)
@@ -515,6 +519,12 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         return reachedObjectives.Count;
     }
 
+    /**
+     * \brief Checks if a specific objective is currently available for interaction.
+     * This method considers the order of objectives if orderedObjectives is true.
+     * \param obj The GameObject to check.
+     * \return True if the objective is available, false otherwise.
+     */
     public bool IsObjectiveCurrentlyAvailable(GameObject obj)
     {
         if (orderedObjectives)

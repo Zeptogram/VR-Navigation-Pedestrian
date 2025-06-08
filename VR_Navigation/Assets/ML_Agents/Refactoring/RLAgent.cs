@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Unity.MLAgents;
-using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
-using System.Collections;
-using UnityEngine.Events;
-using UnityEngine.AI;
+
 
 [RequireComponent(typeof(ObjectiveInteractionHandler))]
 [RequireComponent(typeof(ObjectiveObserver))]
@@ -178,7 +175,7 @@ public class RLAgent : Agent
     /// <summary>
     /// True if the environment is ready.
     /// </summary>
-    private bool isEnvReady = false;
+    //private bool isEnvReady = false;
 
     /// <summary>
     /// Reference to the objective interaction handler.
@@ -452,10 +449,10 @@ public class RLAgent : Agent
             float actionAngle;
             if (MyConstants.discrete)
             {
-                actionSpeed = vectorAction[0];
+                /*actionSpeed = vectorAction[0];
                 actionSpeed = (actionSpeed - 5f) / 5f;
                 actionAngle = vectorAction[1];
-                actionAngle = (actionAngle - 5f) / 5f;
+                actionAngle = (actionAngle - 5f) / 5f;*/
             }
             else
             {
@@ -691,12 +688,12 @@ public class RLAgent : Agent
     {
         return objectiveHandler.objectives;
     }
-
-    /// <summary>
-    /// Controlla se una direzione è valida basandosi sull'array restituito da DetermineVisualizationDirection.
-    /// </summary>
-    /// <param name="direction">Array con informazioni sulla direzione</param>
-    /// <returns>True se la direzione è valida</returns>
+    
+    /**
+     * \brief Checks if a direction is valid based on the array returned by DetermineVisualizationDirection.
+     * \param Array of directions to check
+     * \return True if the direction is valid, false otherwise.
+    */
     public bool CheckForValidDirection(float[] direction)
     {
         if (direction == null || direction.Length == 0)
@@ -704,13 +701,13 @@ public class RLAgent : Agent
             Debug.LogWarning("Direction array is null or empty in CheckForValidDirection");
             return false;
         }
-        
+
         float[] objectives = objectiveObserver.GetObjectivesObservation();
         int lastIndex = direction.Length - 1;
 
         if (!taskCompleted)
         {
-            // Controlla se c'è corrispondenza tra direzione e obiettivi rimanenti
+            // Check if the direction matches any of the objectives
             for (int i = 0; i < direction.Length - 1; i++)
             {
                 if (direction[i] == 1 && direction[i] == objectives[i])
@@ -722,23 +719,29 @@ public class RLAgent : Agent
         }
         else
         {
-            // Task completato: controlla solo l'ultimo elemento (target finale)
+            // Task is completed, check only the last index
             if (direction[lastIndex] == 1 && direction[lastIndex] == objectives[lastIndex])
             {
                 //Debug.Log("Valid direction for final target");
                 return true;
             }
         }
-        
+
         //Debug.Log("No valid direction found");
         return false;
     }
 
-    /// <summary>
-    /// Determina se la direzione verso un target è valida basandosi sugli obiettivi rimanenti.
-    /// </summary>
-    /// <param name="targetObject">Il target da valutare</param>
-    /// <returns>Array con informazioni sulla direzione (compatibilità con sistema originale)</returns>
+    /**
+     * \brief Determines the visualization direction based on the target object.
+     * 
+     * This method calculates the direction from the agent to the target and checks if it aligns with the target's forward direction.
+     * It returns an array of float values representing the compatibility of the direction with the original system.
+     * 
+     * If the DirectionsObjectives component is not found on the target object, an error is logged and an empty array is returned.
+     * 
+     * @param targetObject The target GameObject to evaluate.
+     * @return An array of float values representing the direction compatibility.
+     */
     public float[] DetermineVisualizationDirection(GameObject targetObject)
     {
         Vector3 agentToTarget = targetObject.transform.position - transform.position;
@@ -761,6 +764,15 @@ public class RLAgent : Agent
         return directions.getDirections(passDirection);
     }
 
+    /**
+     * \brief Determines the passing direction based on the trigger object.
+     * 
+     * This method calculates the passing direction based on the entry value and retrieves the direction objectives from the DirectionsObjectives component.
+     * If the DirectionsObjectives component is not found, an error is logged and an empty array is returned.
+     * 
+     * @param triggerObject The GameObject that triggered the event.
+     * @return An array of float values representing the passing direction.
+     */
     public float[] DeterminePassingDirection(GameObject triggerObject)
     {
         int passDirection = (entryValue > 0) ? 0 : 1;
@@ -780,7 +792,7 @@ public class RLAgent : Agent
      */
     public override void Heuristic(float[] actionsOut)
     {
-        //move agent by keyboard
+        // move agent by keyboard
         var continuousActionsOut = actionsOut;
         continuousActionsOut[0] = Input.GetAxis("Vertical");
         continuousActionsOut[1] = Input.GetAxis("Horizontal");
