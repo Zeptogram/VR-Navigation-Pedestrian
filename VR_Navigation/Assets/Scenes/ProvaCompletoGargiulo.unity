@@ -11254,6 +11254,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2187991353187160049, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: orderedObjectives
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2187991353187160049, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: objectives.Array.size
       value: 3
       objectReference: {fileID: 0}
@@ -11264,11 +11268,11 @@ PrefabInstance:
     - target: {fileID: 2187991353187160049, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: objectives.Array.data[1]
       value: 
-      objectReference: {fileID: 1926522894}
+      objectReference: {fileID: 959649820}
     - target: {fileID: 2187991353187160049, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: objectives.Array.data[2]
       value: 
-      objectReference: {fileID: 959649820}
+      objectReference: {fileID: 1926522894}
     - target: {fileID: 2187991353187160049, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: objectives.Array.data[3]
       value: 
@@ -33285,7 +33289,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1662257021}
   - {fileID: 705507995}
   - {fileID: 1108303038}
   - {fileID: 1869971988}
@@ -58556,7 +58559,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5695143438376696120, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1777512034}
   m_SourcePrefab: {fileID: 100100000, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
 --- !u!1001 &1565904041
 PrefabInstance:
@@ -62261,15 +62267,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1662257020}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000000021855694, y: 0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.85848916, y: 6.993686, z: 3.0332265}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.85848916, y: 6.993686, z: 3.0332267}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1777512030}
   - {fileID: 1926522895}
   - {fileID: 46457276}
-  m_Father: {fileID: 893066319}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1662361412 stripped
 Transform:
@@ -63858,7 +63864,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.54
+      value: 1.73
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.y
@@ -63866,7 +63872,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 12.51
+      value: 13.12
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalRotation.w
@@ -66862,6 +66868,29 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
   m_PrefabInstance: {fileID: 1565097527}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1777512034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777512026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b9a3425076199b4dbf9121c2d5f9db8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationActions:
+  - animationTrigger: TurnRight
+    duration: 2
+    description: Rimani fermo per 2 secondi
+  - animationTrigger: TurnLeft
+    duration: 2
+    description: Rimani fermo per 2 secondi
+  playInSequence: 1
+  delayBetweenAnimations: 0.5
+  stopAgentDuringAnimations: 1
+  totalDuration: -1
 --- !u!1001 &1777649025
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -81959,3 +81988,4 @@ SceneRoots:
   - {fileID: 762927510}
   - {fileID: 67096352}
   - {fileID: 876102087}
+  - {fileID: 1662257021}

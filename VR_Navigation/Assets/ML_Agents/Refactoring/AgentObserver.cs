@@ -212,32 +212,24 @@ public class AgentObserver : MonoBehaviour
         wallsAndObjectivesObservations.Clear();
         wallsAndObjectivesGizmos.Clear();
         var objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
-        var reachedObjectives = objectiveHandler != null ? objectiveHandler.reachedObjectives : new List<GameObject>();
         foreach (RaycastHit observation in results)
         {
-            if (observation.collider == null) continue; // Controllo null dalla versione old
-            
+            if (observation.collider == null) continue;
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
 
-            // Initialize one-hot encoding values
-            int tagIndex = -1; // -1 means not relevant
+            int tagIndex = -1;
             float normalizedDistance = -1f;
 
-            // Determine the type of detected entity
             switch (objTag)
             {
                 case Tag.Wall:
-                    tagIndex = 0; // Wall
+                    tagIndex = 0;
                     normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE;
                     break;
-                case Tag.Objective: 
-                    bool isObjectiveAlreadyTaken = reachedObjectives.Contains(seenObject);
-                    bool isValidObjective = IsAgentObjective(rlAgent.GetObjective(), seenObject);
-                    if (isObjectiveAlreadyTaken || ! isValidObjective)
-                        tagIndex = 2; // 2 it is not a objective for the agent
-                    else
-                        tagIndex = 1; // 1 it is a objective for the agent
+                case Tag.Objective:
+                    bool isAvailable = objectiveHandler != null && objectiveHandler.IsObjectiveCurrentlyAvailable(seenObject);
+                    tagIndex = isAvailable ? 1 : 2; // 1 = valid now, 2 = already taken or not available (order)
                     normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 default:

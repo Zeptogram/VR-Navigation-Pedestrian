@@ -44,6 +44,12 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     /// </summary>
     private bool isExecutingObjectiveAnimations = false;
 
+    /// <summary>
+    /// If true, objectives must be completed in the specified order.
+    /// </summary>
+    [Header("Objective Order")]
+    public bool orderedObjectives = false;
+
     /**
      * \brief Initializes references to required components.
      */
@@ -61,23 +67,37 @@ public class ObjectiveInteractionHandler : MonoBehaviour
      */
     public void HandleObjectiveTrigger(GameObject triggerObject)
     {
-        if (!reachedObjectives.Contains(triggerObject))
+        // If order is on, accept only the next objective in the list
+        if (orderedObjectives)
         {
-            reachedObjectives.Add(triggerObject);
-            agent.AddReward(MyConstants.objective_completed_reward);
-
-            observer.MarkObjectiveAsCompleted(triggerObject);
-            //triggerObject.SetActive(false); // TODO: make visible again if needed
-
-            // Run the animations associated with the objective
-            StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
-
-            if (reachedObjectives.Count == objectives.Count && objectives.Count > 0)
+            int nextIndex = reachedObjectives.Count;
+            if (nextIndex >= objectives.Count || objectives[nextIndex] != triggerObject)
             {
-                agent.taskCompleted = true;
-                observer.SetTaskCompleted();
-                Debug.Log($"Agent {agent.name} has completed all objectives!");
+                Debug.LogWarning($"[ORDERED OBJECTIVES] Tried to take {triggerObject.name}, but next should be {objectives[nextIndex].name}");
+                return;
             }
+        }
+        else
+        {
+            // If alredy taken, ignore
+            if (reachedObjectives.Contains(triggerObject))
+                return;
+        }
+
+        reachedObjectives.Add(triggerObject);
+        agent.AddReward(MyConstants.objective_completed_reward);
+
+        observer.MarkObjectiveAsCompleted(triggerObject);
+        //triggerObject.SetActive(false); // TODO: make visible again if needed
+
+        // Run the animations associated with the objective
+        StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
+
+        if (reachedObjectives.Count == objectives.Count && objectives.Count > 0)
+        {
+            agent.taskCompleted = true;
+            observer.SetTaskCompleted();
+            Debug.Log($"Agent {agent.name} has completed all objectives!");
         }
     }
 
@@ -493,5 +513,18 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     public int GetReachedObjectivesCount()
     {
         return reachedObjectives.Count;
+    }
+
+    public bool IsObjectiveCurrentlyAvailable(GameObject obj)
+    {
+        if (orderedObjectives)
+        {
+            int nextIndex = reachedObjectives.Count;
+            return (nextIndex < objectives.Count && objectives[nextIndex] == obj);
+        }
+        else
+        {
+            return !reachedObjectives.Contains(obj) && objectives.Contains(obj);
+        }
     }
 }
