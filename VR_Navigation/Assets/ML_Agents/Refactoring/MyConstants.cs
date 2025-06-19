@@ -9,11 +9,11 @@ public static class MyConstants
     //settings
     public const int viewAngle = 180;
     public const int rayLength = 43;
-    public const int numberOfRaysPerSide = 17;
+    public const int numberOfRaysPerSide = 11;
     //speed
     public static Vector2 minMaxSpeed = new Vector2 (0f, 1.7f);
     //float randomValue = RLAgent.RandomGaussian(0.65f, 2.15f); centrata in 1.4 con deviazione di 0.25
-    //Range di variazione della velocità massima (viene sovrascitta la velocità massima)
+    //Range di variazione della velocit� massima (viene sovrascitta la velocit� massima)
     public static Vector2 speedMaxRange = new Vector2 (0.9f, 2.1f);
     //angle
     public const int angleRange = 25;
@@ -31,7 +31,8 @@ public static class MyConstants
     public const float already_taken_target_reward = -1f;
     public const float target_taken_incorrectly_reward = -1f;
     public const float not_watching_target_reward = -0.5f;
-    public static float verticalRayOffset = -0.5f;
+
+    //public const float verticalRayOffset = -0.05f; // offset per il raycast verticale
   
     // reward pianificazione
     public const float objective_completed_reward = 2f;
@@ -40,8 +41,7 @@ public static class MyConstants
     public const float wrong_direction_reward = -0.08f;
     public const float incomplete_task_step_reward = -0.06f;
     public const float target_alredy_crossed_reward = -0.03f;
-
-
+    
     //Proxemix distances
     public static float proxemic_small_distance = 0.6f - rayOffset;
     public static float proxemic_medium_distance = 1.0f - rayOffset;

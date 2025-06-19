@@ -53,8 +53,8 @@ public class AgentSensorsManager : MonoBehaviour
      //sensore per gli obiettivi
     public void UpdateObjectiveSensorVision(Group agentGroup)
     {
-        // Cambia Single() con SingleOrDefault() per evitare l'eccezione
-        Sensore sensorWallsAndObjectives = _sensors.SingleOrDefault(x => x.SensorName == SensorName.WallsAndObjectives);
+   
+        Sensore sensorWallsAndObjectives = _sensors.Single(x => x.SensorName == SensorName.WallsAndObjectives);
         
         // Controlla se il sensore esiste prima di usarlo
         if (sensorWallsAndObjectives != null)
@@ -100,7 +100,7 @@ public class AgentSensorsManager : MonoBehaviour
                 if (i == 0 && sign == -1) { continue; }
 
                 Vector3 rayDirection = CalculateRayDirection(i, sign);
-                Vector3 offSettedPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset) + (rayDirection * MyConstants.rayOffset);
+                Vector3 offSettedPosition = transform.position + /*(Vector3.up * MyConstants.verticalRayOffset) +*/ (rayDirection * MyConstants.rayOffset);
 
                 RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
                 //RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength, invisibleTargets.ToArray<GameObject>());

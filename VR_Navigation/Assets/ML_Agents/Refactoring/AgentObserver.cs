@@ -115,6 +115,7 @@ public class AgentObserver : MonoBehaviour
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
             int hitObjectIndex = -1;
+            bool isDirectionValid = false;
             Target target = seenObject.GetComponent<Target>();
             int targetId = -1; //Default value for walls and final targets
             // One-hot encoding:
@@ -133,21 +134,26 @@ public class AgentObserver : MonoBehaviour
                     {
                         if (target.targetType == TargetType.Final)
                         {
-                            // Target finale: verde se task completato, rosso altrimenti
-                            bool taskCompleted = rlAgent.IsTaskCompleted();
-                            hitObjectIndex = taskCompleted ? 3 : 4;
+                            if (rlAgent.IsTaskCompleted())
+                            {
+                                hitObjectIndex = 3;
+                            }
+                            else
+                            {
+                                hitObjectIndex = 4;
+                            }
                         }
                         else
                         {
                             float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
-                            bool isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
-                            hitObjectIndex = isDirectionValid ? 1 : 2; // Bianco se direzione valida, giallo se no
-                            targetId = target.id; // Set the target ID for intermediate targets
+                            isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
+                            hitObjectIndex = isDirectionValid ? 1 : 2;
+                            targetId = target.id;
                         }
                     }
                     break;
                 default:
-                    Debug.LogError($"Error in {nameof(ComputeWallsAndTargetsObservations)} shouldn't see the tag: " + seenObject.tag);
+                    Debug.LogError($"Error in {nameof(ComputeWallsAndTargetsObservations)} should't see the tag: " + seenObject.tag);
                     break;
             }
 
@@ -216,6 +222,8 @@ public class AgentObserver : MonoBehaviour
         wallsAndObjectivesObservations.Clear();
         wallsAndObjectivesGizmos.Clear();
         var objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
+        var reachedObjectives = objectiveHandler != null ? objectiveHandler.reachedObjectives : new List<GameObject>();
+
         foreach (RaycastHit observation in results)
         {
             if (observation.collider == null) continue;
@@ -228,12 +236,16 @@ public class AgentObserver : MonoBehaviour
             switch (objTag)
             {
                 case Tag.Wall:
-                    tagIndex = 0;
+                    tagIndex = 0; // Wall
                     normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 case Tag.Objective:
-                    bool isAvailable = objectiveHandler != null && objectiveHandler.IsObjectiveCurrentlyAvailable(seenObject);
-                    tagIndex = isAvailable ? 1 : 2; // 1 = valid now, 2 = already taken or not available (order)
+                    bool isObjectiveAlreadyTaken = reachedObjectives.Contains(seenObject);
+                    bool isValidObjective = IsAgentObjective(rlAgent.GetObjective(), seenObject);
+                    if (isObjectiveAlreadyTaken || !isValidObjective)
+                        tagIndex = 2; // 2 it is not a objective for the agent
+                    else
+                        tagIndex = 1; // 1 it is a objective for the agent
                     normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 default:

@@ -63,33 +63,34 @@ public class AgentGizmosDrawer : MonoBehaviour
         Vector3 newPosition = transform.position; 
         newPosition.y += 1;
 
-        // Disegna TUTTI i raggi per WallsAndTargets
-        foreach (var (tag, position) in wallsAndTargetsObservations)
+        for (int i = 0; i < wallsAndTargetsObservations.Count && i < wallsAndAgentsObservations.Count && i < wallsAndObjectivesObservations.Count; i++)
         {
-            if (_tagColorDict.ContainsKey(tag))
-            {
-                Gizmos.color = _tagColorDict[tag];
-                Gizmos.DrawLine(newPosition, position);
-            }
-        }
+            (GizmosTag wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargetsObservations[i];
+            (GizmosTag wallsAndAgentTag, Vector3 wallsAndAgentVector) = wallsAndAgentsObservations[i];
+            (GizmosTag wallsAndObjectiveTag, Vector3 wallsAndObjectiveVector) = wallsAndObjectivesObservations[i];
 
-        // Disegna TUTTI i raggi per WallsAndAgents
-        foreach (var (tag, position) in wallsAndAgentsObservations)
-        {
-            if (_tagColorDict.ContainsKey(tag))
-            {
-                Gizmos.color = _tagColorDict[tag];
-                Gizmos.DrawLine(newPosition, position);
-            }
-        }
+            float agentAndWallsAndTargetDistance = Vector3.Distance(newPosition, wallsAndTargetVector);
+            float agentAndWallsAndAgentDistance = Vector3.Distance(newPosition, wallsAndAgentVector);
+            float agentAndWallsAndObjectiveDistance = Vector3.Distance(newPosition, wallsAndObjectiveVector);
 
-        // Disegna TUTTI i raggi per WallsAndObjectives
-        foreach (var (tag, position) in wallsAndObjectivesObservations)
-        {
-            if (_tagColorDict.ContainsKey(tag))
+            // Confronta le distanze e disegna i Gizmos
+            if (agentAndWallsAndTargetDistance <= agentAndWallsAndAgentDistance && agentAndWallsAndTargetDistance <= agentAndWallsAndObjectiveDistance)
             {
-                Gizmos.color = _tagColorDict[tag];
-                Gizmos.DrawLine(newPosition, position);
+                // Disegna per WallsAndTargets
+                Gizmos.color = _tagColorDict[wallsAndTargetTag];
+                Gizmos.DrawLine(newPosition, wallsAndTargetVector);
+            }
+            else if (agentAndWallsAndAgentDistance <= agentAndWallsAndTargetDistance && agentAndWallsAndAgentDistance <= agentAndWallsAndObjectiveDistance)
+            {
+                // Disegna per WallsAndAgents
+                Gizmos.color = _tagColorDict[wallsAndAgentTag];
+                Gizmos.DrawLine(newPosition, wallsAndAgentVector);
+            }
+            else
+            {
+                // Disegna per WallsAndObjectives
+                Gizmos.color = _tagColorDict[wallsAndObjectiveTag];
+                Gizmos.DrawLine(newPosition, wallsAndObjectiveVector);
             }
         }
     }

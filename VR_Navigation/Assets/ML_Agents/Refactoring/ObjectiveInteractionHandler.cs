@@ -84,20 +84,24 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                 return;
         }
 
-        reachedObjectives.Add(triggerObject);
-        agent.AddReward(MyConstants.objective_completed_reward);
-
-        observer.MarkObjectiveAsCompleted(triggerObject);
-        //triggerObject.SetActive(false); // TODO: make visible again if needed
-
-        // Run the animations associated with the objective
-        StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
-
-        if (reachedObjectives.Count == objectives.Count && objectives.Count > 0)
+        if (!reachedObjectives.Contains(triggerObject))
         {
-            agent.taskCompleted = true;
-            observer.SetTaskCompleted();
-            Debug.Log($"Agent {agent.name} has completed all objectives!");
+
+            reachedObjectives.Add(triggerObject);
+            agent.AddReward(MyConstants.objective_completed_reward);
+
+            observer.MarkObjectiveAsCompleted(triggerObject);
+            //triggerObject.SetActive(false); // TODO: make visible again if needed
+
+            // Run the animations associated with the objective
+            StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
+
+            if (reachedObjectives.Count == objectives.Count && objectives.Count > 0)
+            {
+                agent.taskCompleted = true;
+                observer.SetTaskCompleted();
+                Debug.Log($"Agent {agent.name} has completed all objectives!");
+            }
         }
     }
 
@@ -108,7 +112,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     private IEnumerator ExecuteObjectiveAnimations(GameObject objectiveObject)
     {
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
-        
+
         if (animationData == null)
         {
             Debug.LogWarning($"No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
@@ -123,17 +127,17 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         {
             agent.SetRun(false);
             agent.GetRigidBody().velocity = Vector3.zero;
-            
+
             // Wait a frame to ensure the agent is stopped
             yield return null;
-            
+
             // Stop any ongoing animations
             if (animationManager != null)
             {
-                animationManager.SetWalking(false);  
-                animationManager.UpdateSpeed(0f);     
+                animationManager.SetWalking(false);
+                animationManager.UpdateSpeed(0f);
             }
-            
+
             // Wait a moment to ensure the agent is fully stopped
             yield return new WaitForSeconds(0.1f);
         }
@@ -163,10 +167,10 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         {
             // Reset the animator to idle state
             animationManager.ResetToIdleState();
-            
+
             // Wait a frame to ensure the animator is reset
             yield return null;
-            
+
             Debug.Log("[OBJECTIVE ANIMATION] Animator reset completed, reactivating agent");
         }
 
@@ -179,7 +183,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         {
             agent.SetRun(true);
             Debug.Log("[OBJECTIVE ANIMATION] Agent reactivated after animations completed");
-            
+
             // Wait a moment before allowing further actions
             yield return new WaitForSeconds(0.2f);
         }
@@ -201,17 +205,17 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             if (animationManager != null && !string.IsNullOrEmpty(action.animationTrigger))
             {
                 Debug.Log($"[OBJECTIVE ANIMATION] Setting animation: {action.animationTrigger} for {action.duration} seconds");
-                
+
                 // Start the coroutine to maintain the animation for the specified duration
                 StartCoroutine(MaintainAnimationForDuration(action.animationTrigger, action.duration));
-                
+
                 Debug.Log($"[OBJECTIVE ANIMATION] Animation {action.animationTrigger} set, waiting {action.duration} seconds...");
             }
-            
+
             // Wait for the duration of the animation
             yield return new WaitForSeconds(action.duration);
             Debug.Log($"[OBJECTIVE ANIMATION] Finished waiting for {action.animationTrigger}");
-            
+
             // Delay between animations if specified
             if (animationData.delayBetweenAnimations > 0)
             {
@@ -219,7 +223,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                 yield return new WaitForSeconds(animationData.delayBetweenAnimations);
             }
         }
-        
+
         Debug.Log("[OBJECTIVE ANIMATION] All animations in sequence completed");
     }
 
@@ -231,9 +235,9 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         // Trigger the animation
         SetAnimationTrigger(animationTrigger);
         Debug.Log($"[OBJECTIVE ANIMATION] Started {animationTrigger} for {duration} seconds");
-        
+
         float elapsedTime = 0f;
-        
+
         // If bool (isWalking, isIdle), keep it active
         if (animationTrigger == "isWalking" || animationTrigger == "isIdle")
         {
@@ -241,7 +245,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             {
                 yield return new WaitForSeconds(0.1f);
                 elapsedTime += 0.1f;
-                
+
                 // For "isWalking" and "isIdle", toggle every 2 seconds (a refresh)
                 if (Mathf.FloorToInt(elapsedTime) % 2 == 0 && elapsedTime % 2 < 0.1f)
                 {
@@ -254,12 +258,12 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         {
             float animationDuration = GetEstimatedAnimationDuration(animationTrigger);
             float nextTriggerTime = animationDuration;
-            
+
             while (elapsedTime < duration)
             {
                 yield return new WaitForSeconds(0.1f);
                 elapsedTime += 0.1f;
-                
+
                 // Restart the animation trigger every estimated duration
                 if (elapsedTime >= nextTriggerTime)
                 {
@@ -268,7 +272,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                     Debug.Log($"[OBJECTIVE ANIMATION] Restarting {animationTrigger} at {elapsedTime:F2}s (next at {nextTriggerTime:F2}s)");
                 }
             }
-            
+
             // Reset the turn animations if they were used
             if (animationTrigger == "TurnRight" || animationTrigger == "TurnLeft")
             {
@@ -276,14 +280,14 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                 Debug.Log($"[OBJECTIVE ANIMATION] Stopped {animationTrigger} after {duration} seconds");
             }
             // Reset triggers (generic)
-            if (animationTrigger == "TurnRight" || animationTrigger == "TurnLeft" || 
+            if (animationTrigger == "TurnRight" || animationTrigger == "TurnLeft" ||
                 (!animationTrigger.StartsWith("is"))) // Per tutti i trigger che non sono parametri bool
             {
                 animationManager.ResetAllTriggers();
                 Debug.Log($"[OBJECTIVE ANIMATION] Reset all triggers after {animationTrigger} completed");
             }
         }
-        
+
         Debug.Log($"[OBJECTIVE ANIMATION] Finished maintaining {animationTrigger} for {duration} seconds");
     }
 
@@ -308,7 +312,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     private void SetAnimationTrigger(string animationTrigger)
     {
         if (animationManager == null) return;
-        
+
         if (animationTrigger == "isWalking")
         {
             animationManager.SetWalking(true);
@@ -343,19 +347,19 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
 
         float timePerAnimation = animationData.totalDuration / animationData.animationActions.Length;
-        
+
         foreach (var action in animationData.animationActions)
         {
             if (animationManager != null && !string.IsNullOrEmpty(action.animationTrigger))
             {
                 Debug.Log($"Attempting to play animation: {action.animationTrigger} for {timePerAnimation} seconds");
-                
+
                 // Start the coroutine to maintain the animation for the specified duration
                 StartCoroutine(MaintainAnimationForDuration(action.animationTrigger, timePerAnimation));
-                
+
                 Debug.Log($"Animation trigger {action.animationTrigger} set successfully");
             }
-            
+
             yield return new WaitForSeconds(timePerAnimation);
         }
     }
@@ -367,14 +371,14 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     {
         // Probably to remove, won't be used in parallel
         float maxDuration = 0f;
-        
+
         // Max duration
         foreach (var action in animationData.animationActions)
         {
             if (action.duration > maxDuration)
                 maxDuration = action.duration;
         }
-        
+
         // Run all animations in parallel
         foreach (var action in animationData.animationActions)
         {
@@ -384,7 +388,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                 Debug.Log($"Playing animation in parallel: {action.animationTrigger} for {action.duration} seconds");
             }
         }
-        
+
         // Wait max duration for all animations to finish
         yield return new WaitForSeconds(maxDuration);
     }
@@ -413,15 +417,12 @@ public class ObjectiveInteractionHandler : MonoBehaviour
      */
     public void SetObjectives(List<GameObject> newObjectives)
     {
-        objectives = newObjectives ?? new List<GameObject>();
+        objectives = new List<GameObject>(newObjectives ?? new List<GameObject>());
         reachedObjectives.Clear();
-        
-        // Initialize the observer with the new objectives
-        if (observer != null)
-        {
-            observer.InitializeObjectives(objectives);
-            Debug.Log($"Set {objectives.Count} objectives for agent {agent.gameObject.name}");
-        }
+
+        observer.InitializeObjectives(objectives);
+
+        Debug.Log($"Agent {agent.name}: set {objectives.Count} objectives");
     }
 
     /**
@@ -432,8 +433,8 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         if (agent.env != null)
         {
             // Obtain the objectives from the environment
-            List<GameObject> envObjectives = agent.env.GetObjectives(); 
-            
+            List<GameObject> envObjectives = agent.env.GetObjectives();
+
             if (envObjectives != null && envObjectives.Count > 0)
             {
                 SetObjectives(envObjectives);
@@ -482,59 +483,5 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         return (float)(objectives.Count - reachedObjectives.Count) / objectives.Count;
     }
 
-    /**
-     * \brief Returns the list of objectives that have not been reached yet.
-     * \return List of remaining objectives.
-     */
-    public List<GameObject> GetRemainingObjectives()
-    {
-        List<GameObject> remaining = new List<GameObject>();
-        
-        foreach (GameObject objective in objectives)
-        {
-            if (!reachedObjectives.Contains(objective))
-            {
-                remaining.Add(objective);
-            }
-        }
-        
-        return remaining;
-    }
 
-    /**
-     * \brief Returns the total number of objectives assigned to this agent.
-     * \return Total count of objectives.
-     */
-    public int GetTotalObjectivesCount()
-    {
-        return objectives.Count;
-    }
-
-    /**
-     * \brief Returns the number of objectives that have been reached.
-     * \return Count of reached objectives.
-     */
-    public int GetReachedObjectivesCount()
-    {
-        return reachedObjectives.Count;
-    }
-
-    /**
-     * \brief Checks if a specific objective is currently available for interaction.
-     * This method considers the order of objectives if orderedObjectives is true.
-     * \param obj The GameObject to check.
-     * \return True if the objective is available, false otherwise.
-     */
-    public bool IsObjectiveCurrentlyAvailable(GameObject obj)
-    {
-        if (orderedObjectives)
-        {
-            int nextIndex = reachedObjectives.Count;
-            return (nextIndex < objectives.Count && objectives[nextIndex] == obj);
-        }
-        else
-        {
-            return !reachedObjectives.Contains(obj) && objectives.Contains(obj);
-        }
-    }
 }
