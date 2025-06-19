@@ -213,6 +213,17 @@ public class RLAgent : Agent
         new ProxemicRange { Start = 0, End = MyConstants.proxemic_small_distance, Reward = MyConstants.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = MyConstants.proxemic_small_ray }
     };
 
+    /// <summary>Add commentMore actions
+    /// Array of front crossings for the agent.
+    /// </summary>
+    public float[] crossings;
+
+    /// <summary>
+    /// Maximum number of intermediate targets that can be handled by the agent.
+    /// </summary>
+    public const int MaxIntermediateTargets = 15;
+    private int numberOfCrossings = 0;
+
     /**
      * \brief Called when the script instance is being loaded.
      * Initializes the agent's components and sets its initial position and rotation.
@@ -228,7 +239,7 @@ public class RLAgent : Agent
         objectiveObserver = GetComponent<ObjectiveObserver>();
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
-        
+
         // Check if all required components are present
         if (agentSensorsManager == null)
             Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
@@ -240,7 +251,7 @@ public class RLAgent : Agent
             Debug.LogError($"ObjectiveInteractionHandler component missing on {gameObject.name}");
         if (agentGizmosDrawer == null)
             Debug.LogError($"AgentGizmosDrawer component missing on {gameObject.name}");
-        
+
         // TODO: Keep or not
         if (agentSensorsManager != null)
         {
@@ -252,7 +263,7 @@ public class RLAgent : Agent
             
             // Tutti i target sono ora sempre visibili - rimuovi tutti gli elementi dalla lista invisibleTargets
             agentSensorsManager.invisibleTargets.Clear();*/
-            
+
             // Chiama questi metodi solo se agentSensorsManager è valido
             try
             {
@@ -264,16 +275,16 @@ public class RLAgent : Agent
                 Debug.LogError($"Error updating sensor vision for {gameObject.name}: {e.Message}");
             }
         }
-    
+
         startPosition = transform.position;
         startRotation = transform.rotation;
-        
+
         // Default walking state
         if (animationManager != null)
         {
             animationManager.SetWalking(true);
         }
-        
+
 #if UNITY_EDITOR
         curriculum = FindObjectOfType<Curriculum>();
         if (curriculum != null)
@@ -284,24 +295,23 @@ public class RLAgent : Agent
         testing = FindObjectOfType<Testing>();
 #endif
 
-    switch (group)
-    {
-        case Group.First:
-            GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.red;
-            break;
-        case Group.Second:
-            GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.cyan;
-            break;
-        case Group.Third:
-            GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.green;
-            break;
-        case Group.Fourth:
-            GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.yellow;
-            break;
-        default:
-            Debug.Log("Group is not recognized");
-            break;
-    }
+        switch (group)
+        {
+            case Group.First:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.red;
+                break;
+            case Group.Second:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.cyan;
+                break;
+            case Group.Third:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.green;
+                break;
+            case Group.Fourth:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.yellow;
+                break;
+            default:
+                break;
+        }
     }
 
     private void Update()
@@ -320,7 +330,7 @@ public class RLAgent : Agent
         {
             //Debug.Log("Animation State: Idle");
             animationManager.SetWalking(false);
-            
+
             float currentYRotation = transform.eulerAngles.y;
             float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
             float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
@@ -329,7 +339,7 @@ public class RLAgent : Agent
             if (Mathf.Abs(deltaY) > 10f)
             {
                 Debug.Log("Animation State: Turn");
-                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f); 
+                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f);
                 if (deltaY > 0)
                     animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
                 else
@@ -343,7 +353,7 @@ public class RLAgent : Agent
             animationManager.StopTurn();
             animationManager.SetWalking(true);
         }
-        
+
         lastYRotation = transform.eulerAngles.y;
     }
 
@@ -384,6 +394,8 @@ public class RLAgent : Agent
         resetAgent?.Invoke(this);
     }
 
+    // TODO: CAPIRE COME GESTIRLA, METTO ENV?
+
     /**
      * \brief Makes the agent listen for environment readiness.
      * \param action Reference to the action to subscribe to.
@@ -394,6 +406,17 @@ public class RLAgent : Agent
         {
             if (agent == this)
             {
+                if (env != null) // Aggiungi questo controllo
+                {
+                    numberOfCrossings = env.GetNumIntermediateTargets();
+                    InitCrossings(numberOfCrossings);
+                    Debug.Log($"Agent {gameObject.name}: initialized {numberOfCrossings} crossings");
+                }
+                else
+                {
+                    Debug.LogError($"Agent {gameObject.name}: Environment is null!");
+                }
+                
                 if (objectiveHandler != null)
                 {
                     objectiveHandler.InitializeObjectivesFromEnvironment();
@@ -413,7 +436,7 @@ public class RLAgent : Agent
      * \brief Collects observations from the environment to feed to the neural network.
      * \param vectorSensor The vector sensor for observations.
      */
-   public override void CollectObservations(VectorSensor vectorSensor)
+    public override void CollectObservations(VectorSensor vectorSensor)
     {
         Dictionary<AgentSensorsManager.Sensore, RaycastHit[]> sensorsResults = agentSensorsManager.ComputeSensorResults();
 
@@ -431,7 +454,9 @@ public class RLAgent : Agent
         vectorSensor.AddObservation(wallsAndObjectivesObservations);
         vectorSensor.AddObservation(normalizedSpeed);
         vectorSensor.AddObservation(objectiveObserver.GetObjectivesObservation());
-        
+        //vectorSensor.AddObservation(GetCrossings());
+        vectorSensor.AddObservation(taskCompleted ? 1.0f : 0.0f); //TODO: check se ha senso
+
         rewardsWallsAndTargetsObservations(wallsAndTargets);
         rewardsWallsAndAgentsObservations(wallsAndAgents);
     }
@@ -459,7 +484,7 @@ public class RLAgent : Agent
                 actionSpeed = Mathf.Clamp(vectorAction[0], -1f, 1f);
                 actionAngle = Mathf.Clamp(vectorAction[1], -1f, 1f);
             }
-            
+
             // Non applicare movimenti se le animazioni degli obiettivi sono in corso
             if (!lockPosition && !(objectiveHandler != null && objectiveHandler.IsExecutingObjectiveAnimations()))
             {
@@ -506,7 +531,7 @@ public class RLAgent : Agent
             }
         }
         // Screenshot logic TESTING
-        
+
         if (testing != null)
         {
             testing.OnAgentStep();
@@ -514,7 +539,7 @@ public class RLAgent : Agent
 #endif
         AddReward(MyConstants.step_reward);
         stepLeft--;
-        if (!taskCompleted) 
+        if (!taskCompleted)
         {
             AddReward(MyConstants.incomplete_task_step_reward * objectiveHandler.GetRemainingObjectivesPercentage()); /// inomplete_task_step_reward is moltiplied by the percentage of objectives not completed
         }
@@ -565,22 +590,6 @@ public class RLAgent : Agent
         return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
     }
 
-    // TODO: Remove
-    public void MoveToNextTargetWithDelay(float delay)
-    {
-        // Old method
-        Debug.LogWarning("MoveToNextTargetWithDelay is deprecated with the new objectives system");
-    }
-
-    public Rigidbody GetRigidBody() => rigidBody;
-
-    // TODO: Remove
-    public void MoveToNextTarget()
-    {
-        // Old method
-        Debug.LogWarning("MoveToNextTarget is deprecated with the new objectives system");
-    }
-
     /**
      * \brief Triggered when the agent enters a collider.
      * \param other The collider entered.
@@ -588,12 +597,12 @@ public class RLAgent : Agent
     private void OnTriggerEnter(Collider other)
     {
         GameObject triggerObject = other.gameObject;
-        
+
         entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         if (triggerObject.CompareTag("Target"))
         {
             Target target = triggerObject.GetComponent<Target>();
-            
+
             if (IsFinalTarget(target))
             {
                 if (taskCompleted)
@@ -637,7 +646,7 @@ public class RLAgent : Agent
     private void OnTriggerExit(Collider other)
     {
         GameObject triggerObject = other.gameObject;
-                
+
         if (objectiveHandler != null && objectiveHandler.IsValidObjective(triggerObject))
         {
             objectiveHandler.HandleObjectiveTrigger(triggerObject);
@@ -657,8 +666,8 @@ public class RLAgent : Agent
         //animationManager.SetRunning();
         GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
         fleeing = true;
-        
-       
+
+
         var sensors = gameObject.GetComponent<AgentSensorsManager>();
         // TODo fix
         foreach (GameObject target in fleeTargets)
@@ -670,7 +679,7 @@ public class RLAgent : Agent
             else
             {
                 //if (!sensors.invisibleTargets.Contains(target))
-                    //sensors.invisibleTargets.Add(target);
+                //sensors.invisibleTargets.Add(target);
             }
         }
     }
@@ -688,7 +697,7 @@ public class RLAgent : Agent
     {
         return objectiveHandler.objectives;
     }
-    
+
     /**
      * \brief Checks if a direction is valid based on the array returned by DetermineVisualizationDirection.
      * \param Array of directions to check
@@ -831,7 +840,7 @@ public class RLAgent : Agent
      */
     private bool IsIntermediateTarget(Target target)
     {
-        return target.targetType == TargetType.Intermediate && 
+        return target.targetType == TargetType.Intermediate &&
             (target.group == group || target.group == Group.Generic);
     }
 
@@ -860,7 +869,7 @@ public class RLAgent : Agent
                 proxemic_small_wall = true;
             }
         }
-        
+
         if (proxemic_small_wall)
         {
             AddReward(MyConstants.proxemic_small_wall_reward);
@@ -874,7 +883,8 @@ public class RLAgent : Agent
      * \param proxemicRaysNumber Number of proxemic rays.
      * \return True if within the limit.
      */
-    private bool IsRayWithinTheLimit(int rayIndex, float proxemicRaysNumber){
+    private bool IsRayWithinTheLimit(int rayIndex, float proxemicRaysNumber)
+    {
         return rayIndex < (proxemicRaysNumber * 2) + 1;
     }
 
@@ -888,7 +898,8 @@ public class RLAgent : Agent
      * \param expectedTag Expected tag.
      * \return True if within range and tag matches.
      */
-    private bool IsWithinProxemicRange(float distance, float start, float end, float RaysNumber, GizmosTag tag, GizmosTag expectedTag){
+    private bool IsWithinProxemicRange(float distance, float start, float end, float RaysNumber, GizmosTag tag, GizmosTag expectedTag)
+    {
         return (distance >= start + MyConstants.rayOffset &&
             distance < end + MyConstants.rayOffset &&
             tag == expectedTag);
@@ -907,7 +918,7 @@ public class RLAgent : Agent
         {
             if (IsWithinProxemicRange(distance, range.Start, range.End, range.RaysNumber, tag, GizmosTag.Agent)
                 && IsRayWithinTheLimit(id, range.RaysNumber))
-            {  
+            {
                 StatsWriter.WriteAgentCollision(
                     transform.position.x,
                     transform.position.z,
@@ -942,12 +953,19 @@ public class RLAgent : Agent
      */
     private void HandleIntermediateTarget(GameObject triggerObject)
     {
-        exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+         exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         float crossingValue = entryValue * exitValue;
 
         if (crossingValue >= 0)
         {
             targetsTaken.Add(triggerObject);
+            Target target = triggerObject.GetComponent<Target>();
+            if (crossings[target.id] > 0)
+            {
+                AddReward(MyConstants.target_alredy_crossed_reward * crossings[target.id]);
+                Debug.Log("Target already crossed");
+            }
+            IncrementCrossing(target);
 
             float[] directionObjectives = DeterminePassingDirection(triggerObject);
 
@@ -964,11 +982,11 @@ public class RLAgent : Agent
                     AddReward(MyConstants.wrong_direction_reward);
                 }
             }
-            /*if (targetsTaken.Contains(triggerObject))
+            if (env.penaltyTakesTargetsAgain && targetsTaken.Contains(triggerObject))
             {
                 AddReward(MyConstants.already_taken_target_reward);
                 Debug.Log("Target already taken");
-            }*/
+            }
         }
         else
         {
@@ -977,8 +995,63 @@ public class RLAgent : Agent
         }
     }
 
+    // Method to initialize the crossing arrays (call when you know the number of intermediate targets)
+    public void InitCrossings(int numIntermediateTargets)
+    {
+        crossings = new float[MaxIntermediateTargets];
+        for (int i = 0; i < MaxIntermediateTargets; i++)
+        {
+            if (i < numIntermediateTargets)
+                crossings[i] = 0;
+            else
+                crossings[i] = -1f;
+        }
+        Debug.Log($"Agent {gameObject.name}: inizializzato array crossings con {numIntermediateTargets} target intermedi");
+    }
+
+    // Method to increment only if the index is valid (not a sentinel cell)
+    public void IncrementCrossing(Target target)
+    {
+        if (target.targetType == TargetType.Intermediate && target.id >= 0 && target.id < crossings.Length && crossings[target.id] != -1f)
+        {
+            crossings[target.id]++;
+        }
+    }
+
+    // Getters for the neural network (arrays always have fixed size)
+    public float[] GetCrossings() => crossings;
+
+    public float GetCrossings(int index)
+    {
+        if (index >= 0 && index < crossings.Length)
+        {
+            return crossings[index];
+        }
+        else
+        {
+            return -1f;
+        }
+    }
+
+
     public void SetRun(bool value)
     {
         run = value;
     }
+    
+    
+    /// <summary>
+    /// Returns the agent's Rigidbody component.
+    /// </summary>
+    /// <returns>The Rigidbody component</returns>
+    public Rigidbody GetRigidBody()
+    {
+        return rigidBody;
+    }
+
+    // OPPURE come proprietà pubblica (più semplice):
+    /// <summary>
+    /// Public accessor for the agent's Rigidbody component.
+    /// </summary>
+    public Rigidbody RigidBody => rigidBody;
 }

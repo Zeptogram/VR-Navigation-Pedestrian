@@ -111,11 +111,12 @@ public class AgentObserver : MonoBehaviour
         foreach (RaycastHit observation in results)
         {
             if (observation.collider == null) continue;
-            
+
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
             int hitObjectIndex = -1;
             Target target = seenObject.GetComponent<Target>();
+            int targetId = -1; //Default value for walls and final targets
             // One-hot encoding:
             // 0 = wall
             // 1 = intermediate target, valid
@@ -141,6 +142,7 @@ public class AgentObserver : MonoBehaviour
                             float[] directionObjectives = rlAgent.DetermineVisualizationDirection(seenObject);
                             bool isDirectionValid = rlAgent.CheckForValidDirection(directionObjectives);
                             hitObjectIndex = isDirectionValid ? 1 : 2; // Bianco se direzione valida, giallo se no
+                            targetId = target.id; // Set the target ID for intermediate targets
                         }
                     }
                     break;
@@ -148,11 +150,13 @@ public class AgentObserver : MonoBehaviour
                     Debug.LogError($"Error in {nameof(ComputeWallsAndTargetsObservations)} shouldn't see the tag: " + seenObject.tag);
                     break;
             }
-        
+
             wallsAndTargetsGizmos.Add((objTag.ToMyGizmosTag(hitObjectIndex), observation.point));
             float normalizedDistance = Mathf.Clamp(observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
             wallsAndTargetsObservations.Add(normalizedDistance);
             AddOneHotObservation(wallsAndTargetsObservations, hitObjectIndex, 5);
+            //Debug.Log("Crossings" + rlAgent.GetCrossings(targetId));
+            wallsAndTargetsObservations.Add(rlAgent.GetCrossings(targetId));
         }
         return wallsAndTargetsObservations;
     }

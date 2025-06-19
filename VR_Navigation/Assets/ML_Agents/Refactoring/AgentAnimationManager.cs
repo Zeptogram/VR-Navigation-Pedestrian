@@ -272,6 +272,6 @@ public class AgentAnimationManager : MonoBehaviour
         }
         SetWalking(true);
         agent.SetRun(true);
-        agent.MoveToNextTarget();
+        //agent.MoveToNextTarget();
     }
 }

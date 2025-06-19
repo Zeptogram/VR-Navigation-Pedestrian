@@ -8,8 +8,8 @@ public static class MyConstants
 {
     //settings
     public const int viewAngle = 180;
-    public const int rayLength = 30;
-    public const int numberOfRaysPerSide = 11;
+    public const int rayLength = 43;
+    public const int numberOfRaysPerSide = 17;
     //speed
     public static Vector2 minMaxSpeed = new Vector2 (0f, 1.7f);
     //float randomValue = RLAgent.RandomGaussian(0.65f, 2.15f); centrata in 1.4 con deviazione di 0.25
@@ -21,7 +21,7 @@ public static class MyConstants
     public const bool discrete = false;
 
     
-    public const float MAXIMUM_VIEW_DISTANCE = 14f; 
+    public const float MAXIMUM_VIEW_DISTANCE = 43f; 
     public const float MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE = 6f; 
     //reward
     public const float step_reward = -0.0001f;
@@ -34,15 +34,14 @@ public static class MyConstants
     public static float verticalRayOffset = -0.5f;
   
     // reward pianificazione
-    public const float objective_completed_reward = 1.5f;
+    public const float objective_completed_reward = 2f;
     public const float finale_target_incomplete_objectives_reward = -3f;
-    public const float finale_target_all_objectives_completed_reward = 6f;
-    //public const float correct_direction_reward = 0.2f;
-    public const float wrong_direction_reward = -0.07f;
-    //public const float not_watching_valid_target_reward = -0.01f;
+    public const float finale_target_all_objectives_completed_reward = 8f;
+    public const float wrong_direction_reward = -0.08f;
     public const float incomplete_task_step_reward = -0.06f;
-    //public const float looking_at_objective_reward = 0.004f;
-    
+    public const float target_alredy_crossed_reward = -0.03f;
+
+
     //Proxemix distances
     public static float proxemic_small_distance = 0.6f - rayOffset;
     public static float proxemic_medium_distance = 1.0f - rayOffset;

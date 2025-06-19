@@ -206,6 +206,7 @@ MonoBehaviour:
   group: 0
   envStep: 0
   lockPosition: 0
+  crossings: []
 --- !u!114 &9119825143924522533
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -257,7 +258,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 333
+    VectorObservationSize: 537
     NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 2
@@ -266,7 +267,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 19edecaa9e282704d85301a23a2d744b, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 93fab6c12106bc0408ef6e8736ecfcf4, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: Pedone

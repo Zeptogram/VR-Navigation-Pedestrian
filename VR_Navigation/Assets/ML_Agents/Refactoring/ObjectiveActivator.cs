@@ -154,7 +154,7 @@ public class ObjectiveActivator : MonoBehaviour
         Debug.Log($"Attivati {numToActivate} obiettivi su {objectives.Count} disponibili");
     }
     
-    private void NotifyAgentsOfObjectiveChange()
+    public void NotifyAgentsOfObjectiveChange()
     {
         if (currentEnvironment == null)
         {

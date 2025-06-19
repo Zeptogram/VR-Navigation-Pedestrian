@@ -432,7 +432,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         if (agent.env != null)
         {
             // Obtain the objectives from the environment
-            List<GameObject> envObjectives = agent.env.GetObjectives(); // Assumendo che questo metodo esista
+            List<GameObject> envObjectives = agent.env.GetObjectives(); 
             
             if (envObjectives != null && envObjectives.Count > 0)
             {

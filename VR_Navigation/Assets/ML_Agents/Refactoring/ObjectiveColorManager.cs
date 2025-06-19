@@ -134,4 +134,21 @@ public class ObjectiveColorManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Unregisters an agent from a specific objective and updates colors.
+    /// </summary>
+    /// <param name="agent">The RLAgent</param>
+    /// <param name="objective">The objective GameObject</param>
+    public void UnregisterAgentFromObjective(RLAgent agent, GameObject objective)
+    {
+        if (objectiveToAgents.ContainsKey(objective))
+        {
+            objectiveToAgents[objective].Remove(agent);
+            if (objectiveToAgents[objective].Count == 0)
+            {
+                objectiveToAgents.Remove(objective);
+            }
+            UpdateObjectiveColors();
+        }
+    }
 }

@@ -11,6 +11,7 @@ public class Target : MonoBehaviour
 {
     public Group group;
     public TargetType targetType;
+    public int id = -1;
 
     private void Start()
     {
