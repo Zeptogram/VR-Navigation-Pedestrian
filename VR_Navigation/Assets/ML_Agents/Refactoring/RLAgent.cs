@@ -125,6 +125,8 @@ public class RLAgent : Agent
     /// <summary>
     /// Number of steps in the environment.
     /// </summary>
+    /// TODO: CHECK IF NECESSARY HERE
+    //[NonSerialized] public int envStep = -1;
     public int envStep;
     /// <summary>
     /// Steps left in the episode.
@@ -171,7 +173,7 @@ public class RLAgent : Agent
     /// <summary>
     /// True if the task is completed.
     /// </summary>
-    [NonSerialized] public bool taskCompleted = false; // CAMBIA DA true A false
+    [NonSerialized] public bool taskCompleted = false;
     /// <summary>
     /// True if the environment is ready.
     /// </summary>
@@ -213,7 +215,7 @@ public class RLAgent : Agent
         new ProxemicRange { Start = 0, End = MyConstants.proxemic_small_distance, Reward = MyConstants.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = MyConstants.proxemic_small_ray }
     };
 
-    /// <summary>Add commentMore actions
+    /// <summary>
     /// Array of front crossings for the agent.
     /// </summary>
     public float[] crossings;
@@ -390,11 +392,11 @@ public class RLAgent : Agent
         tempoIniziale = (int)Time.time;
         currentSpeed = 0;
         numberOfIteraction = 0;
+        numberOfCrossings = 5; // Add to inspector as variable in case
+        InitCrossings(numberOfCrossings);
         // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // Disabilita randomizzazione
         resetAgent?.Invoke(this);
     }
-
-    // TODO: CAPIRE COME GESTIRLA, METTO ENV?
 
     /**
      * \brief Makes the agent listen for environment readiness.
@@ -406,7 +408,7 @@ public class RLAgent : Agent
         {
             if (agent == this)
             {
-                if (env != null) // Aggiungi questo controllo
+                if (env != null) 
                 {
                     numberOfCrossings = env.GetNumIntermediateTargets();
                     InitCrossings(numberOfCrossings);
@@ -465,6 +467,7 @@ public class RLAgent : Agent
      * \brief Applies the actions received from the neural network.
      * \param vectorAction Array of actions.
      */
+    [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
         if (run)
@@ -618,6 +621,10 @@ public class RLAgent : Agent
                     Finished();
                 }
             }
+            else if (IsIntermediateTarget(target))
+            {
+                insideTargets.Add(target.id); // <--- AGGIUNGI QUESTO
+            }
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
         {
@@ -656,7 +663,12 @@ public class RLAgent : Agent
             Target target = triggerObject.GetComponent<Target>();
             if (IsIntermediateTarget(target))
             {
-                HandleIntermediateTarget(triggerObject);
+                // Incrementa SOLO se eri dentro!
+                if (insideTargets.Contains(target.id))
+                {
+                    HandleIntermediateTarget(triggerObject);
+                    insideTargets.Remove(target.id); // ora sei fuori
+                }
             }
         }
     }
@@ -799,6 +811,7 @@ public class RLAgent : Agent
      * \brief Provides manual control for the agent (for debugging).
      * \param actionsOut Output actions array.
      */
+    [Obsolete]
     public override void Heuristic(float[] actionsOut)
     {
         // move agent by keyboard
@@ -830,7 +843,7 @@ public class RLAgent : Agent
      */
     private bool IsFinalTarget(Target target)
     {
-        return target != null && target.targetType == TargetType.Final;
+            return target.targetType == TargetType.Final && (target.group == group || target.group == Group.Generic);
     }
 
     /**
@@ -982,7 +995,7 @@ public class RLAgent : Agent
                     AddReward(MyConstants.wrong_direction_reward);
                 }
             }
-            if (env.penaltyTakesTargetsAgain && targetsTaken.Contains(triggerObject))
+            if (targetsTaken.Contains(triggerObject))
             {
                 AddReward(MyConstants.already_taken_target_reward);
                 Debug.Log("Target already taken");
@@ -1054,4 +1067,6 @@ public class RLAgent : Agent
     /// Public accessor for the agent's Rigidbody component.
     /// </summary>
     public Rigidbody RigidBody => rigidBody;
+
+    private HashSet<int> insideTargets = new HashSet<int>();
 }
