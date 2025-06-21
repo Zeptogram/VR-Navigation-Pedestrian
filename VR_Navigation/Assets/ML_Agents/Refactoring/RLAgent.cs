@@ -1062,7 +1062,6 @@ public class RLAgent : Agent
         return rigidBody;
     }
 
-    // OPPURE come proprietà pubblica (più semplice):
     /// <summary>
     /// Public accessor for the agent's Rigidbody component.
     /// </summary>
