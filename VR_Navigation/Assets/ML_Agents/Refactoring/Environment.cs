@@ -142,6 +142,12 @@ public class Environment : MonoBehaviour
                 }
             }
         }
+
+        // After all objectives are initialized and registered, ensure sensors are updated
+        EnsureObjectiveSensorsForAgents();
+        Debug.Log($"Environment {envID} completed objective initialization and updated agent sensors");
+
+        VerifyObjectiveLayers(); // Verifica e imposta i layer degli obiettivi
     }
 
     public List<GameObject> GetObjectives()
@@ -249,6 +255,11 @@ public class Environment : MonoBehaviour
                 }
             }
         }
+
+        // At the very end, after all objectives are reactivated
+        EnsureObjectiveSensorsForAgents();
+
+        VerifyObjectiveLayers(); // Verifica e imposta i layer degli obiettivi
     }
 
     private void AssignLocalTargetIds()
@@ -261,5 +272,57 @@ public class Environment : MonoBehaviour
             targets[i].id = i;
         }
         Debug.Log($"Ambiente {envID}: assegnati ID locali a {targets.Count} target intermedi");
+    }
+
+    public void EnsureObjectiveSensorsForAgents()
+    {
+        // Make sure agents can see objectives on appropriate layers
+        if (agents != null && agents.Count > 0)
+        {
+            foreach (RLAgent agent in agents)
+            {
+                var sensorsManager = agent.GetComponent<AgentSensorsManager>();
+                if (sensorsManager != null)
+                {
+                    // Force update the sensor vision for objectives
+                    sensorsManager.UpdateObjectiveSensorVision(agent.group);
+                    Debug.Log($"Updated objective sensors vision for agent {agent.name} (group {agent.group})");
+                }
+            }
+        }
+    }
+
+    private void VerifyObjectiveLayers()
+    {
+        if (objectives != null)
+        {
+            foreach (GameObject obj in objectives)
+            {
+                // Get all unique agent groups
+                HashSet<Group> uniqueGroups = new HashSet<Group>();
+                foreach (RLAgent agent in agents)
+                {
+                    uniqueGroups.Add(agent.group);
+                }
+                
+                // Make sure the objective is on the right layer for each group
+                foreach (Group group in uniqueGroups)
+                {
+                    string layerName = group.GetObjectiveLayerName();
+                    int layerIndex = LayerMask.NameToLayer(layerName);
+                    
+                    // Either add to existing layer or set the layer
+                    if (layerIndex != -1)
+                    {
+                        obj.layer = layerIndex;
+                        Debug.Log($"Set layer {layerName} for objective {obj.name}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Layer {layerName} not found for group {group}");
+                    }
+                }
+            }
+        }
     }
 }
