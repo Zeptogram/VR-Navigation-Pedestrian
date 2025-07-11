@@ -9,7 +9,7 @@ public static class MyConstants
     //settings
     public const int viewAngle = 180;
     public const int rayLength = 43;
-    public const int numberOfRaysPerSide = 17;
+    public const int numberOfRaysPerSide = 11;
     //speed
     public static Vector2 minMaxSpeed = new Vector2 (0f, 1.7f);
     //float randomValue = RLAgent.RandomGaussian(0.65f, 2.15f); centrata in 1.4 con deviazione di 0.25
@@ -35,7 +35,7 @@ public static class MyConstants
   
     // reward pianificazione
     public const float objective_completed_reward = 2f;
-    public const float finale_target_incomplete_objectives_reward = -3f;
+    public const float finale_target_incomplete_objectives_reward = -4f;
     public const float finale_target_all_objectives_completed_reward = 8f;
     public const float wrong_direction_reward = -0.08f;
     public const float incomplete_task_step_reward = -0.06f;
