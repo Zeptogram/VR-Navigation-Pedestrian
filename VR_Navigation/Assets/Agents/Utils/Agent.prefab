@@ -147,14 +147,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8215472406520892167}
-  - component: {fileID: 336504708005571761}
-  - component: {fileID: 9119825143924522533}
-  - component: {fileID: 8648114138195177357}
+  - component: {fileID: 218251807799827304}
   - component: {fileID: 6814978789236794652}
   - component: {fileID: 8466011598896647563}
-  - component: {fileID: 3993056144722404885}
-  - component: {fileID: 5102085837330457399}
-  - component: {fileID: 756028196482627101}
   - component: {fileID: 8215472406520892175}
   - component: {fileID: 73372606503062240}
   - component: {fileID: 8215472406520892172}
@@ -162,6 +157,8 @@ GameObject:
   - component: {fileID: 8215472406520892166}
   - component: {fileID: 4594404945888643258}
   - component: {fileID: 3187157242123077621}
+  - component: {fileID: 5037578563846445632}
+  - component: {fileID: 1699529229111752605}
   m_Layer: 11
   m_Name: Agent
   m_TagString: Agente
@@ -187,7 +184,7 @@ Transform:
   - {fileID: 7773877056025536901}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &336504708005571761
+--- !u!114 &218251807799827304
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -196,55 +193,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 8215472406520892164}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba5d23a98ef3f494ba8d9bbd6b434b58, type: 3}
+  m_Script: {fileID: 11500000, guid: 5817a2575f6208d48bb006f68b292306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
+  MaxStep: 100000
+  goalAction: []
   group: 0
-  envStep: 0
+  envStep: 100000
   lockPosition: 0
-  crossings: []
---- !u!114 &9119825143924522533
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8215472406520892164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fdafb85572f9d2847ab7a4e4c532cc82, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectivesObservation:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
---- !u!114 &8648114138195177357
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8215472406520892164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11709bd81fbbb0341b0626a5a5ca5c34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  orderedObjectives: 0
-  objectives: []
-  reachedObjectives: []
 --- !u!114 &6814978789236794652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -258,7 +217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 537
+    VectorObservationSize: 185
     NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 2
@@ -267,7 +226,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 93fab6c12106bc0408ef6e8736ecfcf4, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: f3f8034362d8b0b47a16e2f6ef6a2665, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: Pedone
@@ -291,52 +250,6 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 1000000
---- !u!114 &3993056144722404885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8215472406520892164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19ea2c43d4021af4ca0c8a729e69b101, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _sensors:
-  - SensorName: 0
-    RayLayeredMask:
-      serializedVersion: 2
-      m_Bits: 590080
-  - SensorName: 1
-    RayLayeredMask:
-      serializedVersion: 2
-      m_Bits: 2304
---- !u!114 &5102085837330457399
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8215472406520892164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: faf44d9a35eb9264c8d392ea6a99fcc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gizmosDrawer: 1
---- !u!114 &756028196482627101
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8215472406520892164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5adc5d12b5ad3a40bf471b66f0f84b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!95 &8215472406520892175
 Animator:
   serializedVersion: 5
@@ -464,6 +377,40 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &5037578563846445632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8215472406520892164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17f4382257cebcc4aa732e66cb51ac51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _sensors:
+  - SensorName: 0
+    RayLayeredMask:
+      serializedVersion: 2
+      m_Bits: 590080
+  - SensorName: 1
+    RayLayeredMask:
+      serializedVersion: 2
+      m_Bits: 2304
+--- !u!114 &1699529229111752605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8215472406520892164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9317d7e02b37d945abf21dfee8f5cc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gizmosDrawer: 1
 --- !u!1001 &7811742609655418478
 PrefabInstance:
   m_ObjectHideFlags: 0

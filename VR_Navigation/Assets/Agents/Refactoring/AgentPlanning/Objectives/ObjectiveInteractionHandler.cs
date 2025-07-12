@@ -10,7 +10,6 @@ using UnityEngine;
  * This component manages the objectives assigned to the agent, tracks which objectives have been reached,
  * and updates the agent's reward and completion status accordingly.
  */
-[RequireComponent(typeof(RLAgentPlanning))]
 [RequireComponent(typeof(ObjectiveObserver))]
 public class ObjectiveInteractionHandler : MonoBehaviour
 {
