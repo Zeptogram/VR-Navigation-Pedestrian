@@ -8,6 +8,7 @@ public class AgentObserver : MonoBehaviour
 {
     private List<GameObject> _targetsAlreadyTaken = new List<GameObject>();
 
+    public IAgentConstants constants;
 
     private Rigidbody _rigidbody;
     private List<float> wallsAndTargetsObservations = new List<float>();
@@ -71,7 +72,7 @@ public class AgentObserver : MonoBehaviour
                     break;
             }
             wallsAndTargetsGizmos.Add((objTag.ToMyGizmosTag(isTargetAlreadyTaken), observation.point));
-            float normalizedDistance = Mathf.Clamp(observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
+            float normalizedDistance = Mathf.Clamp(observation.distance / constants.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
             wallsAndTargetsObservations.Add(normalizedDistance);
             AddOneHotObservation(wallsAndTargetsObservations, hitObjectIndex, 3);
         }
@@ -96,14 +97,14 @@ public class AgentObserver : MonoBehaviour
             switch (objTag)
             {
                 case Tag.Wall:
-                    normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_DISTANCE;
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 case Tag.Agent:
                     tagIndex = 1;
                     float diffAng = Clamp0360(Clamp0360(seenObject.transform.eulerAngles.y) - Clamp0360(transform.eulerAngles.y));
                     normalizedDirection = Mathf.Clamp((diffAng / 180f) - 1, -1, 1);
                     normalizedSpeed = observation.rigidbody.velocity.magnitude / 1.7f;
-                    normalizedDistance = observation.distance / MyConstants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE; //da vederificare
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE; //da vederificare
 
                     break;
                 default:

@@ -24,7 +24,7 @@ public static class StatsWriter
         if (runId != "")
         {
             CheckFolder();
-            WriteGeneralSetting(curriculum);
+            //WriteGeneralSetting(curriculum);
         }
     }
 
@@ -125,51 +125,50 @@ public static class StatsWriter
         }
     }
 
-    public static void WriteGeneralSetting(Curriculum curriculum)
+    public static void WriteGeneralSetting(Curriculum curriculum, IAgentConstants constants)
     {
         if (isTraining && runID != "")
         {
-
             writer = new StreamWriter(folderPath + "/GeneralSetting.txt", true);
             writer.WriteLine("RunName: " + runID);
             writer.WriteLine("Start at : " + DateTime.Now);
             writer.WriteLine("General rewards: ");
-            writer.WriteLine("step_reward: " + MyConstants.step_reward);
-            writer.WriteLine("step_finished_reward: " + MyConstants.step_finished_reward);
-            writer.WriteLine("finale_target_reward: " + MyConstants.finale_target_reward);
-            writer.WriteLine("already_taken_target_reward: " + MyConstants.already_taken_target_reward);
-            writer.WriteLine("not_watching_target_reward: " + MyConstants.not_watching_target_reward);
+            writer.WriteLine("step_reward: " + constants.step_reward);
+            writer.WriteLine("step_finished_reward: " + constants.step_finished_reward);
+            writer.WriteLine("finale_target_reward: " + constants.finale_target_reward);
+            writer.WriteLine("already_taken_target_reward: " + constants.already_taken_target_reward);
+            writer.WriteLine("not_watching_target_reward: " + constants.not_watching_target_reward);
             writer.WriteLine("");
 
-            writer.WriteLine("viewAngle: " + MyConstants.viewAngle);
-            writer.WriteLine("rayLength: " + MyConstants.rayLength);
-            writer.WriteLine("numberOfRaysPerSide: " + MyConstants.numberOfRaysPerSide);
+            writer.WriteLine("viewAngle: " + constants.viewAngle);
+            writer.WriteLine("rayLength: " + constants.rayLength);
+            writer.WriteLine("numberOfRaysPerSide: " + constants.numberOfRaysPerSide);
             writer.WriteLine("");
 
-            writer.WriteLine("speedMaxRange: " + MyConstants.speedMaxRange);
+            writer.WriteLine("speedMaxRange: " + constants.speedMaxRange);
             writer.WriteLine("");
 
-            writer.WriteLine("angleRange: " + MyConstants.angleRange);
+            writer.WriteLine("angleRange: " + constants.angleRange);
             writer.WriteLine("");
 
-            writer.WriteLine("MAXIMUM_VIEW_DISTANCE: " + MyConstants.MAXIMUM_VIEW_DISTANCE);
-            writer.WriteLine("MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE: " + MyConstants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE);
+            writer.WriteLine("MAXIMUM_VIEW_DISTANCE: " + constants.MAXIMUM_VIEW_DISTANCE);
+            writer.WriteLine("MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE: " + constants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE);
             writer.WriteLine("");
 
-            writer.WriteLine("rayOffset: " + MyConstants.rayOffset);
+            writer.WriteLine("rayOffset: " + constants.rayOffset);
             writer.WriteLine("");
 
-            writer.WriteLine("proxemic_small_distance: " + MyConstants.proxemic_small_distance);
-            writer.WriteLine("proxemic_small_wall_reward: " + MyConstants.proxemic_small_wall_reward);
-            writer.WriteLine("proxemic_small_agent_reward: " + MyConstants.proxemic_small_agent_reward);
+            writer.WriteLine("proxemic_small_distance: " + constants.proxemic_small_distance);
+            writer.WriteLine("proxemic_small_wall_reward: " + constants.proxemic_small_wall_reward);
+            writer.WriteLine("proxemic_small_agent_reward: " + constants.proxemic_small_agent_reward);
             writer.WriteLine("");
 
-            writer.WriteLine("proxemic_medium_ray: " + MyConstants.proxemic_medium_ray);
-            writer.WriteLine("proxemic_medium_agent_reward: " + MyConstants.proxemic_medium_agent_reward);
+            writer.WriteLine("proxemic_medium_ray: " + constants.proxemic_medium_ray);
+            writer.WriteLine("proxemic_medium_agent_reward: " + constants.proxemic_medium_agent_reward);
             writer.WriteLine("");
 
-            writer.WriteLine("proxemic_small_ray: " + MyConstants.proxemic_small_ray);
-            writer.WriteLine("proxemic_large_agent_reward: " + MyConstants.proxemic_large_agent_reward);
+            writer.WriteLine("proxemic_small_ray: " + constants.proxemic_small_ray);
+            writer.WriteLine("proxemic_large_agent_reward: " + constants.proxemic_large_agent_reward);
             writer.WriteLine("");
             writer.WriteLine("");
             writer.WriteLine("Training");

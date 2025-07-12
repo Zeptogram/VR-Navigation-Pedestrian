@@ -18,7 +18,7 @@ public class AgentAnimationManager : MonoBehaviour
     /// </summary>
     //private RLAgent agent;
 
-  
+
     /// <summary>
     /// Reference to the IAgentRL component.
     /// </summary>
@@ -46,13 +46,13 @@ public class AgentAnimationManager : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            if (animator == null) 
+            if (animator == null)
             {
                 Debug.LogWarning("Animator not found on " + gameObject.name);
                 return;
             }
         }
-        
+
         animator.SetBool("isWalking", walking);
         animator.SetBool("isIdle", !walking);  // Opposite of isWalking
         //Debug.Log($"Set isWalking: {walking}, isIdle: {!walking}");
@@ -67,15 +67,15 @@ public class AgentAnimationManager : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            if (animator == null) 
+            if (animator == null)
             {
                 Debug.LogWarning("Animator not found on " + gameObject.name);
                 return;
             }
         }
-        
+
         animator.SetBool("isIdle", idle);
-        animator.SetBool("isWalking", !idle);  
+        animator.SetBool("isWalking", !idle);
         Debug.Log($"Set isIdle: {idle}, isWalking: {!idle}");
     }
 
@@ -115,13 +115,13 @@ public class AgentAnimationManager : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            if (animator == null) 
+            if (animator == null)
             {
                 Debug.LogWarning("Animator not found on " + gameObject.name);
                 return;
             }
         }
-        
+
         // Reset all triggers in the animator
         foreach (AnimatorControllerParameter param in animator.parameters)
         {
@@ -130,7 +130,7 @@ public class AgentAnimationManager : MonoBehaviour
                 animator.ResetTrigger(param.name);
             }
         }
-        
+
         Debug.Log("All animation triggers reset");
     }
 
@@ -143,21 +143,21 @@ public class AgentAnimationManager : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponent<Animator>();
-            if (animator == null) 
+            if (animator == null)
             {
                 Debug.LogWarning("Animator not found on " + gameObject.name);
                 return;
             }
         }
-        
+
         // Reset all triggers
         ResetAllTriggers();
-        
+
         // Idle state
         animator.SetBool("isWalking", false);
         animator.SetBool("isIdle", true);
         animator.SetFloat("Speed", 0f);
-        
+
         Debug.Log("Animator reset to idle state");
     }
 
@@ -282,4 +282,26 @@ public class AgentAnimationManager : MonoBehaviour
         agent.SetRun(true);
         //agent.MoveToNextTarget();
     }
+    
+
+    public IEnumerator PlayAnimationsSequence(List<RLAgent.AnimationAction> animations, RLAgent agent)
+    {
+        yield return new WaitUntil(() => animator != null);
+
+        agent.SetRun(false);
+        agent.GetRigidBody().velocity = Vector3.zero;
+
+        foreach (var anim in animations)
+        {
+            PlayActionTrigger(anim.animationName);
+            yield return new WaitForSeconds(anim.delay);
+        }
+
+        SetWalking(true);
+        agent.SetRun(true);
+        agent.MoveToNextTarget();
+    }
+
+
+
 }

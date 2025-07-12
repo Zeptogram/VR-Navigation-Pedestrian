@@ -43,10 +43,14 @@ public class AgentSensorsManager : MonoBehaviour
 
     [NonSerialized] public List<GameObject> invisibleTargets;
     [SerializeField] private List<Sensore> _sensors = new List<Sensore>();
-    private int _viewAngle = MyConstants.viewAngle;
-    private int _rayLength = MyConstants.rayLength;
 
-    private int numberOfRaysPerSide = MyConstants.numberOfRaysPerSide;
+    public IAgentConstants constants;
+    private int _viewAngle =>  constants.viewAngle;
+    private int _rayLength =>  constants.rayLength;
+
+    
+
+    private int numberOfRaysPerSide =>  constants.numberOfRaysPerSide;
 
     private Dictionary<Sensore, RaycastHit[]> _sensorsObservations;
 
@@ -95,7 +99,7 @@ public class AgentSensorsManager : MonoBehaviour
                 if (i == 0 && sign == -1) { continue; }
 
                 Vector3 rayDirection = CalculateRayDirection(i, sign);
-                Vector3 offSettedPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset) + (rayDirection * MyConstants.rayOffset);
+                Vector3 offSettedPosition = transform.position + (Vector3.up * constants.verticalRayOffset) + (rayDirection * constants.rayOffset);
 
                 //RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
                 RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength, invisibleTargets.ToArray<GameObject>());

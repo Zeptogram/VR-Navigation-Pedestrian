@@ -16,6 +16,11 @@ public class RLAgentPlanning : Agent, IAgentRL
     private bool run = true;
 
     /// <summary>
+    /// Reference to constants.
+    /// </summary>
+    public IAgentConstants constants { get; private set; }
+
+    /// <summary>
     /// The group to which the agent belongs.
     /// </summary>
     public Group group;
@@ -23,7 +28,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// Minimum and maximum speed for the agent.
     /// </summary>
-    private Vector2 minMaxSpeed = ConstantsPlanning.minMaxSpeed;
+    private Vector2 minMaxSpeed;
 
     /// <summary>
     /// Current speed of the agent.
@@ -59,7 +64,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// Range for randomizing speed.
     /// </summary>
-    private Vector2 speedMaxRange = ConstantsPlanning.speedMaxRange;
+    private Vector2 speedMaxRange;
 
     /// <summary>
     /// List of targets taken by the agent.
@@ -208,12 +213,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// List of proxemic ranges for agent proximity rewards.
     /// </summary>
-    private static readonly List<ProxemicRange> ProxemicRanges = new List<ProxemicRange>
-    {
-        new ProxemicRange { Start = ConstantsPlanning.proxemic_medium_distance, End = ConstantsPlanning.proxemic_large_distance, Reward = ConstantsPlanning.proxemic_large_agent_reward, StatsTag = "Large", RaysNumber = ConstantsPlanning.proxemic_large_ray },
-        new ProxemicRange { Start = ConstantsPlanning.proxemic_small_distance, End = ConstantsPlanning.proxemic_medium_distance, Reward = ConstantsPlanning.proxemic_medium_agent_reward, StatsTag = "Medium", RaysNumber = ConstantsPlanning.proxemic_medium_ray },
-        new ProxemicRange { Start = 0, End = ConstantsPlanning.proxemic_small_distance, Reward = ConstantsPlanning.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = ConstantsPlanning.proxemic_small_ray }
-    };
+    private List<ProxemicRange> ProxemicRanges;
 
     /// <summary>
     /// Array of front crossings for the agent.
@@ -241,6 +241,23 @@ public class RLAgentPlanning : Agent, IAgentRL
         objectiveObserver = GetComponent<ObjectiveObserver>();
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
+
+         // Constants
+        constants = new ConstantsPlanning();
+        agentSensorsManager.constants = this.constants;
+        agentObserver.constants = this.constants;
+        agentGizmosDrawer.constants = this.constants;
+        minMaxSpeed = constants.minMaxSpeed;
+        speedMaxRange = constants.speedMaxRange;
+
+        ProxemicRanges = new List<ProxemicRange>
+        {
+            new ProxemicRange { Start = constants.proxemic_medium_distance, End = constants.proxemic_large_distance, Reward = constants.proxemic_large_agent_reward, StatsTag = "Large", RaysNumber = constants.proxemic_large_ray },
+            new ProxemicRange { Start = constants.proxemic_small_distance, End = constants.proxemic_medium_distance, Reward = constants.proxemic_medium_agent_reward, StatsTag = "Medium", RaysNumber = constants.proxemic_medium_ray },
+            new ProxemicRange { Start = 0, End = constants.proxemic_small_distance, Reward = constants.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = constants.proxemic_small_ray }
+        };
+
+
 
         // Check if all required components are present
         if (agentSensorsManager == null)
@@ -475,12 +492,12 @@ public class RLAgentPlanning : Agent, IAgentRL
             float realSpeed = rigidBody.velocity.magnitude;
             float actionSpeed;
             float actionAngle;
-            if (ConstantsPlanning.discrete)
+            if (constants.discrete)
             {
-                /*actionSpeed = vectorAction[0];
+                actionSpeed = vectorAction[0];
                 actionSpeed = (actionSpeed - 5f) / 5f;
                 actionAngle = vectorAction[1];
-                actionAngle = (actionAngle - 5f) / 5f;*/
+                actionAngle = (actionAngle - 5f) / 5f;
             }
             else
             {
@@ -503,7 +520,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 group,
                 currentSpeed,
                 realSpeed,
-                (actionAngle * ConstantsPlanning.angleRange),
+                (actionAngle * constants.angleRange),
                 envID,
                 uniqueID,
                 numberOfIteraction
@@ -540,15 +557,15 @@ public class RLAgentPlanning : Agent, IAgentRL
             testing.OnAgentStep();
         }
 #endif
-        AddReward(ConstantsPlanning.step_reward);
+        AddReward(constants.step_reward);
         stepLeft--;
         if (!taskCompleted)
         {
-            AddReward(ConstantsPlanning.incomplete_task_step_reward * objectiveHandler.GetRemainingObjectivesPercentage()); /// inomplete_task_step_reward is moltiplied by the percentage of objectives not completed
+            AddReward(constants.incomplete_task_step_reward * objectiveHandler.GetRemainingObjectivesPercentage()); /// inomplete_task_step_reward is moltiplied by the percentage of objectives not completed
         }
         if (stepLeft <= 0)
         {
-            AddReward(ConstantsPlanning.step_finished_reward);
+            AddReward(constants.step_finished_reward);
             print("finished_step");
             Finished();
         }
@@ -611,13 +628,13 @@ public class RLAgentPlanning : Agent, IAgentRL
                 if (taskCompleted)
                 {
                     Debug.Log("Final target and all objectives completed!");
-                    AddReward(ConstantsPlanning.finale_target_all_objectives_completed_reward);
+                    AddReward(constants.finale_target_all_objectives_completed_reward);
                     Finished();
                 }
                 else
                 {
                     Debug.Log("Final target reached but not all objectives completed!");
-                    AddReward(ConstantsPlanning.finale_target_incomplete_objectives_reward);
+                    AddReward(constants.finale_target_incomplete_objectives_reward);
                     Finished();
                 }
             }
@@ -634,11 +651,11 @@ public class RLAgentPlanning : Agent, IAgentRL
             {
                 if (taskCompleted)
                 {
-                    AddReward(ConstantsPlanning.finale_target_all_objectives_completed_reward);
+                    AddReward(constants.finale_target_all_objectives_completed_reward);
                 }
                 else
                 {
-                    AddReward(ConstantsPlanning.finale_target_incomplete_objectives_reward);
+                    AddReward(constants.finale_target_incomplete_objectives_reward);
                 }
                 print("Final target");
                 Finished();
@@ -830,7 +847,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     private void AngleChange(float deltaAngle)
     {
-        newAngle = Mathf.Round((deltaAngle * ConstantsPlanning.angleRange) + transform.rotation.eulerAngles.y);
+        newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
         newAngle %= 360;
         if (newAngle < 0) { newAngle += 360f; }
         transform.eulerAngles = new Vector3(0, newAngle, 0);
@@ -869,7 +886,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         {
             (GizmosTagPlanning wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargets[i];
             float agentAndWallsAndTargetDistance = Vector3.Distance(transform.position + Vector3.up, wallsAndTargetVector);
-            if ((agentAndWallsAndTargetDistance < ConstantsPlanning.proxemic_small_distance + ConstantsPlanning.rayOffset) &&
+            if ((agentAndWallsAndTargetDistance < constants.proxemic_small_distance + constants.rayOffset) &&
                 (wallsAndTargetTag == GizmosTagPlanning.Wall))
             {
                 StatsWriter.WriteAgentCollision(
@@ -885,7 +902,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
         if (proxemic_small_wall)
         {
-            AddReward(ConstantsPlanning.proxemic_small_wall_reward);
+            AddReward(constants.proxemic_small_wall_reward);
             print("proxemic_small_wall_reward");
         }
     }
@@ -913,8 +930,8 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     private bool IsWithinProxemicRange(float distance, float start, float end, float RaysNumber, GizmosTagPlanning tag, GizmosTagPlanning expectedTag)
     {
-        return (distance >= start + ConstantsPlanning.rayOffset &&
-            distance < end + ConstantsPlanning.rayOffset &&
+        return (distance >= start + constants.rayOffset &&
+            distance < end + constants.rayOffset &&
             tag == expectedTag);
     }
 
@@ -975,7 +992,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             Target target = triggerObject.GetComponent<Target>();
             if (crossings[target.id] > 0)
             {
-                AddReward(ConstantsPlanning.target_alredy_crossed_reward * crossings[target.id]);
+                AddReward(constants.target_alredy_crossed_reward * crossings[target.id]);
                 Debug.Log("Target already crossed");
             }
             IncrementCrossing(target);
@@ -987,23 +1004,23 @@ public class RLAgentPlanning : Agent, IAgentRL
                 if (CheckForValidDirection(directionObjectives))
                 {
                     //Debug.Log($"Correct direction taken (entryValue: {entryValue})");
-                    //AddReward(ConstantsPlanning.correct_direction_reward);
+                    //AddReward(constants.correct_direction_reward);
                 }
                 else
                 {
                     //Debug.Log($"Wrong direction taken (entryValue: {entryValue})");
-                    AddReward(ConstantsPlanning.wrong_direction_reward);
+                    AddReward(constants.wrong_direction_reward);
                 }
             }
             if (targetsTaken.Contains(triggerObject))
             {
-                AddReward(ConstantsPlanning.already_taken_target_reward);
+                AddReward(constants.already_taken_target_reward);
                 Debug.Log("Target already taken");
             }
         }
         else
         {
-            AddReward(ConstantsPlanning.target_taken_incorrectly_reward);
+            AddReward(constants.target_taken_incorrectly_reward);
             Debug.Log("Target taken incorrectly");
         }
     }

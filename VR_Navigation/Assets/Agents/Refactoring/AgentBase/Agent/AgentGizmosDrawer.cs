@@ -9,6 +9,8 @@ using static AgentSensorsManager;
 public class AgentGizmosDrawer : MonoBehaviour
 {
     public bool gizmosDrawer;
+    public IAgentConstants constants;
+
 
     private List<(GizmosTag, Vector3)> wallsAndTargetsObservations = new List<(GizmosTag, Vector3)>();
     private List<(GizmosTag, Vector3)> wallsAndAgentsObservations = new List<(GizmosTag, Vector3)>();
@@ -48,7 +50,7 @@ public class AgentGizmosDrawer : MonoBehaviour
 
     private void DrawObservationsGizmos()
     {
-        Vector3 newPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset); 
+        Vector3 newPosition = transform.position + (Vector3.up * constants.verticalRayOffset); 
         newPosition.y += 1;
         for (int i = 0; i < wallsAndTargetsObservations.Count && i < wallsAndAgentsObservations.Count; i++)
         {
@@ -79,13 +81,13 @@ public class AgentGizmosDrawer : MonoBehaviour
     private void DrawGizmosProxemics()
     {
         Gizmos.color = Color.red;
-        Vector3 newPosition = transform.position + (Vector3.up * MyConstants.verticalRayOffset);
+        Vector3 newPosition = transform.position + (Vector3.up * constants.verticalRayOffset);
         newPosition.y += 1;
         if (agentSensorsManager != null)
         {
-            foreach (Proxemic proxemic in MyConstants.Proxemics)
+            foreach (Proxemic proxemic in constants.Proxemics)
             {
-                float d = proxemic.Distance + MyConstants.rayOffset;
+                float d = proxemic.Distance + constants.rayOffset;
 
                 Gizmos.DrawRay(newPosition, agentSensorsManager.CalculateRayDirection(proxemic.RaysNumberPerSide, 1) * d);
                 Gizmos.DrawRay(newPosition, agentSensorsManager.CalculateRayDirection(proxemic.RaysNumberPerSide, -1) * d);

@@ -28,9 +28,11 @@ public class RLAgent : Agent
     private bool run = true;
     private int nextTargetCount = 0;
 
+    public IAgentConstants constants { get; private set; }
+
     public Group group;
 
-    private Vector2 minMaxSpeed = MyConstants.minMaxSpeed;
+    private Vector2 minMaxSpeed;
 
     private float currentSpeed;
     private float newAngle;
@@ -45,7 +47,7 @@ public class RLAgent : Agent
     private Animator animator;
     private AgentAnimationManager animationManager;
 
-    private Vector2 speedMaxRange = MyConstants.speedMaxRange;
+    private Vector2 speedMaxRange;
 
     [NonSerialized] public List<GameObject> targetsTaken = new List<GameObject>();
 
@@ -89,12 +91,22 @@ public class RLAgent : Agent
             gameObject.GetComponent<AgentSensorsManager>().invisibleTargets.Remove(goalAction[0].goalLocation);
         }
         agentSensorsManager = GetComponent<AgentSensorsManager>();
+
         agentGizmosDrawer = GetComponent<AgentGizmosDrawer>();
         agentObserver = GetComponent<AgentObserver>();
         startPosition = transform.position;
         startRotation = transform.rotation;
         rigidBody = GetComponent<Rigidbody>();
         agentSensorsManager.UpdateTargetSensorVision(group);
+
+        // Constants
+        constants = new ConstantsBase();
+        agentSensorsManager.constants = this.constants;
+        agentObserver.constants = this.constants;
+        agentGizmosDrawer.constants = this.constants;
+        minMaxSpeed = constants.minMaxSpeed;
+        speedMaxRange = constants.speedMaxRange;
+
     }
 
     private void Update()
@@ -192,12 +204,12 @@ public class RLAgent : Agent
             float realSpeed = rigidBody.velocity.magnitude;
             float actionSpeed;
             float actionAngle;
-            if (MyConstants.discrete)
+            if (constants.discrete)
             {
-                /*actionSpeed = vectorAction[0];
+                actionSpeed = vectorAction[0];
                 actionSpeed = (actionSpeed - 5f) / 5f;
                 actionAngle = vectorAction[1];
-                actionAngle = (actionAngle - 5f) / 5f;*/
+                actionAngle = (actionAngle - 5f) / 5f;
             }
             else
             {
@@ -219,7 +231,7 @@ public class RLAgent : Agent
                 group,
                 currentSpeed,
                 realSpeed,
-                (actionAngle * MyConstants.angleRange),
+                (actionAngle * constants.angleRange),
                 envID,
                 uniqueID,
                 numberOfIteraction
@@ -235,11 +247,11 @@ public class RLAgent : Agent
 
     public void ComputeSteps()
     {
-        AddReward(MyConstants.step_reward);
+        AddReward(constants.step_reward);
         stepLeft--;
         if (stepLeft <= 0)
         {
-            AddReward(MyConstants.step_finished_reward);
+            AddReward(constants.step_finished_reward);
             print("finished_step");
             Finished();
         }
@@ -317,7 +329,7 @@ public class RLAgent : Agent
             if (goalAction[nextTargetCount].animations != null && goalAction[nextTargetCount].animations.Count > 0)
             {
                 animationManager.SetWalking(false);
-                //StartCoroutine(animationManager.PlayAnimationsSequence(goalAction[nextTargetCount].animations, this));
+                StartCoroutine(animationManager.PlayAnimationsSequence(goalAction[nextTargetCount].animations, this));
             }
             else
             {
@@ -328,7 +340,7 @@ public class RLAgent : Agent
             // final target
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
-                AddReward(MyConstants.finale_target_reward);
+                AddReward(constants.finale_target_reward);
                 print("Final target");
                 Finished();
             }
@@ -339,7 +351,7 @@ public class RLAgent : Agent
             entryValue = Vector3.Dot(transform.forward, reachedTarget.transform.forward);
             if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
             {
-                AddReward(MyConstants.finale_target_reward);
+                AddReward(constants.finale_target_reward);
                 print("Final target");
                 Finished();
             }
@@ -375,18 +387,18 @@ public class RLAgent : Agent
                 if (resultValue >= 0)
                 {
                     targetsTaken.Add(reachedTarget);
-                    AddReward(MyConstants.new_target_reward);
+                    AddReward(constants.new_target_reward);
                     print("Target intermedio: " + reachedTarget.name);
                 }
                 else
                 {
-                    AddReward(MyConstants.target_taken_incorrectly_reward);
+                    AddReward(constants.target_taken_incorrectly_reward);
                     print("Target intermedio preso in modo scorretto: " + reachedTarget.name);
                 }
             }
             else
             {
-                AddReward(MyConstants.already_taken_target_reward);
+                AddReward(constants.already_taken_target_reward);
                 print("Already_taken_target_reward: " + reachedTarget.name);
             }
         }
@@ -426,7 +438,7 @@ public class RLAgent : Agent
 
     private void AngleChange(float deltaAngle)
     {
-        newAngle = Mathf.Round((deltaAngle * MyConstants.angleRange) + transform.rotation.eulerAngles.y);
+        newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
         newAngle %= 360;
         if (newAngle < 0) { newAngle += 360f; }
         transform.eulerAngles = new Vector3(0, newAngle, 0);
@@ -444,7 +456,7 @@ public class RLAgent : Agent
         {
             (GizmosTag wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargets[i];
             float agentAndWallsAndTargetDistance = Vector3.Distance(transform.position + Vector3.up, wallsAndTargetVector);
-            if ((agentAndWallsAndTargetDistance < MyConstants.proxemic_small_distance + MyConstants.rayOffset) &&
+            if ((agentAndWallsAndTargetDistance < constants.proxemic_small_distance + constants.rayOffset) &&
                 (wallsAndTargetTag == GizmosTag.Wall))
             {
                 StatsWriter.WriteAgentCollision(
@@ -463,12 +475,12 @@ public class RLAgent : Agent
         }
         if (!target)
         {
-            AddReward(MyConstants.not_watching_target_reward);
+            AddReward(constants.not_watching_target_reward);
             print("not_watching_target_reward");
         }
         if (proxemic_small_wall)
         {
-            AddReward(MyConstants.proxemic_small_wall_reward);
+            AddReward(constants.proxemic_small_wall_reward);
             print("proxemic_small_wall_reward");
         }
     }
@@ -484,9 +496,9 @@ public class RLAgent : Agent
             (GizmosTag wallsAndAgentsTag, Vector3 wallsAndAgentsVector) = wallsAndAgents[i];
             float agentAndWallsAndAgentsDistance = Vector3.Distance(transform.position + Vector3.up, wallsAndAgentsVector);
 
-            if ((MyConstants.proxemic_large_distance + MyConstants.rayOffset >= agentAndWallsAndAgentsDistance)
-                && (MyConstants.proxemic_medium_distance + MyConstants.rayOffset < agentAndWallsAndAgentsDistance) &&
-                (wallsAndAgentsTag == GizmosTag.Agent) && (i < (MyConstants.proxemic_large_ray * 2) + 1))
+            if ((constants.proxemic_large_distance + constants.rayOffset >= agentAndWallsAndAgentsDistance)
+                && (constants.proxemic_medium_distance + constants.rayOffset < agentAndWallsAndAgentsDistance) &&
+                (wallsAndAgentsTag == GizmosTag.Agent) && (i < (constants.proxemic_large_ray * 2) + 1))
             {
                 StatsWriter.WriteAgentCollision(
                    transform.position.x,
@@ -497,9 +509,9 @@ public class RLAgent : Agent
                 );
                 proxemic_large_agent = true;
             }
-            else if ((MyConstants.proxemic_medium_distance + MyConstants.rayOffset >= agentAndWallsAndAgentsDistance)
-               && (MyConstants.proxemic_small_distance + MyConstants.rayOffset < agentAndWallsAndAgentsDistance) &&
-               (wallsAndAgentsTag == GizmosTag.Agent) && (i < (MyConstants.proxemic_medium_ray * 2) + 1))
+            else if ((constants.proxemic_medium_distance + constants.rayOffset >= agentAndWallsAndAgentsDistance)
+               && (constants.proxemic_small_distance + constants.rayOffset < agentAndWallsAndAgentsDistance) &&
+               (wallsAndAgentsTag == GizmosTag.Agent) && (i < (constants.proxemic_medium_ray * 2) + 1))
             {
                 StatsWriter.WriteAgentCollision(
                    transform.position.x,
@@ -510,7 +522,7 @@ public class RLAgent : Agent
                 );
                 proxemic_medium_agent = true;
             }
-            else if ((MyConstants.proxemic_small_distance + MyConstants.rayOffset >= agentAndWallsAndAgentsDistance) &&
+            else if ((constants.proxemic_small_distance + constants.rayOffset >= agentAndWallsAndAgentsDistance) &&
                 (wallsAndAgentsTag == GizmosTag.Agent))
             {
                 StatsWriter.WriteAgentCollision(
@@ -525,17 +537,17 @@ public class RLAgent : Agent
         }
         if (proxemic_small_agent)
         {
-            AddReward(MyConstants.proxemic_small_agent_reward);
+            AddReward(constants.proxemic_small_agent_reward);
             print("proxemic_small_agent_reward");
         }
         else if (proxemic_medium_agent)
         {
-            AddReward(MyConstants.proxemic_medium_agent_reward);
+            AddReward(constants.proxemic_medium_agent_reward);
             print("proxemic_medium_agent_reward");
         }
         else if (proxemic_large_agent)
         {
-            AddReward(MyConstants.proxemic_large_agent_reward);
+            AddReward(constants.proxemic_large_agent_reward);
             print("proxemic_large_agent_reward");
         }
     }

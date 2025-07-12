@@ -85,7 +85,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
 
         reachedObjectives.Add(triggerObject);
-        agent.AddReward(ConstantsPlanning.objective_completed_reward);
+        agent.AddReward(agent.constants.objective_completed_reward);
 
         observer.MarkObjectiveAsCompleted(triggerObject);
         //triggerObject.SetActive(false); // TODO: make visible again if needed

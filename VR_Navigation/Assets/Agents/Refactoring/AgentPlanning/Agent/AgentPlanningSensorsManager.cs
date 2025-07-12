@@ -25,12 +25,14 @@ public class AgentPlanningSensorsManager : MonoBehaviour
         }
     }
 
+    public IAgentConstants constants;
+
     //[NonSerialized] public List<GameObject> invisibleTargets;
     [SerializeField] private List<Sensore> _sensors = new List<Sensore>();
-    private int _viewAngle = ConstantsPlanning.viewAngle;
-    private int _rayLength = ConstantsPlanning.rayLength;
+    private int _viewAngle => constants.viewAngle;
+    private int _rayLength => constants.rayLength;
 
-    private int numberOfRaysPerSide = ConstantsPlanning.numberOfRaysPerSide;
+    private int numberOfRaysPerSide => constants.numberOfRaysPerSide;
 
     private Dictionary<Sensore, RaycastHit[]> _sensorsObservations; // dizionario che contiene i risultati dei sensori
 
@@ -100,7 +102,7 @@ public class AgentPlanningSensorsManager : MonoBehaviour
                 if (i == 0 && sign == -1) { continue; }
 
                 Vector3 rayDirection = CalculateRayDirection(i, sign);
-                Vector3 offSettedPosition = transform.position + (Vector3.up * ConstantsPlanning.verticalRayOffset) + (rayDirection * ConstantsPlanning.rayOffset);
+                Vector3 offSettedPosition = transform.position + (Vector3.up * constants.verticalRayOffset) + (rayDirection * constants.rayOffset);
 
                 RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
                 //RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength, invisibleTargets.ToArray<GameObject>());

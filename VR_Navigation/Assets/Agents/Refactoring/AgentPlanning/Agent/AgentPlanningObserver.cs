@@ -9,6 +9,10 @@ using static AgentPlanningSensorsManager;
 [RequireComponent(typeof(Rigidbody))]
 public class AgentPlanningObserver : MonoBehaviour
 {
+
+
+    public IAgentConstants constants;
+
     /// <summary>
     /// Reference to the agent's Rigidbody component.
     /// </summary>
@@ -152,7 +156,7 @@ public class AgentPlanningObserver : MonoBehaviour
             }
 
             wallsAndTargetsGizmos.Add((objTag.ToMyGizmosTag(hitObjectIndex), observation.point));
-            float normalizedDistance = Mathf.Clamp(observation.distance / ConstantsPlanning.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
+            float normalizedDistance = Mathf.Clamp(observation.distance / constants.MAXIMUM_VIEW_DISTANCE, 0f, 1f);
             wallsAndTargetsObservations.Add(normalizedDistance);
             AddOneHotObservation(wallsAndTargetsObservations, hitObjectIndex, 5);
             //Debug.Log("Crossings" + rlAgent.GetCrossings(targetId));
@@ -185,14 +189,14 @@ public class AgentPlanningObserver : MonoBehaviour
             switch (objTag)
             {
                 case Tag.Wall:
-                    normalizedDistance = observation.distance / ConstantsPlanning.MAXIMUM_VIEW_DISTANCE;
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 case Tag.Agent:
                     tagIndex = 1;
                     float diffAng = Clamp0360(Clamp0360(seenObject.transform.eulerAngles.y) - Clamp0360(transform.eulerAngles.y));
                     normalizedDirection = Mathf.Clamp((diffAng / 180f) - 1, -1, 1);
                     normalizedSpeed = observation.rigidbody.velocity.magnitude / 1.7f;
-                    normalizedDistance = observation.distance / ConstantsPlanning.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE;
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE;
                     break;
                 default:
                     Debug.LogError($"Error in {nameof(ComputeWallsAndAgentsObservations)} should't see the tag: " + seenObject.tag);
@@ -229,12 +233,12 @@ public class AgentPlanningObserver : MonoBehaviour
             {
                 case Tag.Wall:
                     tagIndex = 0;
-                    normalizedDistance = observation.distance / ConstantsPlanning.MAXIMUM_VIEW_DISTANCE;
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 case Tag.Objective:
                     bool isAvailable = objectiveHandler != null && objectiveHandler.IsObjectiveCurrentlyAvailable(seenObject);
                     tagIndex = isAvailable ? 1 : 2; // 1 = valid now, 2 = already taken or not available (order)
-                    normalizedDistance = observation.distance / ConstantsPlanning.MAXIMUM_VIEW_DISTANCE;
+                    normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_DISTANCE;
                     break;
                 default:
                     Debug.LogError($"Error in {nameof(ComputeWallsAndObjectivesObservations)}: unexpected tag {seenObject.tag}");
