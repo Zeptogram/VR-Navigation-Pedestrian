@@ -91,10 +91,17 @@ public class AgentAnimationManager : MonoBehaviour
             animator = GetComponent<Animator>();
             if (animator == null) return;
         }
-        animator.ResetTrigger("TurnRight");
-        animator.ResetTrigger("TurnLeft");
-        animator.SetFloat("TurnSpeed", angularSpeed); // Animator Parameter for turn speed
-        animator.SetTrigger(right ? "TurnRight" : "TurnLeft");
+        // Reset triggers only if they exist
+        if (HasParameter("TurnRight", AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger("TurnRight");
+        if (HasParameter("TurnLeft", AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger("TurnLeft");
+        if (HasParameter("TurnSpeed", AnimatorControllerParameterType.Float))
+            animator.SetFloat("TurnSpeed", angularSpeed);
+
+        string trigger = right ? "TurnRight" : "TurnLeft";
+        if (HasParameter(trigger, AnimatorControllerParameterType.Trigger))
+            animator.SetTrigger(trigger);
     }
 
     /// <summary>
@@ -102,8 +109,10 @@ public class AgentAnimationManager : MonoBehaviour
     /// </summary>
     public void StopTurn()
     {
-        animator.ResetTrigger("TurnRight");
-        animator.ResetTrigger("TurnLeft");
+        if (HasParameter("TurnRight", AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger("TurnRight");
+        if (HasParameter("TurnLeft", AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger("TurnLeft");
     }
 
     /// <summary>
@@ -302,6 +311,12 @@ public class AgentAnimationManager : MonoBehaviour
         agent.MoveToNextTarget();
     }
 
-
-
+    private bool HasParameter(string paramName, AnimatorControllerParameterType type)
+    {
+        if (animator == null) return false;
+        foreach (var param in animator.parameters)
+            if (param.type == type && param.name == paramName)
+                return true;
+        return false;
+    }
 }

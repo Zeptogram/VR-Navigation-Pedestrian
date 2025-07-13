@@ -8,7 +8,7 @@ using System.Collections;
 using UnityEngine.Events;
 using UnityEngine.AI;
 
-public class RLAgent : Agent
+public class RLAgent : Agent, IAgentRL
 {
     [Serializable]
     public struct AnimationAction
@@ -185,7 +185,7 @@ public class RLAgent : Agent
         rewardsWallsAndTargetsObservations(wallsAndTargets);
         rewardsWallsAndAgentsObservations(wallsAndAgents);
 
-        // Aggiungi padding se necessario (assumiamo che wallsAndTargetsObservations e wallsAndAgentsObservations siano List<float>)
+        /*// Aggiungi padding se necessario (assumiamo che wallsAndTargetsObservations e wallsAndAgentsObservations siano List<float>)
         int observationsCount = wallsAndTargetsObservations.Count + wallsAndAgentsObservations.Count + 1; // +1 per normalizedSpeed
         int requiredObservations = 185;
 
@@ -193,7 +193,7 @@ public class RLAgent : Agent
         for (int i = 0; i < requiredObservations - observationsCount; i++)
         {
             vectorSensor.AddObservation(0f); // Aggiungi valore neutro per il padding
-        }
+        }*/
     }
 
     [Obsolete]

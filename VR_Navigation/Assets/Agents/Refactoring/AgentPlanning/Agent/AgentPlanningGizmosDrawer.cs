@@ -98,6 +98,7 @@ public class AgentPlanningGizmosDrawer : MonoBehaviour
     }
     private void DrawGizmosProxemics()
     {
+        if (constants == null) return;
         Gizmos.color = Color.red;
         Vector3 newPosition = transform.position;
         newPosition.y += 1;

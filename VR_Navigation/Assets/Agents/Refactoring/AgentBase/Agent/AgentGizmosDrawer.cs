@@ -50,6 +50,7 @@ public class AgentGizmosDrawer : MonoBehaviour
 
     private void DrawObservationsGizmos()
     {
+        if (constants == null) return;
         Vector3 newPosition = transform.position + (Vector3.up * constants.verticalRayOffset); 
         newPosition.y += 1;
         for (int i = 0; i < wallsAndTargetsObservations.Count && i < wallsAndAgentsObservations.Count; i++)
@@ -80,6 +81,7 @@ public class AgentGizmosDrawer : MonoBehaviour
     }
     private void DrawGizmosProxemics()
     {
+        if (constants == null) return;
         Gizmos.color = Color.red;
         Vector3 newPosition = transform.position + (Vector3.up * constants.verticalRayOffset);
         newPosition.y += 1;
