@@ -36,6 +36,9 @@ public class RLAgent : Agent, IAgentRL
     private Vector2 minMaxSpeed;
 
     private float currentSpeed;
+
+    private bool isPlayingAnimationSequence = false; 
+
     private float newAngle;
 
     private bool fleeing = false;
@@ -112,6 +115,9 @@ public class RLAgent : Agent, IAgentRL
 
     private void Update()
     {
+        // No animations if the agent is playing an animation sequence
+        if (isPlayingAnimationSequence) return;
+
         float speed = rigidBody.velocity.magnitude;
         animationManager.UpdateSpeed(speed / 10);
 
@@ -145,6 +151,12 @@ public class RLAgent : Agent, IAgentRL
         }
 
         lastYRotation = transform.eulerAngles.y;
+    }
+
+    public void SetAnimationSequenceMode(bool isPlaying)
+    {
+        isPlayingAnimationSequence = isPlaying;
+        Debug.Log($"Animation sequence mode set to: {isPlaying}");
     }
 
     public override void OnEpisodeBegin()
@@ -186,7 +198,7 @@ public class RLAgent : Agent, IAgentRL
         rewardsWallsAndTargetsObservations(wallsAndTargets);
         rewardsWallsAndAgentsObservations(wallsAndAgents);
 
-        /*// Aggiungi padding se necessario (assumiamo che wallsAndTargetsObservations e wallsAndAgentsObservations siano List<float>)
+        /*// Aggiungi padding se necessario 
         int observationsCount = wallsAndTargetsObservations.Count + wallsAndAgentsObservations.Count + 1; // +1 per normalizedSpeed
         int requiredObservations = 185;
 

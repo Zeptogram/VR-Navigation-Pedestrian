@@ -3,6 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
+/// Extension methods for IAgentRL
+/// </summary>
+public static class IAgentRLExtensions
+{
+    public static void SetAnimationSequenceMode(this IAgentRL agent, bool isPlaying)
+    {
+        if (agent is RLAgent rlAgent)
+            rlAgent.SetAnimationSequenceMode(isPlaying);
+    }
+    
+    public static void MoveToNextTarget(this IAgentRL agent)
+    {
+        if (agent is RLAgent rlAgent)
+            rlAgent.MoveToNextTarget();
+    }
+}
+
+/// <summary>
 /// Extension of AgentAnimationManager for RL agents.
 /// Adds RL-specific functionality like delayed movement and animation sequences.
 /// </summary>
@@ -56,6 +74,59 @@ public class RLAgentAnimationManager : AgentAnimationManager
     }
 
     /// <summary>
+    /// Plays an animation trigger by name without resetting all triggers.
+    /// Useful for animation sequences.
+    /// </summary>
+    /// <param name="triggerName">Name of the trigger to play.</param>
+    public void PlayActionTriggerInSequence(string triggerName)
+    {
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                Debug.LogError("Animator not found!");
+                return;
+            }
+        }
+
+        // If no trigger name is provided, do nothing
+        if (string.IsNullOrEmpty(triggerName))
+        {
+            return;
+        }
+
+        // For boolean states like walking or idle, set them directly
+        if (triggerName == "isWalking")
+        {
+            SetWalking(true);
+            return;
+        }
+        else if (triggerName == "isIdle")
+        {
+            SetIdle(true);
+            return;
+        }
+
+        // For triggers, check if the trigger exists in the animator
+        bool triggerExists = HasParameter(triggerName, AnimatorControllerParameterType.Trigger);
+
+        if (!triggerExists)
+        {
+            Debug.LogWarning($"Trigger '{triggerName}' not found in animator controller");
+            return;
+        }
+
+        // Reset trigger
+        animator.ResetTrigger(triggerName);
+        
+        // Set the trigger
+        animator.SetTrigger(triggerName);
+        
+        Debug.Log($"Animation trigger '{triggerName}' set in sequence");
+    }
+
+    /// <summary>
     /// Plays a sequence of animations with delays.
     /// </summary>
     /// <param name="animations">List of animation actions to play.</param>
@@ -65,18 +136,25 @@ public class RLAgentAnimationManager : AgentAnimationManager
     {
         yield return new WaitUntil(() => animator != null);
 
+        // Ora molto più pulito!
+        agent.SetAnimationSequenceMode(true);
         agent.SetRun(false);
         agent.GetRigidBody().velocity = Vector3.zero;
 
         foreach (var anim in animations)
         {
-            PlayActionTrigger(anim.animationName);
+            Debug.Log($"Playing animation: {anim.animationName} with delay: {anim.delay}");
+            
+            animator.SetBool("isIdle", false);
+            animator.SetBool("isWalking", false);
+            
+            PlayActionTriggerInSequence(anim.animationName);
             yield return new WaitForSeconds(anim.delay);
         }
 
+        agent.SetAnimationSequenceMode(false);
         SetWalking(true);
         agent.SetRun(true);
-        if (agent is RLAgent rlAgent)
-            rlAgent.MoveToNextTarget();
+        agent.MoveToNextTarget();
     }
 }

@@ -1783,23 +1783,23 @@ PrefabInstance:
       objectReference: {fileID: 850038376}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[0].animations.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[1].animations.Array.size
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[2].animations.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[3].animations.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[4].animations.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[5].animations.Array.size
@@ -1808,6 +1808,54 @@ PrefabInstance:
     - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: goalAction.Array.data[6].animations.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[0].delay
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[1].delay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[2].delay
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[0].delay
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[1].delay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[2].delay
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[0].animationName
+      value: isPointing
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[1].animationName
+      value: isWalking
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[0].animations.Array.data[2].animationName
+      value: isSitting
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[0].animationName
+      value: isPointing
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[1].animationName
+      value: isWalking
+      objectReference: {fileID: 0}
+    - target: {fileID: 3103466045960535302, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: goalAction.Array.data[1].animations.Array.data[2].animationName
+      value: isTalking1
       objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299093, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_Name
