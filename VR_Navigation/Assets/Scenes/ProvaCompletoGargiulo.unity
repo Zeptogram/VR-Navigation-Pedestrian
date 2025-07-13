@@ -32046,6 +32046,7 @@ GameObject:
   - component: {fileID: 893066317}
   - component: {fileID: 893066320}
   - component: {fileID: 893066321}
+  - component: {fileID: 893066322}
   m_Layer: 0
   m_Name: Experiment Scene
   m_TagString: Untagged
@@ -32182,6 +32183,20 @@ MonoBehaviour:
   maxSteps: 10000000
   canvasScore: {fileID: 0}
   penaltyTakesTargetsAgain: 0
+--- !u!114 &893066322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893066314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d99a78a9524ac4c44b564b0df9289bab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hideObjectivesFromPlayer: 1
+  toggleKey: 104
 --- !u!1 &894900442
 GameObject:
   m_ObjectHideFlags: 0
