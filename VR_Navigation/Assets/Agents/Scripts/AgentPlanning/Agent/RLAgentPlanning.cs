@@ -7,6 +7,8 @@ using UnityEngine;
 
 [RequireComponent(typeof(ObjectiveInteractionHandler))]
 [RequireComponent(typeof(ObjectiveObserver))]
+[RequireComponent(typeof(RLPlanningAnimationManager))]
+
 /**
  * \class RLAgentPlanning
  * \brief Represents the RL agent. Inherits from the Agent class of ML-Agents.
@@ -59,7 +61,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// Animator component reference.
     /// </summary>
     private Animator animator;
-    private AgentAnimationManager animationManager;
+    private RLPlanningAnimationManager animationManager;
 
     /// <summary>
     /// Range for randomizing speed.
@@ -234,7 +236,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         // Init all components
         animator = GetComponent<Animator>();
-        animationManager = GetComponent<AgentAnimationManager>();
+        animationManager = GetComponent<RLPlanningAnimationManager>();
         agentSensorsManager = GetComponent<AgentPlanningSensorsManager>();
         agentGizmosDrawer = GetComponent<AgentPlanningGizmosDrawer>();
         agentObserver = GetComponent<AgentPlanningObserver>();

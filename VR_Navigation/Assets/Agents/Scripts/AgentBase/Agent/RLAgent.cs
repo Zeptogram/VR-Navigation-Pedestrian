@@ -8,6 +8,7 @@ using System.Collections;
 using UnityEngine.Events;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(RLAgentAnimationManager))]
 public class RLAgent : Agent, IAgentRL
 {
     [Serializable]
@@ -45,7 +46,7 @@ public class RLAgent : Agent, IAgentRL
     private Rigidbody rigidBody;
 
     private Animator animator;
-    private AgentAnimationManager animationManager;
+    private RLAgentAnimationManager animationManager;
 
     private Vector2 speedMaxRange;
 
@@ -84,7 +85,7 @@ public class RLAgent : Agent, IAgentRL
     private void Awake()
     {
         animator = GetComponent<Animator>();
-        animationManager = GetComponent<AgentAnimationManager>();
+        animationManager = GetComponent<RLAgentAnimationManager>();
         if (goalAction.Length >= 1 && goalAction[0].goalLocation != null)
         {
             animationManager.SetWalking(true);
@@ -119,7 +120,7 @@ public class RLAgent : Agent, IAgentRL
         {
             Debug.Log("Animation State: Idle");
             animationManager.SetWalking(false);
-            
+
             float currentYRotation = transform.eulerAngles.y;
             float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
             float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
@@ -128,7 +129,7 @@ public class RLAgent : Agent, IAgentRL
             if (Mathf.Abs(deltaY) > 10f)
             {
                 Debug.Log("Animation State: Turn");
-                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f); 
+                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f);
                 if (deltaY > 0)
                     animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
                 else
@@ -142,7 +143,7 @@ public class RLAgent : Agent, IAgentRL
             animationManager.StopTurn();
             animationManager.SetWalking(true);
         }
-        
+
         lastYRotation = transform.eulerAngles.y;
     }
 
@@ -556,5 +557,5 @@ public class RLAgent : Agent, IAgentRL
     {
         run = value;
     }
-   
+
 }
