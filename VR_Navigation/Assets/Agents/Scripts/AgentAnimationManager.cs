@@ -13,11 +13,6 @@ public class AgentAnimationManager : MonoBehaviour
     /// </summary>
     private Animator animator;
 
-    /// <summary>
-    /// Reference to the RLAgent component.
-    /// </summary>
-    //private RLAgent agent;
-
 
     /// <summary>
     /// Reference to the IAgentRL component.
@@ -115,6 +110,42 @@ public class AgentAnimationManager : MonoBehaviour
             animator.ResetTrigger("TurnLeft");
     }
 
+
+    /// <summary>
+    /// Updates the speed parameter in the animator.
+    /// </summary>
+    /// <param name="speed">Speed value to set.</param>
+    public void UpdateSpeed(float speed)
+    {
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null) return;
+        }
+        animator.SetFloat("Speed", speed);
+    }
+
+    /// <summary>
+    /// Checks if a parameter exists in the animator.
+    /// </summary>
+    /// <param name="paramName">Name of the parameter to check.</param>
+    /// <param name="type">Type of the parameter to check.</param>
+    /// <returns>True if the parameter exists, false otherwise.</returns>
+    
+    private bool HasParameter(string paramName, AnimatorControllerParameterType type)
+    {
+        if (animator == null) return false;
+        foreach (var param in animator.parameters)
+            if (param.type == type && param.name == paramName)
+                return true;
+        return false;
+    }
+
+
+    // FOR RLPLANNING
+
+
+
     /// <summary>
     /// Resets all trigger parameters in the animator.
     /// This is more scalable than resetting individual triggers.
@@ -143,6 +174,7 @@ public class AgentAnimationManager : MonoBehaviour
         Debug.Log("All animation triggers reset");
     }
 
+
     /// <summary>
     /// Resets the animator to a clean idle state.
     /// Useful when transitioning between different animation systems.
@@ -169,6 +201,7 @@ public class AgentAnimationManager : MonoBehaviour
 
         Debug.Log("Animator reset to idle state");
     }
+
 
     /// <summary>
     /// Plays an animation trigger by name.
@@ -233,35 +266,9 @@ public class AgentAnimationManager : MonoBehaviour
         Debug.Log($"Animation trigger '{triggerName}' set successfully");
     }
 
-    /*
-    /// <summary>
-    /// Sets the running animation state and speed.
-    /// </summary>
-    public void SetRunning()
-    {
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-            if (animator == null) return;
-        }
-        animator.SetTrigger("isRunning");
-        animator.SetFloat("Speed", 2);
-    }
-    */
 
-    /// <summary>
-    /// Updates the speed parameter in the animator.
-    /// </summary>
-    /// <param name="speed">Speed value to set.</param>
-    public void UpdateSpeed(float speed)
-    {
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-            if (animator == null) return;
-        }
-        animator.SetFloat("Speed", speed);
-    }
+    // FOR RLAGENT BASE
+
 
     /// <summary>
     /// Moves the agent to the next target after a specified delay.
@@ -289,11 +296,12 @@ public class AgentAnimationManager : MonoBehaviour
         }
         SetWalking(true);
         agent.SetRun(true);
-        //agent.MoveToNextTarget();
+        if (agent is RLAgent rlAgent)
+            rlAgent.MoveToNextTarget();
     }
     
 
-    public IEnumerator PlayAnimationsSequence(List<RLAgent.AnimationAction> animations, RLAgent agent)
+    public IEnumerator PlayAnimationsSequence(List<RLAgent.AnimationAction> animations, IAgentRL agent)
     {
         yield return new WaitUntil(() => animator != null);
 
@@ -308,15 +316,8 @@ public class AgentAnimationManager : MonoBehaviour
 
         SetWalking(true);
         agent.SetRun(true);
-        agent.MoveToNextTarget();
+        if (agent is RLAgent rlAgent)
+            rlAgent.MoveToNextTarget();
     }
 
-    private bool HasParameter(string paramName, AnimatorControllerParameterType type)
-    {
-        if (animator == null) return false;
-        foreach (var param in animator.parameters)
-            if (param.type == type && param.name == paramName)
-                return true;
-        return false;
-    }
 }
