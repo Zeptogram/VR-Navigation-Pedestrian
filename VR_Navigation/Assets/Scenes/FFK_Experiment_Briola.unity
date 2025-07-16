@@ -1857,6 +1857,10 @@ PrefabInstance:
       propertyPath: goalAction.Array.data[1].animations.Array.data[2].animationName
       value: isTalking1
       objectReference: {fileID: 0}
+    - target: {fileID: 8823151847150003970, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
+      propertyPath: gizmosDrawer
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9200512954962299093, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
       propertyPath: m_Name
       value: AgentV2 (3)

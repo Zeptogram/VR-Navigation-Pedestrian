@@ -15,6 +15,11 @@ using UnityEngine;
  */
 public class RLAgentPlanning : Agent, IAgentRL
 {
+
+    public TotemArtifact totemArtifact;
+
+
+
     private bool run = true;
 
     /// <summary>
@@ -244,7 +249,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
 
-         // Constants
+        // Constants
         constants = new ConstantsPlanning();
         agentSensorsManager.constants = this.constants;
         agentObserver.constants = this.constants;
@@ -378,6 +383,15 @@ public class RLAgentPlanning : Agent, IAgentRL
         lastYRotation = transform.eulerAngles.y;
     }
 
+    private void Start()
+    {
+        if (totemArtifact != null)
+            totemArtifact.OnSignal += HandleArtifactSignal;
+    }
+
+
+
+
     /// <summary>
     /// Gets the color associated with this agent's group.
     /// </summary>
@@ -427,7 +441,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         {
             if (agent == this)
             {
-                if (env != null) 
+                if (env != null)
                 {
                     numberOfCrossings = env.GetNumIntermediateTargets();
                     InitCrossings(numberOfCrossings);
@@ -437,7 +451,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 {
                     Debug.LogError($"Agent {gameObject.name}: EnvironmentPlanning is null!");
                 }
-                
+
                 if (objectiveHandler != null)
                 {
                     objectiveHandler.InitializeObjectivesFromEnvironment();
@@ -618,6 +632,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     private void OnTriggerEnter(Collider other)
     {
+
         GameObject triggerObject = other.gameObject;
 
         entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
@@ -862,7 +877,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     private bool IsFinalTarget(Target target)
     {
-            return target.targetType == TargetType.Final && (target.group == group || target.group == Group.Generic);
+        return target.targetType == TargetType.Final && (target.group == group || target.group == Group.Generic);
     }
 
     /**
@@ -985,7 +1000,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     private void HandleIntermediateTarget(GameObject triggerObject)
     {
-         exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+        exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         float crossingValue = entryValue * exitValue;
 
         if (crossingValue >= 0)
@@ -1070,8 +1085,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         run = value;
     }
-    
-    
+
+
     /// <summary>
     /// Returns the agent's Rigidbody component.
     /// </summary>
@@ -1087,4 +1102,18 @@ public class RLAgentPlanning : Agent, IAgentRL
     public Rigidbody RigidBody => rigidBody;
 
     private HashSet<int> insideTargets = new HashSet<int>();
+    
+
+    
+    private void HandleArtifactSignal(string signalName, object data)
+    {
+        if (signalName == "orderPlaced")
+        {
+            Debug.Log($"[Artifact] Agent {gameObject.name}: Order #{data} placed!");
+        }
+    }
+
+
+
+
 }
