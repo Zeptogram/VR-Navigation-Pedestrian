@@ -78,7 +78,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
         else
         {
-            // If alredy taken, ignore
+            // If already taken, ignore
             if (reachedObjectives.Contains(triggerObject))
                 return;
         }
@@ -87,17 +87,14 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         agent.AddReward(agent.constants.objective_completed_reward);
 
         observer.MarkObjectiveAsCompleted(triggerObject);
+        
         //triggerObject.SetActive(false); // TODO: make visible again if needed
 
         // Run the animations associated with the objective
         StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
 
-        if (reachedObjectives.Count == objectives.Count && objectives.Count > 0)
-        {
-            agent.taskCompleted = true;
-            observer.SetTaskCompleted();
-            Debug.Log($"Agent {agent.name} has completed all objectives!");
-        }
+        
+        Debug.Log($"[ObjectiveHandler] Agent {agent.name} completed objective {triggerObject.name}. Progress: {reachedObjectives.Count}/{objectives.Count}");
     }
 
     /**

@@ -88,15 +88,7 @@ public class ArtifactConnectionManager : MonoBehaviour
             connectionMethod = "ConnectTo"
         });
         
-        // Add more rules as needed for other artifact types
-        // Example: All Cameras connect to one Display (N:1)
-        // connectionRules.Add(new ConnectionRule
-        // {
-        //     sourceType = typeof(CameraArtifact),
-        //     targetType = typeof(DisplayArtifact),
-        //     connectionType = ConnectionType.ManyToOne,
-        //     connectionMethod = "ConnectTo"
-        // });
+    
     }
     
     /// <summary>

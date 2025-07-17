@@ -10,10 +10,7 @@ public class ObjectiveObserver : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<RLAgentPlanning>();
-        // Initialize the last element to 1 (flag for all completed)
-        objectivesObservation[objectivesObservation.Length - 1] = 1;
         Debug.Log($"ObjectiveObserver awakened for {agent.gameObject.name}");
-
     }
 
     public void InitializeObjectives(List<GameObject> objectives)
@@ -43,9 +40,8 @@ public class ObjectiveObserver : MonoBehaviour
             }
         }
 
-        // If there are objectives, the agent has tasks to complete
         agent.taskCompleted = false;
-        // The last element remains 0 (incomplete)
+        objectivesObservation[objectivesObservation.Length - 1] = 0;
     }
 
     public float[] GetObjectivesObservation()
@@ -61,6 +57,8 @@ public class ObjectiveObserver : MonoBehaviour
             {
                 objectivesObservation[index] = 0;
                 Debug.Log($"Objective {objective.name} completed");
+                
+                CheckIfAllObjectivesCompleted();
             }
         }
         
@@ -75,8 +73,62 @@ public class ObjectiveObserver : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks if all objectives are completed and updates the task status.
+    /// </summary>
+    private void CheckIfAllObjectivesCompleted()
+    {
+        // Check if all objectives are marked as completed (0) except the last one
+        bool allCompleted = true;
+        for (int i = 0; i < objectivesObservation.Length - 1; i++)
+        {
+            if (objectivesObservation[i] == 1)
+            {
+                allCompleted = false;
+                break;
+            }
+        }
+
+        if (allCompleted)
+        {
+            // All objectives are completed
+            agent.taskCompleted = true;
+            objectivesObservation[objectivesObservation.Length - 1] = 1; // Set finale a 1
+            Debug.Log($"[{agent.gameObject.name}] Tutti gli obiettivi completati! Task finale abilitato.");
+        }
+        else
+        {
+            // Objectives still active
+            agent.taskCompleted = false;
+            objectivesObservation[objectivesObservation.Length - 1] = 0; // Mantieni finale a 0
+        }
+    }
+
+    /// <summary>
+    /// Method to manually set the task as completed.
+    /// </summary>
     public void SetTaskCompleted()
     {
-        objectivesObservation[objectivesObservation.Length - 1] = 1;
+        // Check if all objectives are already completed
+        bool allCompleted = true;
+        for (int i = 0; i < objectivesObservation.Length - 1; i++)
+        {
+            if (objectivesObservation[i] == 1)
+            {
+                allCompleted = false;
+                break;
+            }
+        }
+
+        if (allCompleted)
+        {
+            agent.taskCompleted = true;
+            objectivesObservation[objectivesObservation.Length - 1] = 1;
+            Debug.Log($"[{agent.gameObject.name}] Task completato manualmente (tutti gli obiettivi erano già a 0)");
+        }
+        else
+        {
+            Debug.LogWarning($"[{agent.gameObject.name}] Tentativo di settare task completato ma ci sono ancora obiettivi attivi!");
+        }
     }
 }

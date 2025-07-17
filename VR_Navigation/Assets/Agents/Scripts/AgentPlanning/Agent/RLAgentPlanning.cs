@@ -17,6 +17,11 @@ public class RLAgentPlanning : Agent, IAgentRL
 {
 
     public TotemArtifact totemArtifact;
+    public MonitorArtifact monitorArtifact;
+
+    // Order tracking for this agent
+    private int? myOrderId = null;
+    private bool hasPlacedOrder = false;
 
 
 
@@ -387,6 +392,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         if (totemArtifact != null)
             totemArtifact.OnSignal += HandleArtifactSignal;
+
+        if (monitorArtifact != null)
+            monitorArtifact.OnSignal += HandleArtifactSignal;
     }
 
 
@@ -1102,15 +1110,192 @@ public class RLAgentPlanning : Agent, IAgentRL
     public Rigidbody RigidBody => rigidBody;
 
     private HashSet<int> insideTargets = new HashSet<int>();
-    
 
-    
+
+
     private void HandleArtifactSignal(string signalName, object data)
-    {
-        if (signalName == "orderPlaced")
+    {        
+        switch (signalName)
         {
-            Debug.Log($"[Artifact] Agent {gameObject.name}: Order #{data} placed!");
+            case "orderPlaced":
+                OrderPlacedData orderData = data as OrderPlacedData;
+                if (orderData != null)
+                {
+                    // Agent ID matches the agent's instance ID
+                    if (orderData.agentId == gameObject.GetInstanceID() && hasPlacedOrder && !myOrderId.HasValue)
+                    {
+                        myOrderId = orderData.orderId;
+                        Debug.Log($"[Agent {gameObject.name}] Order #{orderData.orderId} sent to monitor");
+                    }
+                    else
+                    {
+                        Debug.Log($"[Agent {gameObject.name}] Conditions not met - agentId match: {orderData.agentId == gameObject.GetInstanceID()}, hasPlacedOrder: {hasPlacedOrder}, myOrderId is null: {!myOrderId.HasValue}");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"[Agent {gameObject.name}] OrderData cast failed!");
+                }
+                break;
+
+            case "orderReady":
+                int readyOrderId = (int) data;
+                if (myOrderId.HasValue && myOrderId.Value == readyOrderId)
+                {
+                    Debug.Log($"[Agent {gameObject.name}] Order #{readyOrderId} ready");
+                    //PickUpOrder();
+                }
+                break;
+
+            case "orderPickedUp":
+                int pickedUpOrderId = (int) data;
+                if (myOrderId.HasValue && myOrderId.Value == pickedUpOrderId)
+                {
+                    Debug.Log($"[Agent {gameObject.name}] Retired #{pickedUpOrderId}!");
+                }
+                break;
         }
+    }
+
+
+
+
+
+
+    /// <summary>
+    /// Method for agent to place an order at the totem
+    /// </summary>
+    public void PlaceOrder()
+    {
+        if (totemArtifact != null && !hasPlacedOrder)
+        {
+            hasPlacedOrder = true;
+            
+            int agentId = gameObject.GetInstanceID();
+            totemArtifact.Use(agentId);
+            
+            Debug.Log($"[Agent {gameObject.name}] Placed Order");
+        }
+        else if (hasPlacedOrder)
+        {
+            Debug.Log($"[Agent {gameObject.name}] Already Placed Order");
+        }
+    }
+
+    /// <summary>
+    /// Method for agent to pick up a ready order
+    /// </summary>
+    public void PickUpOrder()
+    {
+        Debug.Log($"[Agent {gameObject.name}] PickUpOrder() - myOrderId: {myOrderId}, hasPlacedOrder: {hasPlacedOrder}");
+        
+        if (monitorArtifact == null)
+        {
+            Debug.Log($"[Agent {gameObject.name}] MonitorArtifact null!");
+            return;
+        }
+        
+        if (!myOrderId.HasValue)
+        {
+            Debug.Log($"[Agent {gameObject.name}] myOrderId null");
+            return;
+        }
+        
+        // Observe the ready orders from the monitor artifact and ids
+        var readyOrdersWithFood = (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
+        var readyOrderIds = (List<int>)monitorArtifact.Observe("ordersReady");
+        
+        Debug.Log($"[Agent {gameObject.name}] Ready orders from Monitor: {(readyOrderIds != null ? string.Join(", ", readyOrderIds) : "null")}");
+
+        if (readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
+        {
+            if (readyOrdersWithFood != null && readyOrdersWithFood.ContainsKey(myOrderId.Value))
+            {
+                var foodType = readyOrdersWithFood[myOrderId.Value];
+                Debug.Log($"[Agent {gameObject.name}] Order #{myOrderId} ({foodType}) os in the list of ready orders");
+            }
+            else
+            {
+                Debug.Log($"[Agent {gameObject.name}] Order #{myOrderId} is in the list of ready orders");
+            }
+            
+            int agentId = gameObject.GetInstanceID();
+            bool success = monitorArtifact.PickUpOrder(agentId, myOrderId.Value);
+            Debug.Log($"[Agent {gameObject.name}] PickUpOrder: {success}");
+
+            if (success)
+            {
+                Debug.Log($"[Agent {gameObject.name}] SUCCESS, retired order #{myOrderId}!");
+                myOrderId = null;
+                hasPlacedOrder = false; // Reset for next order
+            }
+            else
+            {
+                Debug.Log($"[Agent {gameObject.name}] ERROR: PickUpOrder order failed #{myOrderId}");
+            }
+        }
+        else
+        {
+            if (readyOrderIds == null)
+            {
+                Debug.Log($"[Agent {gameObject.name}] No orders in the ready list");
+            }
+            else if (!readyOrderIds.Contains(myOrderId.Value))
+            {
+                Debug.Log($"[Agent {gameObject.name}] Order #{myOrderId} not ready: [{string.Join(", ", readyOrderIds)}]");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check if agent's order is ready
+    /// </summary>
+    /*public bool IsMyOrderReady()
+    {
+        if (monitorArtifact != null && myOrderId.HasValue)
+        {
+            var readyOrders = (List<int>)monitorArtifact.Observe("ordersReady");
+            return readyOrders != null && readyOrders.Contains(myOrderId.Value);
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Get the food type of agent's ready order
+    /// </summary>
+    public MonitorArtifact.FoodType? GetMyOrderFoodType()
+    {
+        if (monitorArtifact != null && myOrderId.HasValue)
+        {
+            var readyOrdersWithFood = (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
+            if (readyOrdersWithFood != null && readyOrdersWithFood.ContainsKey(myOrderId.Value))
+            {
+                return readyOrdersWithFood[myOrderId.Value];
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Get all ready orders with their food types
+    /// </summary>
+    public Dictionary<int, MonitorArtifact.FoodType> GetAllReadyOrdersWithFood()
+    {
+        if (monitorArtifact != null)
+        {
+            return (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
+        }
+        return new Dictionary<int, MonitorArtifact.FoodType>();
+    }*/
+    
+    private void OnDestroy()
+    {
+        // Clean up signal subscriptions
+        if (totemArtifact != null)
+            totemArtifact.OnSignal -= HandleArtifactSignal;
+            
+        if (monitorArtifact != null)
+            monitorArtifact.OnSignal -= HandleArtifactSignal;
     }
 
 
