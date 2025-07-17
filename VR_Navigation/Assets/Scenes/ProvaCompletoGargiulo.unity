@@ -56420,8 +56420,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c77643bc2fcd3c42bb46a20a86c60f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preparationTimeMin: 10
-  preparationTimeMax: 20
+  preparationTimeMin: 2
+  preparationTimeMax: 5
 --- !u!1 &1528070978
 GameObject:
   m_ObjectHideFlags: 0
