@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using System.Linq;
 
-public class MonitorArtifact : Artifact
+public class MonitorArtifact : Artifact, IArtifactConnectable
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI listPrepOrders;
@@ -54,7 +54,22 @@ public class MonitorArtifact : Artifact
         UpdateFoodVisuals();
     }
 
-    public void ConnectTo(TotemArtifact totem)
+    
+    public void ConnectTo(Artifact other)
+    {
+        if (other is TotemArtifact totem)
+            ConnectToTotem(totem);
+    }
+
+    public void DisconnectFrom(Artifact other)
+    {
+        if (other is TotemArtifact totem)
+            DisconnectFromTotem(totem);
+    }
+
+
+
+    public void ConnectToTotem(TotemArtifact totem)
     {
         if (!connectedTotems.Contains(totem))
         {
@@ -64,7 +79,7 @@ public class MonitorArtifact : Artifact
         }
     }
     
-    public void DisconnectFrom(TotemArtifact totem)
+    public void DisconnectFromTotem(TotemArtifact totem)
     {
         if (connectedTotems.Contains(totem))
         {
@@ -79,7 +94,6 @@ public class MonitorArtifact : Artifact
         switch (signal)
         {
             case "orderPlaced":
-                // Handle the new OrderPlacedData format
                 OrderPlacedData orderData = data as OrderPlacedData;
                 if (orderData != null)
                 {

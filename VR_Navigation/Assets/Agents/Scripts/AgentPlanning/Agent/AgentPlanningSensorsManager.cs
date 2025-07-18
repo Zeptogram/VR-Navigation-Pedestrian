@@ -102,7 +102,7 @@ public class AgentPlanningSensorsManager : MonoBehaviour
                 if (i == 0 && sign == -1) { continue; }
 
                 Vector3 rayDirection = CalculateRayDirection(i, sign);
-                Vector3 offSettedPosition = transform.position + (Vector3.up * constants.verticalRayOffset) + (rayDirection * constants.rayOffset);
+                Vector3 offSettedPosition = transform.position + (rayDirection * constants.rayOffset);
 
                 RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength);
                 //RaycastHit hit = sensor.GetRayInfo(offSettedPosition, rayDirection, _rayLength, invisibleTargets.ToArray<GameObject>());

@@ -19,6 +19,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     public TotemArtifact totemArtifact;
     public MonitorArtifact monitorArtifact;
 
+    public int numberOfCrossings = 0;
+
     // Order tracking for this agent
     private int? myOrderId = null;
     private bool hasPlacedOrder = false;
@@ -236,7 +238,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// Maximum number of intermediate targets that can be handled by the agent.
     /// </summary>
     public const int MaxIntermediateTargets = 15;
-    private int numberOfCrossings = 0;
 
     /**
      * \brief Called when the script instance is being loaded.
@@ -433,7 +434,6 @@ public class RLAgentPlanning : Agent, IAgentRL
         tempoIniziale = (int)Time.time;
         currentSpeed = 0;
         numberOfIteraction = 0;
-        numberOfCrossings = 5; // Add to inspector as variable in case
         InitCrossings(numberOfCrossings);
         // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // Disabilita randomizzazione
         resetAgent?.Invoke(this);

@@ -104,10 +104,47 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     private IEnumerator ExecuteObjectiveAnimations(GameObject objectiveObject)
     {
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
-        
+        var trigger = objectiveObject.GetComponent<ObjectiveTrigger>();
+        bool waitedForOrder = false;
+
+        if (trigger != null && trigger.triggerWaitForOrderReady)
+        {
+            RLAgentPlanning agentPlanning = agent;
+            var monitor = agentPlanning.monitorArtifact;
+            if (monitor != null)
+            {
+                int? myOrderId = agentPlanning.GetType().GetField("myOrderId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(agentPlanning) as int?;
+                if (myOrderId.HasValue)
+                {
+                    float waited = 0f;
+                    float checkInterval = 0.2f;
+                    while (true)
+                    {
+                        var readyOrders = (List<int>)monitor.Observe("ordersReady");
+                        if (readyOrders != null && readyOrders.Contains(myOrderId.Value))
+                            break;
+
+                        agentPlanning.SetRun(false);
+                        agentPlanning.GetRigidBody().velocity = Vector3.zero;
+
+                        yield return new WaitForSeconds(checkInterval);
+                        waited += checkInterval;
+                    }
+                    Debug.Log($"[ObjectiveHandler] Atteso {waited:F1}s per ordine pronto (WaitForOrderReady)");
+                    waitedForOrder = true;
+                }
+            }
+        }
+
         if (animationData == null)
         {
             Debug.LogWarning($"No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
+            
+            if (waitedForOrder)
+            {
+                agent.SetRun(true);
+                Debug.Log("[ObjectiveHandler] Agent reactivated after waiting for order (no animations)");
+            }
             yield break;
         }
 

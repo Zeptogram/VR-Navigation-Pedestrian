@@ -1,10 +1,17 @@
+// Artifact.cs
+// Base class for all artifacts in the system
+
 using UnityEngine;
 using System;
 
 public abstract class Artifact : MonoBehaviour {
     public string ArtifactName { get; private set; }
 
-    protected virtual void Start() {
+    // Generic signal system for communication
+    public event Action<string, object> OnSignal;
+
+    protected virtual void Start()
+    {
         ArtifactName = gameObject.name;
         Init();
     }
@@ -24,10 +31,6 @@ public abstract class Artifact : MonoBehaviour {
         Debug.Log($"[{ArtifactName}] Observed property: {propertyName}");
         return null;
     }
-
-
-    // Generic signal system for communication
-    public event Action<string, object> OnSignal;
 
     // EmitSignal: Method to emit signals to other artifacts
     protected void EmitSignal(string name, object data)

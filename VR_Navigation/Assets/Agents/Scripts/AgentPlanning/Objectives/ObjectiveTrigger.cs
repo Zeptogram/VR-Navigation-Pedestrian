@@ -19,6 +19,9 @@ public class ObjectiveTrigger : MonoBehaviour
     [Tooltip("If true, will trigger PickUpOrder() on RLAgentPlanning")]
     public bool triggerPickUpOrder = false;
 
+    [Tooltip("If true, will wait until the agent's order is ready before proceeding")]
+    public bool triggerWaitForOrderReady = false;
+
     private void Start()
     {
         if (autoFindTotems || autoFindMonitors)
