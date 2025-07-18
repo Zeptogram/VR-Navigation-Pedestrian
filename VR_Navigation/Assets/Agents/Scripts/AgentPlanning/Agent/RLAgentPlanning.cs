@@ -665,7 +665,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             }
             else if (IsIntermediateTarget(target))
             {
-                insideTargets.Add(target.id); // <--- AGGIUNGI QUESTO
+                insideTargets.Add(target.id); 
             }
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
