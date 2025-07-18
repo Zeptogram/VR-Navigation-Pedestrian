@@ -127,6 +127,10 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                         agentPlanning.SetRun(false);
                         agentPlanning.GetRigidBody().velocity = Vector3.zero;
 
+                        // Text animation
+                        if (animationManager != null)
+                            animationManager.PlayActionTrigger("Text");
+
                         yield return new WaitForSeconds(checkInterval);
                         waited += checkInterval;
                     }
