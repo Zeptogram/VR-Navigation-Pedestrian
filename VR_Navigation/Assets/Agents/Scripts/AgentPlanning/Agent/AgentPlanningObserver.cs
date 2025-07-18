@@ -118,6 +118,7 @@ public class AgentPlanningObserver : MonoBehaviour
 
             GameObject seenObject = observation.collider.gameObject;
             Tag objTag = seenObject.tag.ToMyTags();
+            if (objTag == Tag.Unknown) continue;
             int hitObjectIndex = -1;
             Target target = seenObject.GetComponent<Target>();
             int targetId = -1; //Default value for walls and final targets
