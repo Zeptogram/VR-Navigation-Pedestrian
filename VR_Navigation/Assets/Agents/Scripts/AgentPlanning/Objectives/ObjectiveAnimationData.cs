@@ -31,4 +31,21 @@ public class ObjectiveAnimationData : MonoBehaviour
     
     [Header("Ignores the invidual durations, -1 means disabled")]
     public float totalDuration = -1f;
+    
+    [Header("Look At Settings")]
+    [Tooltip("If true, the agent will smoothly look at the specified target when reaching this objective")]
+    public bool enableLookAt = false;
+    
+    [Tooltip("The transform target to look at. If null, no look at will be performed")]
+    public Transform lookAtTarget = null;
+    
+    [Tooltip("Speed of the smooth rotation (degrees per second)")]
+    [Range(30f, 360f)]
+    public float lookAtSpeed = 90f;
+    
+    [Tooltip("If true, the look at happens before the animations. If false, it happens during the first animation")]
+    public bool lookAtBeforeAnimations = true;
+    
+    [Tooltip("If true, only rotates on the Y axis (horizontal look). If false, full 3D rotation")]
+    public bool horizontalLookOnly = true;
 }

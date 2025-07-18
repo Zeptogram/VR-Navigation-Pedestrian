@@ -367,8 +367,8 @@ public class RLAgentPlanning : Agent, IAgentRL
             float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
             float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
 
-            // Turn
-            if (Mathf.Abs(deltaY) > 10f)
+            // Turn - only if not already turning and significant rotation
+            if (Mathf.Abs(deltaY) > 10f && !IsTurnAnimationPlaying())
             {
                 Debug.Log("Animation State: Turn");
                 float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f);
@@ -377,16 +377,37 @@ public class RLAgentPlanning : Agent, IAgentRL
                 else
                     animationManager.PlayTurn(false, normalizedTurnSpeed); // TurnLeft
             }
+            else if (Mathf.Abs(deltaY) < 2f && IsTurnAnimationPlaying())
+            {
+                // Stop turn if rotation is minimal
+                animationManager.StopTurn();
+                animationManager.SetIdle(true);
+            }
         }
         else
         {
             //Debug.Log("Animation State: Walking");
-            // Stop any turn animations
-            animationManager.StopTurn();
+            // Stop any turn animations when walking
+            if (IsTurnAnimationPlaying())
+            {
+                animationManager.StopTurn();
+            }
             animationManager.SetWalking(true);
         }
 
         lastYRotation = transform.eulerAngles.y;
+    }
+    
+    /// <summary>
+    /// Checks if a turn animation is currently playing
+    /// </summary>
+    /// <returns>True if turn animation is active</returns>
+    private bool IsTurnAnimationPlaying()
+    {
+        if (animator == null) return false;
+        
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
     }
 
     private void Start()

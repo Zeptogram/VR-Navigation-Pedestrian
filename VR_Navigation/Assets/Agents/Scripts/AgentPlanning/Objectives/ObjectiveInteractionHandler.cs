@@ -171,10 +171,25 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
+        // Handle look at before animations if enabled
+        if (animationData.enableLookAt && animationData.lookAtBeforeAnimations)
+        {
+            yield return StartCoroutine(PerformSmoothLookAt(animationData));
+        }
+
         // If total duration is set, use it
         if (animationData.totalDuration > 0)
         {
-            yield return ExecuteAnimationsWithTotalDuration(animationData);
+            if (animationData.enableLookAt && !animationData.lookAtBeforeAnimations)
+            {
+                // Start look at and animations together
+                StartCoroutine(PerformSmoothLookAt(animationData));
+                yield return ExecuteAnimationsWithTotalDuration(animationData);
+            }
+            else
+            {
+                yield return ExecuteAnimationsWithTotalDuration(animationData);
+            }
         }
         else
         {
@@ -225,12 +240,110 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     }
 
     /**
+     * \brief Performs a smooth look at rotation towards the specified target.
+     * \param animationData The animation data containing look at settings.
+     */
+    private IEnumerator PerformSmoothLookAt(ObjectiveAnimationData animationData)
+    {
+        if (!animationData.enableLookAt || animationData.lookAtTarget == null)
+        {
+            Debug.LogWarning("[LOOK AT] Look at is enabled but no target specified!");
+            yield break;
+        }
+
+        Debug.Log($"[LOOK AT] Starting smooth look at towards {animationData.lookAtTarget.name}");
+
+        Transform agentTransform = agent.transform;
+        Vector3 startRotation = agentTransform.eulerAngles;
+        
+        // Calculate target direction
+        Vector3 directionToTarget = animationData.lookAtTarget.position - agentTransform.position;
+        
+        // If horizontal only, ignore Y component
+        if (animationData.horizontalLookOnly)
+        {
+            directionToTarget.y = 0;
+        }
+        
+        // Calculate target rotation
+        Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+        
+        // If horizontal only, preserve original X and Z rotations
+        if (animationData.horizontalLookOnly)
+        {
+            Vector3 targetEuler = targetRotation.eulerAngles;
+            targetEuler.x = startRotation.x;
+            targetEuler.z = startRotation.z;
+            targetRotation = Quaternion.Euler(targetEuler);
+        }
+
+        Quaternion startQuaternion = agentTransform.rotation;
+        float totalRotationNeeded = Quaternion.Angle(startQuaternion, targetRotation);
+        float rotationTime = totalRotationNeeded / animationData.lookAtSpeed;
+        
+        // Determine turn direction (left or right)
+        Vector3 cross = Vector3.Cross(agentTransform.forward, directionToTarget.normalized);
+        bool turnRight = cross.y > 0;
+        
+        Debug.Log($"[LOOK AT] Rotating {totalRotationNeeded:F1} degrees over {rotationTime:F2} seconds ({(turnRight ? "RIGHT" : "LEFT")})");
+
+        // Start turn animation if rotation is significant enough
+        bool playingTurnAnimation = false;
+        if (totalRotationNeeded > 10f && animationManager != null)
+        {
+            float normalizedTurnSpeed = Mathf.Clamp(animationData.lookAtSpeed / 90f, 0.5f, 1.0f);
+            animationManager.PlayTurn(turnRight, normalizedTurnSpeed);
+            playingTurnAnimation = true;
+            Debug.Log($"[LOOK AT] Started turn animation: {(turnRight ? "TurnRight" : "TurnLeft")} with speed {normalizedTurnSpeed:F2}");
+        }
+
+        float elapsedTime = 0f;
+        
+        while (elapsedTime < rotationTime)
+        {
+            // Calculate interpolation factor
+            float t = elapsedTime / rotationTime;
+            
+            // Use smooth step for more natural rotation
+            t = Mathf.SmoothStep(0f, 1f, t);
+            
+            // Apply rotation
+            agentTransform.rotation = Quaternion.Slerp(startQuaternion, targetRotation, t);
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // Ensure final rotation is exact
+        agentTransform.rotation = targetRotation;
+        
+        // Stop turn animation if it was playing
+        if (playingTurnAnimation && animationManager != null)
+        {
+            animationManager.StopTurn();
+            Debug.Log("[LOOK AT] Stopped turn animation");
+        }
+        
+        Debug.Log($"[LOOK AT] Smooth look at completed in {elapsedTime:F2} seconds");
+    }
+
+    /**
      * \brief Executes animations in sequence with individual durations.
      */
     private IEnumerator ExecuteAnimationsInSequence(ObjectiveAnimationData animationData)
     {
+        bool isFirstAnimation = true;
+        
         foreach (var action in animationData.animationActions)
         {
+            // Handle look at during first animation if not done before
+            if (isFirstAnimation && animationData.enableLookAt && !animationData.lookAtBeforeAnimations)
+            {
+                // Start look at and first animation together
+                StartCoroutine(PerformSmoothLookAt(animationData));
+                isFirstAnimation = false;
+            }
+            
             if (animationManager != null && !string.IsNullOrEmpty(action.animationTrigger))
             {
                 Debug.Log($"[OBJECTIVE ANIMATION] Setting animation: {action.animationTrigger} for {action.duration} seconds");
@@ -251,6 +364,8 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                 Debug.Log($"[OBJECTIVE ANIMATION] Waiting delay: {animationData.delayBetweenAnimations} seconds");
                 yield return new WaitForSeconds(animationData.delayBetweenAnimations);
             }
+            
+            isFirstAnimation = false;
         }
         
         Debug.Log("[OBJECTIVE ANIMATION] All animations in sequence completed");
