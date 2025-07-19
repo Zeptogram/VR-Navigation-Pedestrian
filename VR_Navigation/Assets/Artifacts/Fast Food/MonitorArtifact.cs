@@ -311,7 +311,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     {
         foreach (var totem in connectedTotems)
         {
-            // Supponiamo che ogni TotemArtifact abbia un metodo HasOrder(int orderId)
             if (totem.HasOrder(orderId))
                 return totem.ArtifactName;
         }

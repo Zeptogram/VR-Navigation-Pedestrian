@@ -86,17 +86,7 @@ public class TotemArtifact : Artifact
         }
     }
 
-    public void OnOrderPickedUp(object data)
-    {
-        if (data is OrderPickedUpData pickedUpData)
-        {
-            if (pickedUpData.totemName == this.ArtifactName)
-            {
-                OrderPickedUp(pickedUpData.orderId);
-            }
-        }
-    }
-
+    // HasOrder(int orderId): Check if an order exists
     public bool HasOrder(int orderId)
     {
         return orders.ContainsKey(orderId);

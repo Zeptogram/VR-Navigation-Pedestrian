@@ -79,7 +79,7 @@ public class ArtifactConnectionManager : MonoBehaviour
     {
         connectionRules.Clear();
         
-        // Rule: All Totems connect to all Monitors (N:N)
+        // Rule: All Totems connect to one Monitor (N:1)
         connectionRules.Add(new ConnectionRule
         {
             sourceType = typeof(TotemArtifact),
