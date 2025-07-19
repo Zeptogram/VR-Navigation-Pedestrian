@@ -27,7 +27,7 @@ public class TotemArtifact : Artifact
 
         // Order ID set, uses a counter
         int orderId = ++orderCounter;
-        Debug.Log($"[ORDER {ArtifactName}] Agent {agentId} placed order:  {orderId}");
+        Debug.Log($"[{ArtifactName}] Agent {agentId} placed order:  {orderId}");
 
         // Add to active orders
         orders[orderId] = false;

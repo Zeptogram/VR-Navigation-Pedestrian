@@ -637,42 +637,6 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         return (float)(objectives.Count - reachedObjectives.Count) / objectives.Count;
     }
 
-    /**
-     * \brief Returns the list of objectives that have not been reached yet.
-     * \return List of remaining objectives.
-     */
-    public List<GameObject> GetRemainingObjectives()
-    {
-        List<GameObject> remaining = new List<GameObject>();
-        
-        foreach (GameObject objective in objectives)
-        {
-            if (!reachedObjectives.Contains(objective))
-            {
-                remaining.Add(objective);
-            }
-        }
-        
-        return remaining;
-    }
-
-    /**
-     * \brief Returns the total number of objectives assigned to this agent.
-     * \return Total count of objectives.
-     */
-    public int GetTotalObjectivesCount()
-    {
-        return objectives.Count;
-    }
-
-    /**
-     * \brief Returns the number of objectives that have been reached.
-     * \return Count of reached objectives.
-     */
-    public int GetReachedObjectivesCount()
-    {
-        return reachedObjectives.Count;
-    }
 
     /**
      * \brief Checks if a specific objective is currently available for interaction.

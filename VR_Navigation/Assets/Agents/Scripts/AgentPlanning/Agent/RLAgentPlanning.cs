@@ -1132,10 +1132,12 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     private HashSet<int> insideTargets = new HashSet<int>();
 
-
-
+    
+    /// <summary>
+    /// Handles signals from artifacts (totem and monitor).
+    /// </summary>
     private void HandleArtifactSignal(string signalName, object data)
-    {        
+    {
         switch (signalName)
         {
             case "orderPlaced":
@@ -1160,7 +1162,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 break;
 
             case "orderReady":
-                int readyOrderId = (int) data;
+                int readyOrderId = (int)data;
                 if (myOrderId.HasValue && myOrderId.Value == readyOrderId)
                 {
                     Debug.Log($"[Agent {gameObject.name}] Order #{readyOrderId} ready");
@@ -1184,11 +1186,6 @@ public class RLAgentPlanning : Agent, IAgentRL
                 break;
         }
     }
-
-
-
-
-
 
     /// <summary>
     /// Method for agent to place an order at the totem
@@ -1263,47 +1260,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         }
     }
 
-    /// <summary>
-    /// Check if agent's order is ready
-    /// </summary>
-    /*public bool IsMyOrderReady()
-    {
-        if (monitorArtifact != null && myOrderId.HasValue)
-        {
-            var readyOrders = (List<int>)monitorArtifact.Observe("ordersReady");
-            return readyOrders != null && readyOrders.Contains(myOrderId.Value);
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// Get the food type of agent's ready order
-    /// </summary>
-    public MonitorArtifact.FoodType? GetMyOrderFoodType()
-    {
-        if (monitorArtifact != null && myOrderId.HasValue)
-        {
-            var readyOrdersWithFood = (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
-            if (readyOrdersWithFood != null && readyOrdersWithFood.ContainsKey(myOrderId.Value))
-            {
-                return readyOrdersWithFood[myOrderId.Value];
-            }
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Get all ready orders with their food types
-    /// </summary>
-    public Dictionary<int, MonitorArtifact.FoodType> GetAllReadyOrdersWithFood()
-    {
-        if (monitorArtifact != null)
-        {
-            return (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
-        }
-        return new Dictionary<int, MonitorArtifact.FoodType>();
-    }*/
-    
+  
     private void OnDestroy()
     {
         // Clean up signal subscriptions
