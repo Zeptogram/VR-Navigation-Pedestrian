@@ -8,21 +8,21 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI listPrepOrders;
     [SerializeField] private TextMeshProUGUI listReadyOrders;
-    
+
     [Header("Visual Food Objects")]
     [SerializeField] private GameObject hamburgerObject;
     [SerializeField] private GameObject hotdogObject;
-    
+
     [Header("Food Assignment Logic")]
     [SerializeField] private bool useOrderBasedFood = true; // Hamburger odd orders, Hotdog even orders
-    
+
     // Track connected totems
     private List<TotemArtifact> connectedTotems = new List<TotemArtifact>();
-    
+
     // Order tracking with food type
     private List<int> ordersInPreparation = new List<int>();
     private Dictionary<int, FoodType> readyOrdersWithFood = new Dictionary<int, FoodType>();
-    
+
     public enum FoodType
     {
         Hamburger,
@@ -32,7 +32,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     public Dictionary<int, FoodType> ReadyOrdersWithFood => new Dictionary<int, FoodType>(readyOrdersWithFood);
     public List<int> OrdersInPreparation => ordersInPreparation.ToList();
     public List<int> ReadyOrderIds => readyOrdersWithFood.Keys.ToList();
-    
+
     // For Artifact Interface
 
     protected override void Init()
@@ -41,7 +41,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         UpdateUI();
         UpdateFoodVisuals();
     }
-    
+
 
     public override void Use(int agentId, params object[] args)
     {
@@ -79,7 +79,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
     }
 
-    
+
     public void ConnectTo(Artifact other)
     {
         if (other is TotemArtifact totem)
@@ -101,7 +101,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             Debug.Log($"[{ArtifactName}] Connected to totem: {totem.ArtifactName}");
         }
     }
-    
+
     public void DisconnectFromTotem(TotemArtifact totem)
     {
         if (connectedTotems.Contains(totem))
@@ -124,13 +124,13 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                     Debug.Log($"[{ArtifactName}] Ordine #{orderData.orderId} da agente {orderData.agentId} aggiunto alla preparazione");
                 }
                 break;
-                
+
             case "orderReady":
                 int readyOrderId = (int)data;
                 MoveOrderToReady(readyOrderId);
                 Debug.Log($"[{ArtifactName}] Ordine #{readyOrderId} è pronto!");
                 break;
-                
+
             case "orderPickedUp":
                 int pickedUpOrderId = (int)data;
                 RemoveOrderFromReady(pickedUpOrderId);
@@ -138,7 +138,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 break;
         }
     }
-    
+
     private void AddOrderToPreparation(int orderId)
     {
         if (!ordersInPreparation.Contains(orderId))
@@ -147,34 +147,34 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             UpdateUI();
         }
     }
-    
+
     private void MoveOrderToReady(int orderId)
     {
         if (ordersInPreparation.Contains(orderId))
         {
             ordersInPreparation.Remove(orderId);
-            
+
             // Assign food type based on order ID
-            FoodType foodType = useOrderBasedFood ? 
-                (orderId % 2 == 1 ? FoodType.Hamburger : FoodType.Hotdog) : 
+            FoodType foodType = useOrderBasedFood ?
+                (orderId % 2 == 1 ? FoodType.Hamburger : FoodType.Hotdog) :
                 GetNextFoodType();
-                
+
             readyOrdersWithFood[orderId] = foodType;
-            
+
             Debug.Log($"[{ArtifactName}] Ordine #{orderId} pronto come {foodType}");
-            
+
             UpdateUI();
             UpdateFoodVisuals();
         }
     }
-    
+
     private FoodType GetNextFoodType()
     {
         // Alternate between food types
         int readyCount = readyOrdersWithFood.Count;
         return readyCount % 2 == 0 ? FoodType.Hamburger : FoodType.Hotdog;
     }
-    
+
     /// <summary>
     /// Updates the visibility of food objects based on ready orders
     /// </summary>
@@ -183,23 +183,23 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         var foodCounts = readyOrdersWithFood.Values
             .GroupBy(food => food)
             .ToDictionary(g => g.Key, g => g.Count());
-        
+
         bool showHamburger = foodCounts.ContainsKey(FoodType.Hamburger) && foodCounts[FoodType.Hamburger] > 0;
         bool showHotdog = foodCounts.ContainsKey(FoodType.Hotdog) && foodCounts[FoodType.Hotdog] > 0;
-        
+
         if (hamburgerObject != null)
         {
             hamburgerObject.SetActive(showHamburger);
             Debug.Log($"[{ArtifactName}] Hamburger visibility: {showHamburger} (count: {foodCounts.GetValueOrDefault(FoodType.Hamburger, 0)})");
         }
-        
+
         if (hotdogObject != null)
         {
             hotdogObject.SetActive(showHotdog);
             Debug.Log($"[{ArtifactName}] Hotdog visibility: {showHotdog} (count: {foodCounts.GetValueOrDefault(FoodType.Hotdog, 0)})");
         }
     }
-    
+
     private void UpdateUI()
     {
         if (listPrepOrders != null)
@@ -215,13 +215,13 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             }
             listPrepOrders.text = prepText;
         }
-        
+
         if (listReadyOrders != null)
         {
             string readyText = "";
             if (readyOrdersWithFood.Count > 0)
             {
-                var readyDescriptions = readyOrdersWithFood.Select(kvp => 
+                var readyDescriptions = readyOrdersWithFood.Select(kvp =>
                     $"Order #{kvp.Key} ({kvp.Value})");
                 readyText += string.Join(", ", readyDescriptions);
             }
@@ -232,23 +232,10 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             listReadyOrders.text = readyText;
         }
     }
-    
-    // GetOrderFoodType(int orderId): returns the food type for a specific order ID
-    public FoodType? GetOrderFoodType(int orderId)
-    {
-        return readyOrdersWithFood.ContainsKey(orderId) ? readyOrdersWithFood[orderId] : (FoodType?)null;
-    }
-    
-    // GetFoodTypeCounts(): returns a dictionary with counts of each food type in ready orders
-    public Dictionary<FoodType, int> GetFoodTypeCounts()
-    {
-        return readyOrdersWithFood.Values
-            .GroupBy(food => food)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-    
-   
-    
+
+
+
+
     // Method for agents to pick up ready orders
     public bool PickUpOrder(int agentId, int orderId)
     {
@@ -274,23 +261,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         Debug.Log($"[{ArtifactName}] Ordine #{orderId} non trovato negli ordini pronti");
         return false;
     }
-    
-    // Get the first ready order (for agents who don't specify)
-    public int? GetFirstReadyOrder()
-    {
-        return readyOrdersWithFood.Count > 0 ? readyOrdersWithFood.Keys.First() : (int?)null;
-    }
-    
-    private void OnDestroy()
-    {
-        // Clean up connections when monitor is destroyed
-        foreach (TotemArtifact totem in connectedTotems)
-        {
-            totem.OnSignal -= HandleSignal;
-        }
-        connectedTotems.Clear();
-    }
-    
+
+
     private void RemoveOrderFromReady(int orderId)
     {
         if (readyOrdersWithFood.ContainsKey(orderId))
@@ -316,4 +288,18 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
         return null;
     }
+    
+
+    private void OnDestroy()
+    {
+        // Clean up connections when monitor is destroyed
+        foreach (TotemArtifact totem in connectedTotems)
+        {
+            totem.OnSignal -= HandleSignal;
+        }
+        connectedTotems.Clear();
+    }
+
+
+
 }
