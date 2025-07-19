@@ -1,7 +1,8 @@
+// OrderPickedUpData.cs
 public class OrderPickedUpData
 {
     public int orderId;
-    public string totemName; // o un altro identificatore univoco
+    public string totemName;
 
     public OrderPickedUpData(int orderId, string totemName)
     {

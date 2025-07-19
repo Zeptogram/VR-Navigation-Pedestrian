@@ -47,15 +47,13 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     {
         base.Use(agentId, args);
 
-        // Se viene passato un orderId come primo argomento, prova a ritirare quell'ordine
+        // If args contains an orderId, pick up that order
         if (args != null && args.Length > 0 && args[0] is int orderId)
-        {
             PickUpOrder(agentId, orderId);
-        }
         else
-        {
-            Debug.LogWarning($"[{ArtifactName}] Use chiamato senza orderId: specificare l'ordine da ritirare.");
-        }
+            Debug.LogWarning($"[{ArtifactName}] Use not supported without orderId argument");
+        
+
     }
 
     public override object Observe(string propertyName)
@@ -112,6 +110,11 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
     }
 
+    // Specific methods for MonitorArtifact
+
+
+
+    // HandleSignal(string signal, object data): Processes signals from connected totems
     private void HandleSignal(string signal, object data)
     {
         switch (signal)
@@ -121,24 +124,19 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 if (orderData != null)
                 {
                     AddOrderToPreparation(orderData.orderId);
-                    Debug.Log($"[{ArtifactName}] Ordine #{orderData.orderId} da agente {orderData.agentId} aggiunto alla preparazione");
+                    Debug.Log($"[{ArtifactName}] Order #{orderData.orderId} from Agent {orderData.agentId} in preparation");
                 }
                 break;
 
             case "orderReady":
                 int readyOrderId = (int)data;
                 MoveOrderToReady(readyOrderId);
-                Debug.Log($"[{ArtifactName}] Ordine #{readyOrderId} è pronto!");
-                break;
-
-            case "orderPickedUp":
-                int pickedUpOrderId = (int)data;
-                RemoveOrderFromReady(pickedUpOrderId);
-                Debug.Log($"[{ArtifactName}] Ordine #{pickedUpOrderId} ritirato");
+                Debug.Log($"[{ArtifactName}] Order #{readyOrderId} ready");
                 break;
         }
     }
 
+    // AddOrderToPreparation(int orderId): Adds an order to the preparation list
     private void AddOrderToPreparation(int orderId)
     {
         if (!ordersInPreparation.Contains(orderId))
@@ -148,6 +146,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
     }
 
+    // MoveOrderToReady(int orderId): Moves an order from preparation to ready state
     private void MoveOrderToReady(int orderId)
     {
         if (ordersInPreparation.Contains(orderId))
@@ -160,14 +159,12 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 GetNextFoodType();
 
             readyOrdersWithFood[orderId] = foodType;
-
-            Debug.Log($"[{ArtifactName}] Ordine #{orderId} pronto come {foodType}");
-
             UpdateUI();
             UpdateFoodVisuals();
         }
     }
 
+    // GetNextFoodType(): Determines the next food type based on current ready orders
     private FoodType GetNextFoodType()
     {
         // Alternate between food types
@@ -175,9 +172,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         return readyCount % 2 == 0 ? FoodType.Hamburger : FoodType.Hotdog;
     }
 
-    /// <summary>
-    /// Updates the visibility of food objects based on ready orders
-    /// </summary>
+    // UpdateFoodVisuals(): Updates the visibility of food objects based on ready orders
     private void UpdateFoodVisuals()
     {
         var foodCounts = readyOrdersWithFood.Values
@@ -188,31 +183,22 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         bool showHotdog = foodCounts.ContainsKey(FoodType.Hotdog) && foodCounts[FoodType.Hotdog] > 0;
 
         if (hamburgerObject != null)
-        {
             hamburgerObject.SetActive(showHamburger);
-            Debug.Log($"[{ArtifactName}] Hamburger visibility: {showHamburger} (count: {foodCounts.GetValueOrDefault(FoodType.Hamburger, 0)})");
-        }
 
         if (hotdogObject != null)
-        {
             hotdogObject.SetActive(showHotdog);
-            Debug.Log($"[{ArtifactName}] Hotdog visibility: {showHotdog} (count: {foodCounts.GetValueOrDefault(FoodType.Hotdog, 0)})");
-        }
     }
 
+    // UpdateUI(): Updates the UI text elements for preparation and ready orders
     private void UpdateUI()
     {
         if (listPrepOrders != null)
         {
             string prepText = "";
             if (ordersInPreparation.Count > 0)
-            {
                 prepText += string.Join(", ", ordersInPreparation.Select(id => $"Order #{id}"));
-            }
             else
-            {
                 prepText += "No Preparation Orders";
-            }
             listPrepOrders.text = prepText;
         }
 
@@ -222,63 +208,49 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             if (readyOrdersWithFood.Count > 0)
             {
                 var readyDescriptions = readyOrdersWithFood.Select(kvp =>
-                    $"Order #{kvp.Key} ({kvp.Value})");
+                    $"Order #{kvp.Key}");
                 readyText += string.Join(", ", readyDescriptions);
             }
             else
-            {
                 readyText += "No Ready Orders";
-            }
             listReadyOrders.text = readyText;
         }
     }
 
-
-
-
-    // Method for agents to pick up ready orders
+    // PickUpOrder(int agentId, int orderId): Called by Use method to pick up an order
     public bool PickUpOrder(int agentId, int orderId)
     {
         if (readyOrdersWithFood.ContainsKey(orderId))
         {
             FoodType foodType = readyOrdersWithFood[orderId];
-            Debug.Log($"[{ArtifactName}] Picking up {foodType} order #{orderId}");
 
-            // Remove from ready orders
-            readyOrdersWithFood.Remove(orderId);
+            RemoveOrderFromReady(orderId);
 
-            // Update UI and visuals
-            UpdateUI();
-            UpdateFoodVisuals();
-
-            // Emit signal con dati strutturati (questo basta!)
             EmitSignal("orderPickedUp", new OrderPickedUpData(orderId, FindTotemNameForOrder(orderId)));
 
-            Debug.Log($"[{ArtifactName}] {foodType} order #{orderId} ritirato da agente {agentId}");
+            Debug.Log($"[{ArtifactName}] {foodType} order #{orderId} retired by Agent {agentId}");
             return true;
         }
 
-        Debug.Log($"[{ArtifactName}] Ordine #{orderId} non trovato negli ordini pronti");
+        Debug.Log($"[{ArtifactName}] Order #{orderId} not found in ready orders");
         return false;
     }
 
 
+    // RemoveOrderFromReady(int orderId): Removes an order from the ready orders
     private void RemoveOrderFromReady(int orderId)
     {
         if (readyOrdersWithFood.ContainsKey(orderId))
         {
             FoodType foodType = readyOrdersWithFood[orderId];
             readyOrdersWithFood.Remove(orderId);
-            Debug.Log($"[{ArtifactName}] {foodType} ordine #{orderId} rimosso dalla lista ready");
+            Debug.Log($"[{ArtifactName}] {foodType} Order #{orderId} removed from ready orders");
             UpdateUI();
             UpdateFoodVisuals();
         }
-        else
-        {
-            Debug.LogWarning($"[{ArtifactName}] Tentativo di rimuovere ordine #{orderId} non presente nella lista ready");
-        }
     }
 
+    // FindTotemNameForOrder(int orderId): Finds the totem name associated with an order
     private string FindTotemNameForOrder(int orderId)
     {
         foreach (var totem in connectedTotems)
@@ -289,7 +261,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         return null;
     }
     
-
+    // OnDestroy(): Clean up connections when the monitor is destroyed
     private void OnDestroy()
     {
         // Clean up connections when monitor is destroyed
