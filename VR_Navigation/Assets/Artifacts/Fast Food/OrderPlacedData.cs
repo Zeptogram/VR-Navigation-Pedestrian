@@ -1,4 +1,5 @@
-// Class to hold data when an order is placed
+// OrderPlacedData.cs
+// Data structure for order placement in the fast food system
 public class OrderPlacedData
 {
     public int orderId;

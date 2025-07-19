@@ -1169,10 +1169,17 @@ public class RLAgentPlanning : Agent, IAgentRL
                 break;
 
             case "orderPickedUp":
-                int pickedUpOrderId = (int) data;
-                if (myOrderId.HasValue && myOrderId.Value == pickedUpOrderId)
+                if (data is OrderPickedUpData pickedUpData)
                 {
-                    Debug.Log($"[Agent {gameObject.name}] Retired #{pickedUpOrderId}!");
+                    int pickedUpOrderId = pickedUpData.orderId;
+                    if (myOrderId.HasValue && myOrderId.Value == pickedUpOrderId)
+                    {
+                        Debug.Log($"[Agent {gameObject.name}] Retired #{pickedUpOrderId}!");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[Agent {gameObject.name}] orderPickedUp: data non è OrderPickedUpData!");
                 }
                 break;
         }
@@ -1222,7 +1229,6 @@ public class RLAgentPlanning : Agent, IAgentRL
             return;
         }
         
-        // Observe the ready orders from the monitor artifact and ids
         var readyOrdersWithFood = (Dictionary<int, MonitorArtifact.FoodType>)monitorArtifact.Observe("readyOrdersWithFood");
         var readyOrderIds = (List<int>)monitorArtifact.Observe("ordersReady");
         
@@ -1233,7 +1239,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             if (readyOrdersWithFood != null && readyOrdersWithFood.ContainsKey(myOrderId.Value))
             {
                 var foodType = readyOrdersWithFood[myOrderId.Value];
-                Debug.Log($"[Agent {gameObject.name}] Order #{myOrderId} ({foodType}) os in the list of ready orders");
+                Debug.Log($"[Agent {gameObject.name}] Order #{myOrderId} ({foodType}) is in the list of ready orders");
             }
             else
             {
@@ -1241,19 +1247,8 @@ public class RLAgentPlanning : Agent, IAgentRL
             }
             
             int agentId = gameObject.GetInstanceID();
-            bool success = monitorArtifact.PickUpOrder(agentId, myOrderId.Value);
-            Debug.Log($"[Agent {gameObject.name}] PickUpOrder: {success}");
+            monitorArtifact.Use(agentId, myOrderId.Value);
 
-            if (success)
-            {
-                Debug.Log($"[Agent {gameObject.name}] SUCCESS, retired order #{myOrderId}!");
-                myOrderId = null;
-                hasPlacedOrder = false; // Reset for next order
-            }
-            else
-            {
-                Debug.Log($"[Agent {gameObject.name}] ERROR: PickUpOrder order failed #{myOrderId}");
-            }
         }
         else
         {
@@ -1318,8 +1313,5 @@ public class RLAgentPlanning : Agent, IAgentRL
         if (monitorArtifact != null)
             monitorArtifact.OnSignal -= HandleArtifactSignal;
     }
-
-
-
 
 }

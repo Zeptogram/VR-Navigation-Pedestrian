@@ -64,7 +64,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
      * Adds the objective to the reached list, gives a reward, marks it as completed, and checks if all objectives are done.
      * \param triggerObject The objective GameObject that was triggered.
      */
-    public void HandleObjectiveTrigger(GameObject triggerObject)
+    public void HandleObjectiveTrigger(GameObject triggerObject, Action onAnimationsComplete = null)
     {
         // If order is on, accept only the next objective in the list
         if (orderedObjectives)
@@ -91,7 +91,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         //triggerObject.SetActive(false); // TODO: make visible again if needed
 
         // Run the animations associated with the objective
-        StartCoroutine(ExecuteObjectiveAnimations(triggerObject));
+        StartCoroutine(ExecuteObjectiveAnimations(triggerObject, onAnimationsComplete));
 
         
         Debug.Log($"[ObjectiveHandler] Agent {agent.name} completed objective {triggerObject.name}. Progress: {reachedObjectives.Count}/{objectives.Count}");
@@ -101,7 +101,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
      * \brief Executes the animations associated with the reached objective.
      * \param objectiveObject The objective GameObject that contains animation data.
      */
-    private IEnumerator ExecuteObjectiveAnimations(GameObject objectiveObject)
+    private IEnumerator ExecuteObjectiveAnimations(GameObject objectiveObject, Action onAnimationsComplete = null)
     {
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
         var trigger = objectiveObject.GetComponent<ObjectiveTrigger>();
@@ -241,6 +241,9 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
 
         Debug.Log($"[OBJECTIVE ANIMATION] Completed all animations for objective {objectiveObject.name}");
+
+        // Invoke the callback if provided
+        onAnimationsComplete?.Invoke();
     }
 
     /**

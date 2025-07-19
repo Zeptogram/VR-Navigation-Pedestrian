@@ -33,25 +33,50 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     public List<int> OrdersInPreparation => ordersInPreparation.ToList();
     public List<int> ReadyOrderIds => readyOrdersWithFood.Keys.ToList();
     
-    // GetOrderFoodType(int orderId): returns the food type for a specific order ID
-    public FoodType? GetOrderFoodType(int orderId)
-    {
-        return readyOrdersWithFood.ContainsKey(orderId) ? readyOrdersWithFood[orderId] : (FoodType?)null;
-    }
-    
-    // GetFoodTypeCounts(): returns a dictionary with counts of each food type in ready orders
-    public Dictionary<FoodType, int> GetFoodTypeCounts()
-    {
-        return readyOrdersWithFood.Values
-            .GroupBy(food => food)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-    
+    // For Artifact Interface
+
     protected override void Init()
     {
         Debug.Log($"[{ArtifactName}] Monitor initialized");
         UpdateUI();
         UpdateFoodVisuals();
+    }
+    
+
+    public override void Use(int agentId, params object[] args)
+    {
+        base.Use(agentId, args);
+
+        // Se viene passato un orderId come primo argomento, prova a ritirare quell'ordine
+        if (args != null && args.Length > 0 && args[0] is int orderId)
+        {
+            PickUpOrder(agentId, orderId);
+        }
+        else
+        {
+            Debug.LogWarning($"[{ArtifactName}] Use chiamato senza orderId: specificare l'ordine da ritirare.");
+        }
+    }
+
+    public override object Observe(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case "ordersInPreparation":
+                return ordersInPreparation.ToList();
+            case "ordersReady":
+                return readyOrdersWithFood.Keys.ToList();
+            case "readyOrdersWithFood":
+                return new Dictionary<int, FoodType>(readyOrdersWithFood);
+            case "hasReadyOrders":
+                return readyOrdersWithFood.Count > 0;
+            case "prepOrdersCount":
+                return ordersInPreparation.Count;
+            case "readyOrdersCount":
+                return readyOrdersWithFood.Count;
+            default:
+                return base.Observe(propertyName);
+        }
     }
 
     
@@ -66,8 +91,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         if (other is TotemArtifact totem)
             DisconnectFromTotem(totem);
     }
-
-
 
     public void ConnectToTotem(TotemArtifact totem)
     {
@@ -210,27 +233,21 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
     }
     
-    // Methods for agents to observe the state
-    public override object Observe(string propertyName)
+    // GetOrderFoodType(int orderId): returns the food type for a specific order ID
+    public FoodType? GetOrderFoodType(int orderId)
     {
-        switch (propertyName)
-        {
-            case "ordersInPreparation":
-                return ordersInPreparation.ToList(); 
-            case "ordersReady":
-                return readyOrdersWithFood.Keys.ToList(); 
-            case "readyOrdersWithFood":
-                return new Dictionary<int, FoodType>(readyOrdersWithFood);
-            case "hasReadyOrders":
-                return readyOrdersWithFood.Count > 0;
-            case "prepOrdersCount":
-                return ordersInPreparation.Count;
-            case "readyOrdersCount":
-                return readyOrdersWithFood.Count;
-            default:
-                return base.Observe(propertyName);
-        }
+        return readyOrdersWithFood.ContainsKey(orderId) ? readyOrdersWithFood[orderId] : (FoodType?)null;
     }
+    
+    // GetFoodTypeCounts(): returns a dictionary with counts of each food type in ready orders
+    public Dictionary<FoodType, int> GetFoodTypeCounts()
+    {
+        return readyOrdersWithFood.Values
+            .GroupBy(food => food)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+    
+   
     
     // Method for agents to pick up ready orders
     public bool PickUpOrder(int agentId, int orderId)
@@ -239,27 +256,21 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         {
             FoodType foodType = readyOrdersWithFood[orderId];
             Debug.Log($"[{ArtifactName}] Picking up {foodType} order #{orderId}");
-            
+
             // Remove from ready orders
             readyOrdersWithFood.Remove(orderId);
-            
+
             // Update UI and visuals
             UpdateUI();
             UpdateFoodVisuals();
-            
-            // Notify connected totems
-            foreach (TotemArtifact totem in connectedTotems)
-            {
-                totem.OrderPickedUp(orderId);
-            }
-            
-            // Emit signal
-            EmitSignal("orderPickedUp", orderId);
-            
+
+            // Emit signal con dati strutturati (questo basta!)
+            EmitSignal("orderPickedUp", new OrderPickedUpData(orderId, FindTotemNameForOrder(orderId)));
+
             Debug.Log($"[{ArtifactName}] {foodType} order #{orderId} ritirato da agente {agentId}");
             return true;
         }
-        
+
         Debug.Log($"[{ArtifactName}] Ordine #{orderId} non trovato negli ordini pronti");
         return false;
     }
@@ -294,5 +305,16 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         {
             Debug.LogWarning($"[{ArtifactName}] Tentativo di rimuovere ordine #{orderId} non presente nella lista ready");
         }
+    }
+
+    private string FindTotemNameForOrder(int orderId)
+    {
+        foreach (var totem in connectedTotems)
+        {
+            // Supponiamo che ogni TotemArtifact abbia un metodo HasOrder(int orderId)
+            if (totem.HasOrder(orderId))
+                return totem.ArtifactName;
+        }
+        return null;
     }
 }

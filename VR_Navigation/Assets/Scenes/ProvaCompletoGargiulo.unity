@@ -10992,7 +10992,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.68
+      value: -1.84
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11049,6 +11049,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5695143438376696120, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 345340964}
+    - targetCorrespondingSourceObject: {fileID: 5695143438376696120, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 345340968}
   m_SourcePrefab: {fileID: 100100000, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
 --- !u!4 &345340962 stripped
 Transform:
@@ -11072,12 +11075,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0a8bb151638f64481c5bae3b8b3bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  linkedArtifacts: []
-  autoFindTotems: 1
-  autoFindMonitors: 1
   triggerPlaceOrder: 0
   triggerPickUpOrder: 1
   triggerWaitForOrderReady: 0
+--- !u!114 &345340968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 345340963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b9a3425076199b4dbf9121c2d5f9db8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationActions: []
+  playInSequence: 1
+  delayBetweenAnimations: 0.5
+  stopAgentDuringAnimations: 1
+  totalDuration: -1
+  enableLookAt: 0
+  lookAtTarget: {fileID: 2126680024}
+  lookAtSpeed: 60
+  lookAtBeforeAnimations: 1
+  horizontalLookOnly: 1
 --- !u!4 &346464899 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5838439550256664009, guid: 75c16d4794f25e84ea8d82ee45dd1937, type: 3}
@@ -31829,7 +31851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_LocalScale.x
-      value: 9
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_LocalScale.y
@@ -31849,7 +31871,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.77
+      value: -2.67
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: 721b289bdc40d9141a0eb05566d19c68, type: 3}
       propertyPath: m_LocalRotation.w
@@ -61886,7 +61908,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.33
+      value: 4.72
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.y
@@ -61894,7 +61916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 8.52
+      value: 7.36
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalRotation.w
@@ -65335,9 +65357,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0a8bb151638f64481c5bae3b8b3bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  linkedArtifacts: []
-  autoFindTotems: 1
-  autoFindMonitors: 1
   triggerPlaceOrder: 1
   triggerPickUpOrder: 0
   triggerWaitForOrderReady: 0
@@ -70958,9 +70977,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0a8bb151638f64481c5bae3b8b3bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  linkedArtifacts: []
-  autoFindTotems: 1
-  autoFindMonitors: 1
   triggerPlaceOrder: 0
   triggerPickUpOrder: 0
   triggerWaitForOrderReady: 1
