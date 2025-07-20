@@ -94,7 +94,12 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         if (orderedObjectives)
         {
             int nextIndex = reachedObjectives.Count;
-            if (nextIndex >= objectives.Count || objectives[nextIndex] != triggerObject)
+            if (nextIndex >= objectives.Count)
+            {
+                Debug.LogWarning($"[ORDERED OBJECTIVES] Tried to take {triggerObject.name}, but all objectives are already completed.");
+                return;
+            }
+            if (objectives[nextIndex] != triggerObject)
             {
                 Debug.LogWarning($"[ORDERED OBJECTIVES] Tried to take {triggerObject.name}, but next should be {objectives[nextIndex].name}");
                 return;
