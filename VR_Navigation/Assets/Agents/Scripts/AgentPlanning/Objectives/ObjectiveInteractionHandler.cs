@@ -49,6 +49,8 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     /// </summary>
     private bool isExecutingObjectiveAnimations = false;
 
+    private bool isOrderReady = false;
+
     /**
      * \brief Initializes references to required components.
      */
@@ -57,6 +59,28 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         agent = GetComponent<RLAgentPlanning>();
         observer = GetComponent<ObjectiveObserver>();
         animationManager = GetComponent<AgentAnimationManager>();
+    }
+
+    private void Start()
+    {
+        if (agent.monitorArtifact != null)
+            agent.monitorArtifact.OnPropertyChanged += HandleMonitorPropertyChanged;
+    }
+
+    private void OnDestroy()
+    {
+        if (agent.monitorArtifact != null)
+            agent.monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
+    }
+
+    private void HandleMonitorPropertyChanged(string propertyName, object value)
+    {
+        if (propertyName == "ordersReady")
+        {
+            int? myOrderId = agent.MyOrderId;
+            var readyOrders = value as List<int>;
+            isOrderReady = myOrderId.HasValue && readyOrders != null && readyOrders.Contains(myOrderId.Value);
+        }
     }
 
     /**
@@ -113,17 +137,15 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             var monitor = agentPlanning.monitorArtifact;
             if (monitor != null)
             {
-                int? myOrderId = agentPlanning.GetType().GetField("myOrderId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(agentPlanning) as int?;
+                int? myOrderId = agent.MyOrderId;
                 if (myOrderId.HasValue)
                 {
                     float waited = 0f;
                     float checkInterval = 0.2f;
-                    while (true)
-                    {
-                        var readyOrders = (List<int>)monitor.Observe("ordersReady");
-                        if (readyOrders != null && readyOrders.Contains(myOrderId.Value))
-                            break;
+                    isOrderReady = false;
 
+                    while (!isOrderReady)
+                    {
                         agentPlanning.SetRun(false);
                         agentPlanning.GetRigidBody().velocity = Vector3.zero;
 
@@ -134,7 +156,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                         yield return new WaitForSeconds(checkInterval);
                         waited += checkInterval;
                     }
-                    Debug.Log($"[ObjectiveHandler] Atteso {waited:F1}s per ordine pronto (WaitForOrderReady)");
+                    Debug.Log($"[ObjectiveHandler] Waited {waited:F1}s for order (WaitForOrderReady)");
                     waitedForOrder = true;
                 }
             }
@@ -142,7 +164,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
 
         if (animationData == null)
         {
-            Debug.LogWarning($"No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
+            Debug.LogWarning($"[ObjectiveHandler] No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
             
             if (waitedForOrder)
             {
@@ -153,7 +175,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         }
 
         isExecutingObjectiveAnimations = true;
-        Debug.Log($"[OBJECTIVE ANIMATION] Starting objective animations for {objectiveObject.name}");
+        //Debug.Log($"[Objective Animation] Starting objective animations for {objectiveObject.name}");
 
         // If setted to stop the agent during animations
         if (animationData.stopAgentDuringAnimations)
@@ -208,7 +230,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             }
         }
 
-        Debug.Log("[OBJECTIVE ANIMATION] All objective animations completed, preparing to reactivate agent");
+        //Debug.Log("[Objective Animation] All objective animations completed, preparing to reactivate agent");
 
         // Reset the animator if needed
         if (animationData.stopAgentDuringAnimations && animationManager != null)
@@ -219,7 +241,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             // Wait a frame to ensure the animator is reset
             yield return null;
             
-            Debug.Log("[OBJECTIVE ANIMATION] Animator reset completed, reactivating agent");
+            //Debug.Log("[Objective Animation] Animator reset completed, reactivating agent");
         }
 
         // Toggle the state of isExecutingObjectiveAnimations
@@ -230,7 +252,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         if (animationData.stopAgentDuringAnimations)
         {
             agent.SetRun(true);
-            Debug.Log("[OBJECTIVE ANIMATION] Agent reactivated after animations completed");
+            //Debug.Log("[Objective Animation] Agent reactivated after animations completed");
             
             // Wait a moment before allowing further actions
             yield return new WaitForSeconds(0.2f);
@@ -240,7 +262,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             isExecutingObjectiveAnimations = false;
         }
 
-        Debug.Log($"[OBJECTIVE ANIMATION] Completed all animations for objective {objectiveObject.name}");
+        //Debug.Log($"[Objective Animation] Completed all animations for objective {objectiveObject.name}");
 
         // Invoke the callback if provided
         onAnimationsComplete?.Invoke();

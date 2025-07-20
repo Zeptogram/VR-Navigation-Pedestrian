@@ -39,26 +39,13 @@ public class TotemArtifact : Artifact
         StartCoroutine(PrepareOrder(orderId));
     }
 
-    public override object Observe(string propertyName)
-    {
-        switch (propertyName)
-        {
-            case "orders":
-                return new Dictionary<int, bool>(orders);
-            case "totalOrders":
-                return orderCounter;
-            default:
-                return base.Observe(propertyName);
-        }
-    }
-
     // Specific methods to handle order preparation
     
 
     // PrepareOrder(int orderId): Coroutine to simulate order preparation
     private IEnumerator PrepareOrder(int orderId)
     {
-        float preparationTime = Random.Range(preparationTimeMin, preparationTimeMax);
+        float preparationTime = UnityEngine.Random.Range(preparationTimeMin, preparationTimeMax);
         Debug.Log($"[{ArtifactName}] Order {orderId} ready in {preparationTime:F1} seconds");
 
         yield return new WaitForSeconds(preparationTime);

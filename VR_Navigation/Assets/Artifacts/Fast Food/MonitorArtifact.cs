@@ -23,6 +23,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     private List<int> ordersInPreparation = new List<int>();
     private Dictionary<int, FoodType> readyOrdersWithFood = new Dictionary<int, FoodType>();
 
+    private List<OrderPlacedData> placedOrders = new List<OrderPlacedData>();
+
     public enum FoodType
     {
         Hamburger,
@@ -37,7 +39,9 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
 
     protected override void Init()
     {
-        Debug.Log($"[{ArtifactName}] Monitor initialized");
+        DefineObsProperty("ordersInPreparation", ordersInPreparation.ToList());
+        DefineObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
+        DefineObsProperty("placedOrders", new List<OrderPlacedData>(placedOrders));
         UpdateUI();
         UpdateFoodVisuals();
     }
@@ -55,28 +59,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         
 
     }
-
-    public override object Observe(string propertyName)
-    {
-        switch (propertyName)
-        {
-            case "ordersInPreparation":
-                return ordersInPreparation.ToList();
-            case "ordersReady":
-                return readyOrdersWithFood.Keys.ToList();
-            case "readyOrdersWithFood":
-                return new Dictionary<int, FoodType>(readyOrdersWithFood);
-            case "hasReadyOrders":
-                return readyOrdersWithFood.Count > 0;
-            case "prepOrdersCount":
-                return ordersInPreparation.Count;
-            case "readyOrdersCount":
-                return readyOrdersWithFood.Count;
-            default:
-                return base.Observe(propertyName);
-        }
-    }
-
 
     public void ConnectTo(Artifact other)
     {
@@ -112,8 +94,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
 
     // Specific methods for MonitorArtifact
 
-
-
     // HandleSignal(string signal, object data): Processes signals from connected totems
     private void HandleSignal(string signal, object data)
     {
@@ -123,7 +103,7 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 OrderPlacedData orderData = data as OrderPlacedData;
                 if (orderData != null)
                 {
-                    AddOrderToPreparation(orderData.orderId);
+                    AddOrderToPreparation(orderData.orderId, orderData.agentId);
                     Debug.Log($"[{ArtifactName}] Order #{orderData.orderId} from Agent {orderData.agentId} in preparation");
                 }
                 break;
@@ -137,11 +117,14 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     }
 
     // AddOrderToPreparation(int orderId): Adds an order to the preparation list
-    private void AddOrderToPreparation(int orderId)
+    private void AddOrderToPreparation(int orderId, int agentId)
     {
         if (!ordersInPreparation.Contains(orderId))
         {
             ordersInPreparation.Add(orderId);
+            placedOrders.Add(new OrderPlacedData(orderId, agentId));
+            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
+            UpdateObsProperty("placedOrders", new List<OrderPlacedData>(placedOrders));
             UpdateUI();
         }
     }
@@ -159,6 +142,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 GetNextFoodType();
 
             readyOrdersWithFood[orderId] = foodType;
+            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
+            UpdateObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
             UpdateUI();
             UpdateFoodVisuals();
         }
@@ -242,9 +227,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     {
         if (readyOrdersWithFood.ContainsKey(orderId))
         {
-            FoodType foodType = readyOrdersWithFood[orderId];
             readyOrdersWithFood.Remove(orderId);
-            Debug.Log($"[{ArtifactName}] {foodType} Order #{orderId} removed from ready orders");
+            UpdateObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
             UpdateUI();
             UpdateFoodVisuals();
         }
