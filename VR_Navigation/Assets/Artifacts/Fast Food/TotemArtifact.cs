@@ -4,12 +4,15 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using TMPro;
 public class TotemArtifact : Artifact
 {
     [Header("Order Configuration")]
     [SerializeField] private float preparationTimeMin = 5f;
     [SerializeField] private float preparationTimeMax = 10f;
+
+    [Header("UI")]
+    [SerializeField] private TextMeshProUGUI orderText; // <-- aggiungi questo
 
     private int orderCounter;
     private Dictionary<int, bool> orders = new Dictionary<int, bool>(); // orderId -> isReady
@@ -17,6 +20,8 @@ public class TotemArtifact : Artifact
     protected override void Init()
     {
         orderCounter = 0;
+        if (orderText != null)
+            orderText.text = "";
     }
 
     // From Artifact Interface
@@ -32,6 +37,13 @@ public class TotemArtifact : Artifact
         // Add to active orders
         orders[orderId] = false;
 
+        // UI Update
+        if (orderText != null)
+        {
+            orderText.text = $"Order #{orderId} sent!";
+            StartCoroutine(ClearOrderTextAfterDelay(3f));
+        }
+
         // Emit signal with structured data
         EmitSignal("orderPlaced", new OrderPlacedData(orderId, agentId));
 
@@ -40,7 +52,7 @@ public class TotemArtifact : Artifact
     }
 
     // Specific methods to handle order preparation
-    
+
 
     // PrepareOrder(int orderId): Coroutine to simulate order preparation
     private IEnumerator PrepareOrder(int orderId)
@@ -58,7 +70,7 @@ public class TotemArtifact : Artifact
             Debug.Log($"[{ArtifactName}] Order {orderId} ready");
         }
     }
-    
+
     // OrderPickedUp(int orderId): Method to remove an order when picked up
     public void OrderPickedUp(int orderId)
     {
@@ -77,6 +89,14 @@ public class TotemArtifact : Artifact
     public bool HasOrder(int orderId)
     {
         return orders.ContainsKey(orderId);
+    }
+    
+     // ClearOrderTextAfterDelay(float delay): Coroutine to clear the order text after a delay
+    private IEnumerator ClearOrderTextAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (orderText != null)
+            orderText.text = "";
     }
 }
 

@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 7262723630074066311}
   - component: {fileID: 3188984293830208346}
   - component: {fileID: 861413874068737518}
+  - component: {fileID: 4545725711879088033}
   m_Layer: 11
   m_Name: Planning Agent
   m_TagString: Agente
@@ -65,6 +66,9 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 10000000
+  totemArtifact: {fileID: 0}
+  monitorArtifact: {fileID: 0}
+  numberOfCrossings: 0
   group: 0
   envStep: 10000000
   lockPosition: 0
@@ -328,6 +332,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d89708955a019b49b4cf8088425556d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4545725711879088033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2563330552443912178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95c306813bd6acb42b8012f9dd0cbc4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &5750508143802454304
