@@ -57,7 +57,7 @@ public abstract class Artifact : MonoBehaviour {
     }
 
     // EmitSignal(string name, object data): Method to emit direct signals to other artifacts
-    protected void EmitSignal(string name, object data)
+    public void EmitSignal(string name, object data)
     {
         Debug.Log($"[{ArtifactName}] Emitting signal {name}");
         OnSignal?.Invoke(name, data);

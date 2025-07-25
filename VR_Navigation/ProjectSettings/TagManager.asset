@@ -13,6 +13,8 @@ TagManager:
   - Muro
   - evac
   - Obiettivo
+  - Artifact
+  - ArtifactZone
   layers:
   - Default
   - TransparentFX

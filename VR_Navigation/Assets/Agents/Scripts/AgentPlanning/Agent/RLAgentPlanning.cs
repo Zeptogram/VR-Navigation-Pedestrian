@@ -15,7 +15,9 @@ using UnityEngine;
  */
 public class RLAgentPlanning : Agent, IAgentRL
 {
-
+    // Artifact lists
+    [SerializeField] private List<Artifact> assignedArtifacts = new List<Artifact>();
+    
     public TotemArtifact totemArtifact;
     public MonitorArtifact monitorArtifact;
 
@@ -660,8 +662,27 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     private void OnTriggerEnter(Collider other)
     {
-
         GameObject triggerObject = other.gameObject;
+
+        if (triggerObject.CompareTag("ArtifactZone"))
+        {
+            Artifact artifact = triggerObject.GetComponent<Artifact>() ?? 
+                               triggerObject.GetComponentInParent<Artifact>();
+            
+            if (artifact != null && assignedArtifacts.Contains(artifact))
+            {
+                Debug.Log($"[Agent {gameObject.name}] Collided with assigned artifact: {artifact.ArtifactName}");
+                
+                int agentId = gameObject.GetInstanceID();
+                //artifact.Use(agentId, "agent_collision", gameObject);
+            }
+            else if (artifact != null)
+            {
+                Debug.Log($"[Agent {gameObject.name}] Collided with unassigned artifact: {artifact.ArtifactName}");
+            }
+
+            return;
+        }
 
         entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         if (triggerObject.CompareTag("Target"))
