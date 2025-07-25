@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
+using UnityEngine.AI;
 
 
 [RequireComponent(typeof(ObjectiveInteractionHandler))]
@@ -16,8 +17,11 @@ using UnityEngine;
 public class RLAgentPlanning : Agent, IAgentRL
 {
     // Artifact lists
-    [SerializeField] private List<Artifact> assignedArtifacts = new List<Artifact>();
-    
+    [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+
+    public List<Artifact> assignedArtifacts => _assignedArtifacts;
+
+
     public TotemArtifact totemArtifact;
     public MonitorArtifact monitorArtifact;
 
@@ -402,7 +406,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
         lastYRotation = transform.eulerAngles.y;
     }
-    
+
     /// <summary>
     /// Checks if a turn animation is currently playing
     /// </summary>
@@ -410,7 +414,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     private bool IsTurnAnimationPlaying()
     {
         if (animator == null) return false;
-        
+
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
     }
@@ -421,7 +425,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             monitorArtifact.OnPropertyChanged += HandleMonitorPropertyChanged;
     }
 
-    
+
 
     /// <summary>
     /// Gets the color associated with this agent's group.
@@ -664,15 +668,15 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         GameObject triggerObject = other.gameObject;
 
-        if (triggerObject.CompareTag("ArtifactZone"))
+        /*if (triggerObject.CompareTag("ArtifactZone"))
         {
-            Artifact artifact = triggerObject.GetComponent<Artifact>() ?? 
+            Artifact artifact = triggerObject.GetComponent<Artifact>() ??
                                triggerObject.GetComponentInParent<Artifact>();
-            
+
             if (artifact != null && assignedArtifacts.Contains(artifact))
             {
                 Debug.Log($"[Agent {gameObject.name}] Collided with assigned artifact: {artifact.ArtifactName}");
-                
+
                 int agentId = gameObject.GetInstanceID();
                 //artifact.Use(agentId, "agent_collision", gameObject);
             }
@@ -682,7 +686,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             }
 
             return;
-        }
+        }*/
 
         entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         if (triggerObject.CompareTag("Target"))
@@ -706,7 +710,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             }
             else if (IsIntermediateTarget(target))
             {
-                insideTargets.Add(target.id); 
+                insideTargets.Add(target.id);
             }
         }
         else if (fleeing && other.gameObject.name.Contains("Flee"))
@@ -1152,7 +1156,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     private HashSet<int> insideTargets = new HashSet<int>();
 
-    
+
     /// <summary>
     /// Handles property changes from the monitor artifact.
     /// </summary>
@@ -1236,13 +1240,32 @@ public class RLAgentPlanning : Agent, IAgentRL
         monitorArtifact.Use(agentId, myOrderId.Value);
         Debug.Log($"[Agent {gameObject.name}] Picked up order #{myOrderId.Value}");
     }
-    
+
 
     private void OnDestroy()
     {
         if (monitorArtifact != null)
             monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
-        
+
     }
+    
+
+    /// <summary>
+    /// Method to switch back to RL control from NavMesh
+    /// </summary>
+    public void SwitchBackToRLControl()
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent != null)
+        {
+            navAgent.enabled = false;
+        }
+        
+        this.enabled = true;
+        
+        Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} switched back to RL control");
+    }
+
+
 
 }
