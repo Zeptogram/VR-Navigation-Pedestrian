@@ -135,14 +135,15 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
         var trigger = objectiveObject.GetComponent<ObjectiveTrigger>();
         bool waitedForOrder = false;
-
-        if (trigger != null && trigger.triggerWaitForOrderReady)
+        
+        /*if (trigger != null && trigger.triggerWaitForOrderReady)
         {
             RLAgentPlanning agentPlanning = agent;
             var monitor = agentPlanning.monitorArtifact;
             if (monitor != null)
             {
                 int? myOrderId = agent.MyOrderId;
+
                 if (myOrderId.HasValue)
                 {
                     float waited = 0f;
@@ -165,7 +166,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
                     waitedForOrder = true;
                 }
             }
-        }
+        }*/
 
         if (animationData == null)
         {

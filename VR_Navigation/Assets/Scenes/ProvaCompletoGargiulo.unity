@@ -18163,7 +18163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4692123614729747438, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: m_Radius
-      value: 5
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4692123614729747438, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: m_IsTrigger
@@ -18222,9 +18222,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 800182755}
     - target: {fileID: 6650695834814927955, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
+      propertyPath: exitDestination
+      value: 
+      objectReference: {fileID: 1926522898}
+    - target: {fileID: 6650695834814927955, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: stoppingDistance
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 6650695834814927955, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
+      propertyPath: artifactDestination
+      value: 
+      objectReference: {fileID: 490418724}
     - target: {fileID: 6650695834814927955, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: destinationTransform
       value: 
@@ -62498,6 +62506,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5695143438376696120, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1926522902}
+    - targetCorrespondingSourceObject: {fileID: 5695143438376696120, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1926522906}
   m_SourcePrefab: {fileID: 100100000, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
 --- !u!1001 &1702611330
 PrefabInstance:
@@ -65889,7 +65900,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0a8bb151638f64481c5bae3b8b3bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  triggerPlaceOrder: 1
+  triggerPlaceOrder: 0
   triggerPickUpOrder: 0
   triggerWaitForOrderReady: 0
 --- !u!1001 &1777649025
@@ -71515,7 +71526,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   triggerPlaceOrder: 0
   triggerPickUpOrder: 0
-  triggerWaitForOrderReady: 1
+  triggerWaitForOrderReady: 0
+--- !u!114 &1926522906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926522894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f491128d966c8d4e955b15728fe0222, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableWaiting: 1
+  useFixedWaitTime: 0
+  fixedWaitDuration: 5
+  checkInterval: 0.2
+  showTextAnimation: 1
+  debugging: 1
 --- !u!1 &1932309640
 GameObject:
   m_ObjectHideFlags: 0
@@ -80670,7 +80699,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7522857273538875524, guid: a39c880715f46834293647aaf0703fac, type: 3}
       propertyPath: _assignedArtifacts.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7522857273538875524, guid: a39c880715f46834293647aaf0703fac, type: 3}
       propertyPath: assignedArtifacts.Array.data[0]

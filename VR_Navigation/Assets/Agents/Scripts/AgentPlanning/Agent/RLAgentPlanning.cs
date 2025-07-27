@@ -19,6 +19,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     // Artifact lists
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
 
+    [System.NonSerialized]
+    private bool isUsingNavMesh = false;
+
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
 
@@ -29,12 +32,12 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     // Order tracking for this agent
     private int? myOrderId = null;
-
-    public int? MyOrderId => myOrderId; // For obj handler
-
+    public int? MyOrderId => myOrderId;
     private bool hasPlacedOrder = false;
 
-
+    // For order readiness
+    private bool isMyOrderReady = false;
+    public bool IsMyOrderReady => isMyOrderReady;
 
     private bool run = true;
 
@@ -537,9 +540,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (run)
+        if (run && !isUsingNavMesh)
         {
-            float realSpeed = rigidBody.velocity.magnitude;
+            //float realSpeed = rigidBody.velocity.magnitude;
             float actionSpeed;
             float actionAngle;
             if (constants.discrete)
@@ -561,7 +564,10 @@ public class RLAgentPlanning : Agent, IAgentRL
                 AngleChange(actionAngle);
                 SpeedChange(actionSpeed);
             }
+        }
 
+        if (run)
+        {
             int agentID = gameObject.GetInstanceID();
             numberOfIteraction++;
             StatsWriter.WriteAgentStats(
@@ -569,8 +575,8 @@ public class RLAgentPlanning : Agent, IAgentRL
                 transform.position.z,
                 group,
                 currentSpeed,
-                realSpeed,
-                (actionAngle * constants.angleRange),
+                rigidBody.velocity.magnitude,
+                transform.rotation.eulerAngles.y,
                 envID,
                 uniqueID,
                 numberOfIteraction
@@ -1160,8 +1166,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// Handles property changes from the monitor artifact.
     /// </summary>
-    /// <param name="propertyName"></param>
-    /// <param name="value"></param>
     private void HandleMonitorPropertyChanged(string propertyName, object value)
     {
         switch (propertyName)
@@ -1175,7 +1179,8 @@ public class RLAgentPlanning : Agent, IAgentRL
                         if (order.agentId == gameObject.GetInstanceID())
                         {
                             myOrderId = order.orderId;
-                            Debug.Log($"[Agent {gameObject.name}] (ObsProp) Order #{order.orderId} successfully placed");
+                            isMyOrderReady = false; // reset order ready flag
+                            Debug.Log($"[Agent {gameObject.name}] (ObsProp) My order ID set to {myOrderId.Value}");
                             break;
                         }
                     }
@@ -1186,8 +1191,8 @@ public class RLAgentPlanning : Agent, IAgentRL
                 var readyOrderIds = value as List<int>;
                 if (myOrderId.HasValue && readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
                 {
+                    isMyOrderReady = true; // Order ready flag
                     Debug.Log($"[Agent {gameObject.name}] (ObsProp) My order {myOrderId.Value} ready!");
-                    // PickUpOrder();
                 }
                 break;
 
@@ -1195,10 +1200,10 @@ public class RLAgentPlanning : Agent, IAgentRL
                 var prepOrderIds = value as List<int>;
                 if (myOrderId.HasValue && prepOrderIds != null && prepOrderIds.Contains(myOrderId.Value))
                 {
+                    isMyOrderReady = false; // Order not ready flag
                     Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
                 }
                 break;
-
 
             default:
                 break;
@@ -1238,17 +1243,40 @@ public class RLAgentPlanning : Agent, IAgentRL
 
         int agentId = gameObject.GetInstanceID();
         monitorArtifact.Use(agentId, myOrderId.Value);
-        Debug.Log($"[Agent {gameObject.name}] Picked up order #{myOrderId.Value}");
+
+        // Reset flags 
+        isMyOrderReady = false;
+        hasPlacedOrder = false;
+        myOrderId = null;
+
+        Debug.Log($"[Agent {gameObject.name}] Picked up order and reset order tracking");
     }
 
-
-    private void OnDestroy()
+    /// <summary>
+    /// Automatically handles artifact interaction based on artifact type
+    /// </summary>
+    public void HandleArtifactInteraction(Artifact artifact)
     {
-        if (monitorArtifact != null)
-            monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
-
+        if (artifact is TotemArtifact totem)
+        {
+            // Auto-place order when interacting with totem
+            PlaceOrder();
+            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PlaceOrder for TotemArtifact");
+        }
+        else if (artifact is MonitorArtifact monitor)
+        {
+            // Auto-pickup order when interacting with monitor
+            PickUpOrder();
+            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PickUpOrder for MonitorArtifact");
+        }
+        else
+        {
+            int agentId = gameObject.GetInstanceID();
+            artifact.Use(agentId, "testone");
+            Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
+        }
     }
-    
+
 
     /// <summary>
     /// Method to switch back to RL control from NavMesh
@@ -1260,12 +1288,52 @@ public class RLAgentPlanning : Agent, IAgentRL
         {
             navAgent.enabled = false;
         }
-        
+
         this.enabled = true;
-        
+
         Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} switched back to RL control");
     }
 
+    /// <summary>
+    /// Enables NavMesh navigation mode
+    /// </summary>
+    public void EnableNavMeshMode()
+    {
+        isUsingNavMesh = true;
 
+        // Stop any current movement
+        if (rigidBody != null)
+        {
+            rigidBody.velocity = Vector3.zero;
+            rigidBody.angularVelocity = Vector3.zero;
+        }
+
+        Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
+    }
+
+    /// <summary>
+    /// Disables NavMesh navigation mode and returns to RL control
+    /// </summary>
+    public void DisableNavMeshMode()
+    {
+        isUsingNavMesh = false;
+        Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
+    }
+
+    /// <summary>
+    /// Check if agent is currently using NavMesh
+    /// </summary>
+    public bool IsUsingNavMesh()
+    {
+        return isUsingNavMesh;
+    }
+    
+
+    private void OnDestroy()
+    {
+        if (monitorArtifact != null)
+            monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
+
+    }
 
 }
