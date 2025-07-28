@@ -122,7 +122,7 @@ public class ArtifactTrigger : MonoBehaviour
             Debug.Log($"[ArtifactTrigger] ArtifactNavigationHandler already exists on {agentObj.name}");
         }
 
-        handler.StartNavigation(targetArtifact, destinationTransform, exitDestination, this);
+        handler.StartNavigation(targetArtifact, destinationTransform, exitDestination);
     }
 
     private void OnTriggerExit(Collider other)

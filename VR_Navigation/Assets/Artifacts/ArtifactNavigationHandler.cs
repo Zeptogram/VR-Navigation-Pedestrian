@@ -7,11 +7,10 @@ public class ArtifactNavigationHandler : MonoBehaviour
     private Artifact targetArtifact;
     private Transform artifactDestination;
     private Transform exitDestination;
-    private ArtifactTrigger parentTrigger;
 
     [Header("Navigation Settings")]
     [SerializeField] private float reachedDistance = 1.0f;
-    [SerializeField] private float interactionDelay = 1.0f;
+    [SerializeField] private float interactionDelay = 0.2f;
 
     private bool isNavigatingToArtifact = false;
     private bool hasInteractedWithArtifact = false;
@@ -34,13 +33,12 @@ public class ArtifactNavigationHandler : MonoBehaviour
         }
     }
 
-    public void StartNavigation(Artifact artifact, Transform artifactDest, Transform exitDest, ArtifactTrigger trigger)
+    public void StartNavigation(Artifact artifact, Transform artifactDest, Transform exitDest)
     {
        
         targetArtifact = artifact;
         artifactDestination = artifactDest;
         exitDestination = exitDest;
-        parentTrigger = trigger;
 
         isNavigatingToArtifact = true;
         hasInteractedWithArtifact = false;
@@ -74,6 +72,28 @@ public class ArtifactNavigationHandler : MonoBehaviour
             navAgent.velocity = Vector3.zero;
         }
 
+        // Check for interaction behavior on the artifact
+        ArtifactInteractionBehavior interactionBehavior = targetArtifact.GetComponentInChildren<ArtifactInteractionBehavior>();
+        if (interactionBehavior != null)
+        {
+            // Animation and then use the artifact
+            interactionBehavior.StartInteraction(gameObject, () => 
+            {
+                // Once the animation is done, handle the artifact use
+                HandleArtifactUse();
+                Invoke(nameof(StartExitNavigation), interactionDelay);
+            });
+        }
+        else
+        {
+            // No animation
+            HandleArtifactUse();
+            Invoke(nameof(StartExitNavigation), interactionDelay);
+        }
+    }
+
+    private void HandleArtifactUse()
+    {
         // Let the agent handle the interaction based on artifact type
         RLAgentPlanning rlAgent = GetComponent<RLAgentPlanning>();
         if (rlAgent != null)
@@ -86,9 +106,6 @@ public class ArtifactNavigationHandler : MonoBehaviour
             int agentId = gameObject.GetInstanceID();
             targetArtifact.Use(agentId, "navigation_reached", gameObject);
         }
-
- 
-        Invoke(nameof(StartExitNavigation), interactionDelay);
     }
 
     private void StartExitNavigation()

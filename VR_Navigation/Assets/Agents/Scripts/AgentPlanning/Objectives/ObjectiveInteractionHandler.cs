@@ -134,9 +134,9 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     {
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
         var trigger = objectiveObject.GetComponent<ObjectiveTrigger>();
-        bool waitedForOrder = false;
+        /*bool waitedForOrder = false;
         
-        /*if (trigger != null && trigger.triggerWaitForOrderReady)
+        if (trigger != null && trigger.triggerWaitForOrderReady)
         {
             RLAgentPlanning agentPlanning = agent;
             var monitor = agentPlanning.monitorArtifact;
@@ -170,13 +170,13 @@ public class ObjectiveInteractionHandler : MonoBehaviour
 
         if (animationData == null)
         {
-            Debug.LogWarning($"[ObjectiveHandler] No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
+            /*Debug.LogWarning($"[ObjectiveHandler] No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
             
             if (waitedForOrder)
             {
                 agent.SetRun(true);
                 Debug.Log("[ObjectiveHandler] Agent reactivated after waiting for order (no animations)");
-            }
+            }*/
             yield break;
         }
 
