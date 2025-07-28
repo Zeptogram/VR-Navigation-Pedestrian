@@ -17,7 +17,7 @@ public class ArtifactTrigger : MonoBehaviour
 
     private HashSet<GameObject> agentsInNavigation = new HashSet<GameObject>();
 
-    void Start()
+    void Awake()
     {
         if (targetArtifact == null)
         {
@@ -77,27 +77,24 @@ public class ArtifactTrigger : MonoBehaviour
         if (debugging)
             Debug.Log($"[ArtifactTrigger] Switching agent {rlAgent.name} to NavMesh mode");
 
+        // Capture current movement data
+        Vector3 currentVelocity = rlAgent.GetRigidBody().velocity;
         
-        // For transition (animation)
-        rlAgent.StartExitTransition();
-        
-        // Enable NavMesh mode in RLAgent (disables movement)
+        // Enable NavMesh mode
         rlAgent.EnableNavMeshMode();
-
+        
+        // Pre-configure NavMeshAgent before enabling
+        navAgent.stoppingDistance = stoppingDistance;
+                
         // Enable NavMeshAgent
         navAgent.enabled = true;
-        navAgent.stoppingDistance = stoppingDistance;
-
-
-        // Add navigation handler
-        ArtifactNavigationHandler handler = agentObj.GetComponent<ArtifactNavigationHandler>();
-        if (handler == null)
-        {
-            handler = agentObj.AddComponent<ArtifactNavigationHandler>();
-        }
-
-        handler.StartNavigation(targetArtifact, destinationTransform, exitDestination, this);
         
+        // Fix velocity for NavMesh control
+        Vector3 agentVelocity = Vector3.ClampMagnitude(currentVelocity, navAgent.speed);
+        navAgent.velocity = agentVelocity;
+        
+        
+        // Set destination
         if (navAgent.isOnNavMesh)
         {
             navAgent.SetDestination(destinationTransform.position);
@@ -106,6 +103,26 @@ public class ArtifactTrigger : MonoBehaviour
         {
             Debug.LogWarning($"[ArtifactTrigger] Agent {rlAgent.name} is not on NavMesh");
         }
+        
+        // Handle navigation handler setup
+        SetupNavigationHandler(agentObj);
+    }
+
+    private void SetupNavigationHandler(GameObject agentObj)
+    {
+        // Check if handler already exists to prevent duplicates (without this weird things happen)
+        ArtifactNavigationHandler handler = agentObj.GetComponent<ArtifactNavigationHandler>();
+        if (handler == null)
+        {
+            handler = agentObj.AddComponent<ArtifactNavigationHandler>();
+            Debug.Log($"[ArtifactTrigger] Added new ArtifactNavigationHandler to {agentObj.name}");
+        }
+        else
+        {
+            Debug.Log($"[ArtifactTrigger] ArtifactNavigationHandler already exists on {agentObj.name}");
+        }
+
+        handler.StartNavigation(targetArtifact, destinationTransform, exitDestination, this);
     }
 
     private void OnTriggerExit(Collider other)
@@ -114,6 +131,17 @@ public class ArtifactTrigger : MonoBehaviour
         {
             if (agentsInNavigation.Contains(other.gameObject))
             {
+                // Check if the agent has a navigation handler that's still navigating to the artifact
+                ArtifactNavigationHandler handler = other.gameObject.GetComponent<ArtifactNavigationHandler>();
+                if (handler != null && handler.IsNavigatingToArtifact)
+                {
+                    // Don't remove agent from navigation if still going to artifact
+                    if (debugging)
+                        Debug.Log($"[ArtifactTrigger] Agent {other.name} exited trigger but still navigating to artifact - keeping in NavMesh mode");
+                    return;
+                }
+
+                // Agent has either reached artifact or is navigating to exit - return control to RL
                 agentsInNavigation.Remove(other.gameObject);
                 SwitchBackToRLAgent(other.gameObject);
                 
@@ -133,19 +161,25 @@ public class ArtifactTrigger : MonoBehaviour
             if (debugging)
                 Debug.Log($"[ArtifactTrigger] Switching agent {agentObj.name} back to RL mode");
 
-            // For transition (animation)
-            rlAgent.StartExitTransition();
+            // Capture NavMesh velocity before disabling
+            Vector3 navMeshVelocity = navAgent.velocity;
+
+            // Disable NavMesh mode and apply preserved velocity
+            rlAgent.DisableNavMeshMode();
 
             // Disable NavMeshAgent
             navAgent.enabled = false;
-
-            // Disable NavMesh mode in RLAgent (re-enables movement)
-            rlAgent.DisableNavMeshMode();
+            
+            // Fix velocity for RL control
+            Vector3 agentVelocity = Vector3.ClampMagnitude(navMeshVelocity, navAgent.speed);
+            rlAgent.GetRigidBody().velocity = agentVelocity;
+            
 
             // Clean up navigation handler
             ArtifactNavigationHandler handler = agentObj.GetComponent<ArtifactNavigationHandler>();
             if (handler != null)
             {
+                Debug.Log($"[ArtifactTrigger] Destroying ArtifactNavigationHandler on {agentObj.name}");
                 Destroy(handler);
             }
         }

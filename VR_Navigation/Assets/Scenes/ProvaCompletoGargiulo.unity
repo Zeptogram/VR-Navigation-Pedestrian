@@ -18163,7 +18163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4692123614729747438, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: m_Radius
-      value: 2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4692123614729747438, guid: 22083d3c7778346438a911c3b30e2116, type: 3}
       propertyPath: m_IsTrigger
@@ -71543,7 +71543,8 @@ MonoBehaviour:
   useFixedWaitTime: 0
   fixedWaitDuration: 5
   checkInterval: 0.2
-  showTextAnimation: 1
+  enableWaitingAnimation: 1
+  animationTriggerName: Text
   debugging: 1
 --- !u!1 &1932309640
 GameObject:

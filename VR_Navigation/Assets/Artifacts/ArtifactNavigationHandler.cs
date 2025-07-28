@@ -16,6 +16,9 @@ public class ArtifactNavigationHandler : MonoBehaviour
     private bool isNavigatingToArtifact = false;
     private bool hasInteractedWithArtifact = false;
 
+    // For external access
+    public bool IsNavigatingToArtifact => isNavigatingToArtifact;
+
     void Start()
     {
         navAgent = GetComponent<NavMeshAgent>();
@@ -29,11 +32,11 @@ public class ArtifactNavigationHandler : MonoBehaviour
         {
             CheckArtifactReached();
         }
-        
     }
 
     public void StartNavigation(Artifact artifact, Transform artifactDest, Transform exitDest, ArtifactTrigger trigger)
     {
+       
         targetArtifact = artifact;
         artifactDestination = artifactDest;
         exitDestination = exitDest;
@@ -56,8 +59,6 @@ public class ArtifactNavigationHandler : MonoBehaviour
             OnArtifactReached();
         }
     }
-
-
 
     private void OnArtifactReached()
     {
@@ -86,11 +87,9 @@ public class ArtifactNavigationHandler : MonoBehaviour
             targetArtifact.Use(agentId, "navigation_reached", gameObject);
         }
 
-        // Wait a bit then start moving to exit
+ 
         Invoke(nameof(StartExitNavigation), interactionDelay);
     }
-
-    
 
     private void StartExitNavigation()
     {
@@ -102,18 +101,18 @@ public class ArtifactNavigationHandler : MonoBehaviour
 
         Debug.Log($"[ArtifactNavigationHandler] Starting navigation to exit");
 
-
         if (navAgent != null && navAgent.isOnNavMesh)
         {
             navAgent.SetDestination(exitDestination.position);
         }
-       
     }
+
+    
 
     void OnDestroy()
     {
         // Clean up any pending invokes
         CancelInvoke();
-
+        isNavigatingToArtifact = false;
     }
 }

@@ -22,8 +22,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     [System.NonSerialized]
     private bool isUsingNavMesh = false;
 
-    [System.NonSerialized]
-    private bool isTransitioningToNavMesh = false;
 
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
@@ -377,13 +375,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void UpdateAnimations()
     {
-        // NUOVO: Se è in transizione, non aggiornare le animazioni
-        if (isTransitioningToNavMesh)
-            return;
-
         // Get Speed
         float speed = GetCurrentSpeed();
-        
+
         animationManager.UpdateSpeed(speed / 10);
 
         // Idle/Walking
@@ -435,7 +429,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         if (isUsingNavMesh)
         {
-            
+
             NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
             if (navAgent != null && navAgent.enabled)
             {
@@ -612,8 +606,8 @@ public class RLAgentPlanning : Agent, IAgentRL
                 transform.position.x,
                 transform.position.z,
                 group,
-                GetCurrentSpeed(), 
-                GetCurrentSpeed(), 
+                GetCurrentSpeed(),
+                GetCurrentSpeed(),
                 transform.rotation.eulerAngles.y,
                 envID,
                 uniqueID,
@@ -1338,62 +1332,31 @@ public class RLAgentPlanning : Agent, IAgentRL
     public void EnableNavMeshMode()
     {
         isUsingNavMesh = true;
-
-        // Stop any current movement
-        if (rigidBody != null)
+        
+        // Use Kinematic for NavMesh navigation
+        if (rigidBody != null && !rigidBody.isKinematic)
         {
-            rigidBody.velocity = Vector3.zero;
-            rigidBody.angularVelocity = Vector3.zero;
+            rigidBody.isKinematic = true;
         }
-
         Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
-    }
-
-
-    /// <summary>
-    /// Begins the transition to NavMesh navigation mode or vice versa
-    /// </summary>
-    public void StartExitTransition()
-    {
-        // Lock animatior
-        isTransitioningToNavMesh = true;
-        
-        // Force walk
-        if (animationManager != null)
-        {
-            animationManager.SetWalking(true);
-            animationManager.StopTurn();
-        }
-
-        // Coroutine to unlock animator after RL transition
-        StartCoroutine(UnlockAnimatorAfterTransition());
-    }
-
-    /// <summary>
-    /// Unlocks the animator after the transition
-    /// </summary>
-    private System.Collections.IEnumerator UnlockAnimatorAfterTransition()
-    {
-        // Wait a few frames to allow to regain control
-        yield return new WaitForFixedUpdate();
-        yield return new WaitForFixedUpdate();
-        yield return new WaitForFixedUpdate();
-
-        // Unlock animator
-        isTransitioningToNavMesh = false;
-        
-        Debug.Log($"[RLAgentPlanning] Animator unlocked after transition for {gameObject.name}");
     }
 
     /// <summary>
     /// Disables NavMesh navigation mode and returns to RL control
     /// </summary>
     public void DisableNavMeshMode()
-    {
+    {        
         isUsingNavMesh = false;
+
+        // Re-enable Rigidbody physics for RL control
+       if (rigidBody != null && rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = false;
+        }
+
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
     }
-    
+
 
     private void OnDestroy()
     {
@@ -1401,5 +1364,5 @@ public class RLAgentPlanning : Agent, IAgentRL
             monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
 
     }
-
+    
 }
