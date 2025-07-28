@@ -18,18 +18,17 @@ public class RLAgentPlanning : Agent, IAgentRL
 {
     // Artifact lists
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+    public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
+    /// <summary>
+    /// True if the agent is using NavMesh for navigation.
+    /// </summary>
     [System.NonSerialized]
     private bool isUsingNavMesh = false;
 
 
-    public List<Artifact> assignedArtifacts => _assignedArtifacts;
-
-
-    public TotemArtifact totemArtifact;
-    public MonitorArtifact monitorArtifact;
-
-    public int numberOfCrossings = 0;
+    /*public TotemArtifact totemArtifact;
+    public MonitorArtifact monitorArtifact;*/
 
     // Order tracking for this agent
     private int? myOrderId = null;
@@ -39,6 +38,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     // For order readiness
     private bool isMyOrderReady = false;
     public bool IsMyOrderReady => isMyOrderReady;
+
+    public int numberOfCrossings = 0;
 
     private bool run = true;
 
@@ -454,10 +455,54 @@ public class RLAgentPlanning : Agent, IAgentRL
         return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
     }
 
-    private void Start()
+     private void Start()
     {
-        if (monitorArtifact != null)
-            monitorArtifact.OnPropertyChanged += HandleMonitorPropertyChanged;
+        // Setup event listeners for all assigned artifacts
+        SetupArtifactEventListeners();
+    }
+
+    /// <summary>
+    /// Sets up event listeners for all assigned artifacts
+    /// </summary>
+    private void SetupArtifactEventListeners()
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is MonitorArtifact monitor)
+            {
+                monitor.OnPropertyChanged += HandleMonitorPropertyChanged;
+                Debug.Log($"[RLAgentPlanning] Setup event listener for MonitorArtifact: {monitor.ArtifactName}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes event listeners for all assigned artifacts
+    /// </summary>
+    private void RemoveArtifactEventListeners()
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is MonitorArtifact monitor)
+            {
+                monitor.OnPropertyChanged -= HandleMonitorPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the first artifact of a specific type from assigned artifacts
+    /// </summary>
+    private T GetArtifactOfType<T>() where T : Artifact
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is T typedArtifact)
+            {
+                return typedArtifact;
+            }
+        }
+        return null;
     }
 
 
@@ -1247,6 +1292,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public void PlaceOrder()
     {
+        var totemArtifact = GetArtifactOfType<TotemArtifact>();
+        
         if (totemArtifact != null && !hasPlacedOrder)
         {
             hasPlacedOrder = true;
@@ -1254,11 +1301,15 @@ public class RLAgentPlanning : Agent, IAgentRL
             int agentId = gameObject.GetInstanceID();
             totemArtifact.Use(agentId);
 
-            Debug.Log($"[Agent {gameObject.name}] Placed Order");
+            Debug.Log($"[Agent {gameObject.name}] Placed Order at {totemArtifact.ArtifactName}");
         }
         else if (hasPlacedOrder)
         {
             Debug.Log($"[Agent {gameObject.name}] Already Placed Order");
+        }
+        else
+        {
+            Debug.LogWarning($"[Agent {gameObject.name}] No TotemArtifact assigned for placing order");
         }
     }
 
@@ -1267,9 +1318,11 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public void PickUpOrder()
     {
+        var monitorArtifact = GetArtifactOfType<MonitorArtifact>();
+        
         if (monitorArtifact == null || !myOrderId.HasValue)
         {
-            Debug.Log($"[Agent {gameObject.name}] Cannot pick up order: monitor or orderId missing");
+            Debug.Log($"[Agent {gameObject.name}] Cannot pick up order: monitor artifact missing or orderId not set");
             return;
         }
 
@@ -1281,7 +1334,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         hasPlacedOrder = false;
         myOrderId = null;
 
-        Debug.Log($"[Agent {gameObject.name}] Picked up order and reset order tracking");
+        Debug.Log($"[Agent {gameObject.name}] Picked up order from {monitorArtifact.ArtifactName} and reset order tracking");
     }
 
     /// <summary>
@@ -1289,22 +1342,29 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public void HandleArtifactInteraction(Artifact artifact)
     {
+        
+        if (!_assignedArtifacts.Contains(artifact))
+        {
+            Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
+            return;
+        }
+
         if (artifact is TotemArtifact totem)
         {
             // Auto-place order when interacting with totem
             PlaceOrder();
-            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PlaceOrder for TotemArtifact");
+            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PlaceOrder for TotemArtifact: {totem.ArtifactName}");
         }
         else if (artifact is MonitorArtifact monitor)
         {
             // Auto-pickup order when interacting with monitor
             PickUpOrder();
-            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PickUpOrder for MonitorArtifact");
+            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PickUpOrder for MonitorArtifact: {monitor.ArtifactName}");
         }
         else
         {
             int agentId = gameObject.GetInstanceID();
-            artifact.Use(agentId, "testone");
+            artifact.Use(agentId, "generic_interaction", gameObject);
             Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
         }
     }
@@ -1357,12 +1417,10 @@ public class RLAgentPlanning : Agent, IAgentRL
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
     }
 
-
     private void OnDestroy()
     {
-        if (monitorArtifact != null)
-            monitorArtifact.OnPropertyChanged -= HandleMonitorPropertyChanged;
-
+        // Cleanup all artifact event listeners
+        RemoveArtifactEventListeners();
     }
     
 }

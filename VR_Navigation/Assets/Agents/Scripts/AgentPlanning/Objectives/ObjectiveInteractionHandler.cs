@@ -49,7 +49,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     /// </summary>
     private bool isExecutingObjectiveAnimations = false;
 
-    private bool isOrderReady = false;
+    //private bool isOrderReady = false;
 
     /**
      * \brief Initializes references to required components.
@@ -61,7 +61,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         animationManager = GetComponent<AgentAnimationManager>();
     }
 
-    private void Start()
+   /* private void Start()
     {
         if (agent.monitorArtifact != null)
             agent.monitorArtifact.OnPropertyChanged += HandleMonitorPropertyChanged;
@@ -81,7 +81,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
             var readyOrders = value as List<int>;
             isOrderReady = myOrderId.HasValue && readyOrders != null && readyOrders.Contains(myOrderId.Value);
         }
-    }
+    }*/
 
     /**
      * \brief Handles the logic when the agent triggers an objective.
