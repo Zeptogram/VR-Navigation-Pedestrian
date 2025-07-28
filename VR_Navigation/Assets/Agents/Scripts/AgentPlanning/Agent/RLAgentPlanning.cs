@@ -22,6 +22,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     [System.NonSerialized]
     private bool isUsingNavMesh = false;
 
+    [System.NonSerialized]
+    private bool isTransitioningToNavMesh = false;
+
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
 
@@ -366,7 +369,21 @@ public class RLAgentPlanning : Agent, IAgentRL
             return; // No basic movement or animation updates while executing animations
         }
 
-        float speed = rigidBody.velocity.magnitude;
+        UpdateAnimations();
+    }
+
+    /// <summary>
+    /// Updates agent animations based on current movement
+    /// </summary>
+    private void UpdateAnimations()
+    {
+        // NUOVO: Se è in transizione, non aggiornare le animazioni
+        if (isTransitioningToNavMesh)
+            return;
+
+        // Get Speed
+        float speed = GetCurrentSpeed();
+        
         animationManager.UpdateSpeed(speed / 10);
 
         // Idle/Walking
@@ -408,6 +425,27 @@ public class RLAgentPlanning : Agent, IAgentRL
         }
 
         lastYRotation = transform.eulerAngles.y;
+    }
+
+    /// <summary>
+    /// Gets the current speed from either Rigidbody or NavMeshAgent
+    /// </summary>
+    /// <returns>Current movement speed</returns>
+    private float GetCurrentSpeed()
+    {
+        if (isUsingNavMesh)
+        {
+            
+            NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+            if (navAgent != null && navAgent.enabled)
+            {
+                // For navmesh speed
+                return navAgent.velocity.magnitude * 4f;
+            }
+        }
+
+        // Otherwise use Rigidbody speed
+        return rigidBody.velocity.magnitude;
     }
 
     /// <summary>
@@ -574,8 +612,8 @@ public class RLAgentPlanning : Agent, IAgentRL
                 transform.position.x,
                 transform.position.z,
                 group,
-                currentSpeed,
-                rigidBody.velocity.magnitude,
+                GetCurrentSpeed(), 
+                GetCurrentSpeed(), 
                 transform.rotation.eulerAngles.y,
                 envID,
                 uniqueID,
@@ -1311,6 +1349,42 @@ public class RLAgentPlanning : Agent, IAgentRL
         Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
     }
 
+
+    /// <summary>
+    /// Begins the transition to NavMesh navigation mode or vice versa
+    /// </summary>
+    public void StartExitTransition()
+    {
+        // Lock animatior
+        isTransitioningToNavMesh = true;
+        
+        // Force walk
+        if (animationManager != null)
+        {
+            animationManager.SetWalking(true);
+            animationManager.StopTurn();
+        }
+
+        // Coroutine to unlock animator after RL transition
+        StartCoroutine(UnlockAnimatorAfterTransition());
+    }
+
+    /// <summary>
+    /// Unlocks the animator after the transition
+    /// </summary>
+    private System.Collections.IEnumerator UnlockAnimatorAfterTransition()
+    {
+        // Wait a few frames to allow to regain control
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+
+        // Unlock animator
+        isTransitioningToNavMesh = false;
+        
+        Debug.Log($"[RLAgentPlanning] Animator unlocked after transition for {gameObject.name}");
+    }
+
     /// <summary>
     /// Disables NavMesh navigation mode and returns to RL control
     /// </summary>
@@ -1318,14 +1392,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         isUsingNavMesh = false;
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
-    }
-
-    /// <summary>
-    /// Check if agent is currently using NavMesh
-    /// </summary>
-    public bool IsUsingNavMesh()
-    {
-        return isUsingNavMesh;
     }
     
 

@@ -52,6 +52,7 @@ public class ArtifactTrigger : MonoBehaviour
 
                     if (rlAgent != null && navAgent != null)
                     {
+                        // IMPORTANT CHECK: Here i check if the artifact is assigned to the agent, so that not every agent can navigate and use the artifact!
                         if (rlAgent.assignedArtifacts.Contains(targetArtifact))
                         {
                             agentsInNavigation.Add(other.gameObject);
@@ -76,13 +77,18 @@ public class ArtifactTrigger : MonoBehaviour
         if (debugging)
             Debug.Log($"[ArtifactTrigger] Switching agent {rlAgent.name} to NavMesh mode");
 
-        // Enable NavMesh mode in RLAgent (disables movement but keeps script active)
+        
+        // For transition (animation)
+        rlAgent.StartExitTransition();
+        
+        // Enable NavMesh mode in RLAgent (disables movement)
         rlAgent.EnableNavMeshMode();
 
         // Enable NavMeshAgent
         navAgent.enabled = true;
         navAgent.stoppingDistance = stoppingDistance;
-        
+
+
         // Add navigation handler
         ArtifactNavigationHandler handler = agentObj.GetComponent<ArtifactNavigationHandler>();
         if (handler == null)
@@ -126,6 +132,9 @@ public class ArtifactTrigger : MonoBehaviour
         {
             if (debugging)
                 Debug.Log($"[ArtifactTrigger] Switching agent {agentObj.name} back to RL mode");
+
+            // For transition (animation)
+            rlAgent.StartExitTransition();
 
             // Disable NavMeshAgent
             navAgent.enabled = false;
