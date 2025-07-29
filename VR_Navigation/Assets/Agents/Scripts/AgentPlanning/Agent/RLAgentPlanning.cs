@@ -1290,9 +1290,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// Method for agent to place an order at the totem
     /// </summary>
-    public void PlaceOrder()
+    public void PlaceOrder(Artifact totemArtifact)
     {
-        var totemArtifact = GetArtifactOfType<TotemArtifact>();
         
         if (totemArtifact != null && !hasPlacedOrder)
         {
@@ -1316,9 +1315,8 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// Method for agent to pick up a ready order
     /// </summary>
-    public void PickUpOrder()
+    public void PickUpOrder(Artifact monitorArtifact)
     {
-        var monitorArtifact = GetArtifactOfType<MonitorArtifact>();
         
         if (monitorArtifact == null || !myOrderId.HasValue)
         {
@@ -1342,30 +1340,31 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public void HandleArtifactInteraction(Artifact artifact)
     {
-        
         if (!_assignedArtifacts.Contains(artifact))
         {
             Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
             return;
         }
 
-        if (artifact is TotemArtifact totem)
+        // Check artifact type and handle interaction accordingly
+        switch (artifact)
         {
-            // Auto-place order when interacting with totem
-            PlaceOrder();
-            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PlaceOrder for TotemArtifact: {totem.ArtifactName}");
-        }
-        else if (artifact is MonitorArtifact monitor)
-        {
-            // Auto-pickup order when interacting with monitor
-            PickUpOrder();
-            Debug.Log($"[Agent {gameObject.name}] Auto-triggered PickUpOrder for MonitorArtifact: {monitor.ArtifactName}");
-        }
-        else
-        {
-            int agentId = gameObject.GetInstanceID();
-            artifact.Use(agentId, "generic_interaction", gameObject);
-            Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
+            case TotemArtifact totemArtifact:
+                PlaceOrder(totemArtifact);
+                Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
+                break;
+
+            case MonitorArtifact monitorArtifact:
+                PickUpOrder(monitorArtifact);
+                Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
+                break;
+                
+            default:
+                // Default interaction
+                int agentId = gameObject.GetInstanceID();
+                artifact.Use(agentId, "default", gameObject);
+                Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
+                break;
         }
     }
 

@@ -19,12 +19,12 @@ public class ObjectiveTrigger : MonoBehaviour
             {
                 if (triggerPlaceOrder)
                 {
-                    handler.HandleObjectiveTrigger(gameObject, () => rlAgent.PlaceOrder());
+                    //handler.HandleObjectiveTrigger(gameObject, () => rlAgent.PlaceOrder());
                     // Qui disattivo RLAgent e uso navmesh (oppure uso stati dell'animator)
                 }
                 if (triggerPickUpOrder)
                 {
-                    handler.HandleObjectiveTrigger(gameObject, () => rlAgent.PickUpOrder());
+                   // handler.HandleObjectiveTrigger(gameObject, () => rlAgent.PickUpOrder());
                 }
             }
         }
