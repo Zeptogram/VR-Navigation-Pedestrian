@@ -123,8 +123,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         {
             ordersInPreparation.Add(orderId);
             placedOrders.Add(new OrderPlacedData(orderId, agentId));
-            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
             UpdateObsProperty("placedOrders", new List<OrderPlacedData>(placedOrders));
+            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
             UpdateUI();
         }
     }
@@ -142,8 +142,8 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
                 GetNextFoodType();
 
             readyOrdersWithFood[orderId] = foodType;
-            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
             UpdateObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
+            UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
             UpdateUI();
             UpdateFoodVisuals();
         }

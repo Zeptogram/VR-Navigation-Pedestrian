@@ -4,6 +4,17 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
+
+[System.Serializable]
+public class ArtifactInteractionEvent : UnityEvent<Artifact> {}
+
+[System.Serializable]
+public class PropertyChangeEvent
+{
+    public string propertyName;
+    public UnityEvent<object> onChanged;
+}
 
 
 [RequireComponent(typeof(ObjectiveInteractionHandler))]
@@ -18,6 +29,16 @@ public class RLAgentPlanning : Agent, IAgentRL
 {
     // Artifact lists
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+
+    // Config artifact in inspector (to change a bit)
+
+    [Header("Artifact Interaction Events")]
+    public ArtifactInteractionEvent onTotemInteraction;
+    public ArtifactInteractionEvent onMonitorInteraction;
+    public ArtifactInteractionEvent onGenericArtifactInteraction;
+
+    [Header("Monitor Property Change Events")]
+    public List<PropertyChangeEvent> monitorPropertyEvents = new List<PropertyChangeEvent>();
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
     /// <summary>
@@ -1317,19 +1338,22 @@ public class RLAgentPlanning : Agent, IAgentRL
         switch (artifact)
         {
             case TotemArtifact totemArtifact:
-                PlaceOrder(totemArtifact);
+                //PlaceOrder(totemArtifact);
+                onTotemInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
                 break;
 
             case MonitorArtifact monitorArtifact:
-                PickUpOrder(monitorArtifact);
+                //PickUpOrder(monitorArtifact);
+                onMonitorInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
                 break;
 
             default:
                 // Default interaction
                 int agentId = gameObject.GetInstanceID();
-                artifact.Use(agentId, "default", gameObject);
+                //artifact.Use(agentId, "default", gameObject);
+                onGenericArtifactInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
                 break;
         }
@@ -1340,7 +1364,15 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void HandleMonitorPropertyChanged(string propertyName, object value)
     {
-        switch (propertyName)
+        foreach (var evt in monitorPropertyEvents)
+        {
+            if (evt.propertyName == propertyName)
+            {
+                evt.onChanged?.Invoke(value);
+                break;
+            }
+        }
+        /*switch (propertyName)
         {
             case "placedOrders":
                 var orders = value as List<OrderPlacedData>;
@@ -1379,7 +1411,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
             default:
                 break;
-        }
+        }*/
     }
 
 
@@ -1439,4 +1471,41 @@ public class RLAgentPlanning : Agent, IAgentRL
         RemoveArtifactEventListeners();
     }
     
+    public void OnPlacedOrdersChanged(object value)
+    {
+        var orders = value as List<OrderPlacedData>;
+        if (orders != null && !myOrderId.HasValue && hasPlacedOrder)
+        {
+            foreach (var order in orders)
+            {
+                if (order.agentId == gameObject.GetInstanceID())
+                {
+                    myOrderId = order.orderId;
+                    isMyOrderReady = false; // reset order ready flag
+                    Debug.Log($"[Agent {gameObject.name}] (Event) My order ID set to {myOrderId.Value}");
+                    break;
+                }
+            }
+        }
+    }
+
+    public void OnOrdersReadyChanged(object value)
+    {
+        var readyOrderIds = value as List<int>;
+        if (myOrderId.HasValue && readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
+        {
+            isMyOrderReady = true; // Order ready flag
+            Debug.Log($"[Agent {gameObject.name}] (Event) My order {myOrderId.Value} ready!");
+        }
+    }
+
+    public void OnOrdersInPreparationChanged(object value)
+    {
+        var prepOrderIds = value as List<int>;
+        if (myOrderId.HasValue && prepOrderIds != null && prepOrderIds.Contains(myOrderId.Value))
+        {
+            isMyOrderReady = false; // Order not ready flag
+            Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
+        }
+    }
 }
