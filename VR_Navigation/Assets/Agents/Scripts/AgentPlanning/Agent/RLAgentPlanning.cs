@@ -360,6 +360,12 @@ public class RLAgentPlanning : Agent, IAgentRL
         }
     }
 
+    private void Start()
+    {
+        // Artifacts setup
+        SetupArtifactEventListeners();
+    }
+
     private void Update()
     {
         // If the objective handler is executing animations, skip the update
@@ -455,55 +461,6 @@ public class RLAgentPlanning : Agent, IAgentRL
         return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
     }
 
-     private void Start()
-    {
-        // Setup event listeners for all assigned artifacts
-        SetupArtifactEventListeners();
-    }
-
-    /// <summary>
-    /// Sets up event listeners for all assigned artifacts
-    /// </summary>
-    private void SetupArtifactEventListeners()
-    {
-        foreach (var artifact in _assignedArtifacts)
-        {
-            if (artifact is MonitorArtifact monitor)
-            {
-                monitor.OnPropertyChanged += HandleMonitorPropertyChanged;
-                Debug.Log($"[RLAgentPlanning] Setup event listener for MonitorArtifact: {monitor.ArtifactName}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Removes event listeners for all assigned artifacts
-    /// </summary>
-    private void RemoveArtifactEventListeners()
-    {
-        foreach (var artifact in _assignedArtifacts)
-        {
-            if (artifact is MonitorArtifact monitor)
-            {
-                monitor.OnPropertyChanged -= HandleMonitorPropertyChanged;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets the first artifact of a specific type from assigned artifacts
-    /// </summary>
-    private T GetArtifactOfType<T>() where T : Artifact
-    {
-        foreach (var artifact in _assignedArtifacts)
-        {
-            if (artifact is T typedArtifact)
-            {
-                return typedArtifact;
-            }
-        }
-        return null;
-    }
 
 
 
@@ -833,11 +790,10 @@ public class RLAgentPlanning : Agent, IAgentRL
             Target target = triggerObject.GetComponent<Target>();
             if (IsIntermediateTarget(target))
             {
-                // Incrementa SOLO se eri dentro!
                 if (insideTargets.Contains(target.id))
                 {
                     HandleIntermediateTarget(triggerObject);
-                    insideTargets.Remove(target.id); // ora sei fuori
+                    insideTargets.Remove(target.id); 
                 }
             }
         }
@@ -1240,6 +1196,145 @@ public class RLAgentPlanning : Agent, IAgentRL
     private HashSet<int> insideTargets = new HashSet<int>();
 
 
+    // NavMesh Control Methods
+
+
+    /// <summary>
+    /// Method to switch back to RL control from NavMesh
+    /// </summary>
+    public void SwitchBackToRLControl()
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent != null)
+        {
+            navAgent.enabled = false;
+        }
+
+        this.enabled = true;
+
+        Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} switched back to RL control");
+    }
+
+    /// <summary>
+    /// Enables NavMesh navigation mode
+    /// </summary>
+    public void EnableNavMeshMode()
+    {
+        isUsingNavMesh = true;
+        
+        // Use Kinematic for NavMesh navigation
+        if (rigidBody != null && !rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = true;
+        }
+        Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
+    }
+
+    /// <summary>
+    /// Disables NavMesh navigation mode and returns to RL control
+    /// </summary>
+    public void DisableNavMeshMode()
+    {        
+        isUsingNavMesh = false;
+
+        // Re-enable Rigidbody physics for RL control
+       if (rigidBody != null && rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = false;
+        }
+
+        Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
+    }
+
+
+
+    // Artifact Setup and Event Handling Methods
+
+
+
+    /// <summary>
+    /// Sets up event listeners for all assigned artifacts
+    /// </summary>
+    private void SetupArtifactEventListeners()
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is MonitorArtifact monitor)
+            {
+                monitor.OnPropertyChanged += HandleMonitorPropertyChanged;
+                Debug.Log($"[RLAgentPlanning] Setup event listener for MonitorArtifact: {monitor.ArtifactName}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes event listeners for all assigned artifacts
+    /// </summary>
+    private void RemoveArtifactEventListeners()
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is MonitorArtifact monitor)
+            {
+                monitor.OnPropertyChanged -= HandleMonitorPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the first artifact of a specific type from assigned artifacts
+    /// </summary>
+    private T GetArtifactOfType<T>() where T : Artifact
+    {
+        foreach (var artifact in _assignedArtifacts)
+        {
+            if (artifact is T typedArtifact)
+            {
+                return typedArtifact;
+            }
+        }
+        return null;
+    }
+
+
+
+    // Artifact Interaction Methods
+
+
+
+    /// <summary>
+    /// Automatically handles artifact interaction based on artifact type
+    /// </summary>
+    public void HandleArtifactInteraction(Artifact artifact)
+    {
+        if (!_assignedArtifacts.Contains(artifact))
+        {
+            Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
+            return;
+        }
+
+        // Check artifact type and handle interaction accordingly
+        switch (artifact)
+        {
+            case TotemArtifact totemArtifact:
+                PlaceOrder(totemArtifact);
+                Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
+                break;
+
+            case MonitorArtifact monitorArtifact:
+                PickUpOrder(monitorArtifact);
+                Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
+                break;
+
+            default:
+                // Default interaction
+                int agentId = gameObject.GetInstanceID();
+                artifact.Use(agentId, "default", gameObject);
+                Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
+                break;
+        }
+    }
+
     /// <summary>
     /// Handles property changes from the monitor artifact.
     /// </summary>
@@ -1286,6 +1381,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 break;
         }
     }
+
 
     /// <summary>
     /// Method for agent to place an order at the totem
@@ -1335,86 +1431,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         Debug.Log($"[Agent {gameObject.name}] Picked up order from {monitorArtifact.ArtifactName} and reset order tracking");
     }
 
-    /// <summary>
-    /// Automatically handles artifact interaction based on artifact type
-    /// </summary>
-    public void HandleArtifactInteraction(Artifact artifact)
-    {
-        if (!_assignedArtifacts.Contains(artifact))
-        {
-            Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
-            return;
-        }
 
-        // Check artifact type and handle interaction accordingly
-        switch (artifact)
-        {
-            case TotemArtifact totemArtifact:
-                PlaceOrder(totemArtifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
-                break;
-
-            case MonitorArtifact monitorArtifact:
-                PickUpOrder(monitorArtifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
-                break;
-                
-            default:
-                // Default interaction
-                int agentId = gameObject.GetInstanceID();
-                artifact.Use(agentId, "default", gameObject);
-                Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
-                break;
-        }
-    }
-
-
-    /// <summary>
-    /// Method to switch back to RL control from NavMesh
-    /// </summary>
-    public void SwitchBackToRLControl()
-    {
-        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
-        if (navAgent != null)
-        {
-            navAgent.enabled = false;
-        }
-
-        this.enabled = true;
-
-        Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} switched back to RL control");
-    }
-
-    /// <summary>
-    /// Enables NavMesh navigation mode
-    /// </summary>
-    public void EnableNavMeshMode()
-    {
-        isUsingNavMesh = true;
-        
-        // Use Kinematic for NavMesh navigation
-        if (rigidBody != null && !rigidBody.isKinematic)
-        {
-            rigidBody.isKinematic = true;
-        }
-        Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
-    }
-
-    /// <summary>
-    /// Disables NavMesh navigation mode and returns to RL control
-    /// </summary>
-    public void DisableNavMeshMode()
-    {        
-        isUsingNavMesh = false;
-
-        // Re-enable Rigidbody physics for RL control
-       if (rigidBody != null && rigidBody.isKinematic)
-        {
-            rigidBody.isKinematic = false;
-        }
-
-        Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
-    }
 
     private void OnDestroy()
     {
