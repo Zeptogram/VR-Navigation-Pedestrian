@@ -7,7 +7,14 @@ using UnityEngine.AI;
 using UnityEngine.Events;
 
 [System.Serializable]
-public class ArtifactInteractionEvent : UnityEvent<Artifact> {}
+public class ArtifactInteractionEvent : UnityEvent<Artifact> { }
+
+[System.Serializable]
+public class ArtifactEventSubscription
+{
+    public Artifact artifact;
+    public bool subscribeToPropertyChanged;
+}
 
 [System.Serializable]
 public class PropertyChangeEvent
@@ -32,13 +39,19 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     // Config artifact in inspector (to change a bit)
 
+    [Header("Artifact Event Subscriptions")]
+    public List<ArtifactEventSubscription> artifactEventSubscriptions = new List<ArtifactEventSubscription>();
+
     [Header("Artifact Interaction Events")]
     public ArtifactInteractionEvent onTotemInteraction;
     public ArtifactInteractionEvent onMonitorInteraction;
     public ArtifactInteractionEvent onGenericArtifactInteraction;
 
-    [Header("Monitor Property Change Events")]
-    public List<PropertyChangeEvent> monitorPropertyEvents = new List<PropertyChangeEvent>();
+
+    [Header("Artifact Property Change Events")]
+    public List<PropertyChangeEvent> artifactPropertyEvents = new List<PropertyChangeEvent>();
+
+
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
     /// <summary>
@@ -1278,13 +1291,15 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void SetupArtifactEventListeners()
     {
-        foreach (var artifact in _assignedArtifacts)
+        // For Observable properties
+        foreach (var subscription in artifactEventSubscriptions)
         {
-            if (artifact is MonitorArtifact monitor)
+            if (subscription.subscribeToPropertyChanged)
             {
-                monitor.OnPropertyChanged += HandleMonitorPropertyChanged;
-                Debug.Log($"[RLAgentPlanning] Setup event listener for MonitorArtifact: {monitor.ArtifactName}");
+                subscription.artifact.OnPropertyChanged += HandlePropertyChangedGeneric;
+                Debug.Log($"[RLAgentPlanning] Subscribed to property changed on {subscription.artifact.ArtifactName}");
             }
+
         }
     }
 
@@ -1293,11 +1308,11 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void RemoveArtifactEventListeners()
     {
-        foreach (var artifact in _assignedArtifacts)
+        foreach (var subscription in artifactEventSubscriptions)
         {
-            if (artifact is MonitorArtifact monitor)
+            if (subscription.subscribeToPropertyChanged)
             {
-                monitor.OnPropertyChanged -= HandleMonitorPropertyChanged;
+                subscription.artifact.OnPropertyChanged -= HandlePropertyChangedGeneric;
             }
         }
     }
@@ -1364,7 +1379,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void HandleMonitorPropertyChanged(string propertyName, object value)
     {
-        foreach (var evt in monitorPropertyEvents)
+        /*foreach (var evt in monitorPropertyEvents)
         {
             if (evt.propertyName == propertyName)
             {
@@ -1372,7 +1387,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 break;
             }
         }
-        /*switch (propertyName)
+        switch (propertyName)
         {
             case "placedOrders":
                 var orders = value as List<OrderPlacedData>;
@@ -1508,4 +1523,16 @@ public class RLAgentPlanning : Agent, IAgentRL
             Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
         }
     }
+
+    public void HandlePropertyChangedGeneric(string propertyName, object value)
+{
+    foreach (var evt in artifactPropertyEvents)
+    {
+        if (evt.propertyName == propertyName)
+        {
+            evt.onChanged?.Invoke(value);
+            break;
+        }
+    }
+}
 }
