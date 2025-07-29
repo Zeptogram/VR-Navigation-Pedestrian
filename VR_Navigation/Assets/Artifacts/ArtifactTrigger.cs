@@ -52,9 +52,17 @@ public class ArtifactTrigger : MonoBehaviour
 
                     if (rlAgent != null && navAgent != null)
                     {
-                        // IMPORTANT CHECK: Here i check if the artifact is assigned to the agent, so that not every agent can navigate and use the artifact!
+                        // IMPORTANT CHECK: Here i check if the artifact is assigned to the agent
                         if (rlAgent.assignedArtifacts.Contains(targetArtifact))
                         {
+                            // Check if interaction behavior prevents navigation
+                            if (ShouldSkipNavigation(other.gameObject))
+                            {
+                                if (debugging)
+                                    Debug.Log($"[ArtifactTrigger] Agent {other.name} has already used this artifact - skipping navigation");
+                                return;
+                            }
+
                             agentsInNavigation.Add(other.gameObject);
                             SwitchToNavMesh(rlAgent, navAgent, other.gameObject);
                         }
@@ -70,6 +78,26 @@ public class ArtifactTrigger : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Checks if navigation should be skipped for this agent
+    /// </summary>
+    private bool ShouldSkipNavigation(GameObject agent)
+    {
+        // Check if there's an ArtifactInteractionBehavior that would prevent interaction
+        ArtifactInteractionBehavior interactionBehavior = targetArtifact.GetComponentInChildren<ArtifactInteractionBehavior>();
+        
+        if (interactionBehavior != null)
+        {
+            // If the interaction behavior has onetime use enabled and this agent has already used it
+            if (interactionBehavior.HasAgentUsedInteraction(agent))
+            {
+                return true; // Skip navigation
+            }
+        }
+        
+        return false; // Activate navmesh
     }
 
     private void SwitchToNavMesh(RLAgentPlanning rlAgent, NavMeshAgent navAgent, GameObject agentObj)

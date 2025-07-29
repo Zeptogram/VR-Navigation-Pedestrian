@@ -5620,6 +5620,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionDuration: 3.5
   stopAgentDuringInteraction: 1
+  oneTimeUsePerAgent: 1
   animationTrigger: Pickup
   playAnimation: 1
   enableLookAt: 1
@@ -11253,7 +11254,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.36
+      value: -4.05
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11261,7 +11262,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.27
+      value: 15.37
       objectReference: {fileID: 0}
     - target: {fileID: 4396988122849710397, guid: a60036971f7734eb0ba43d8aaca8f1ce, type: 3}
       propertyPath: m_LocalRotation.w
@@ -24240,6 +24241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionDuration: 4
   stopAgentDuringInteraction: 1
+  oneTimeUsePerAgent: 0
   animationTrigger: Point
   playAnimation: 1
   enableLookAt: 1

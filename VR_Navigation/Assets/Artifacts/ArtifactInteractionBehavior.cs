@@ -7,6 +7,7 @@ public class ArtifactInteractionBehavior : MonoBehaviour
     [Header("Interaction Settings")]
     [SerializeField] private float interactionDuration = 2f;
     [SerializeField] private bool stopAgentDuringInteraction = true;
+    [SerializeField] private bool oneTimeUsePerAgent = false; // ⭐ NUOVO FLAG
     
     [Header("Animation Settings")]
     [SerializeField] private string animationTrigger = "Point";
@@ -22,12 +23,32 @@ public class ArtifactInteractionBehavior : MonoBehaviour
     
     private bool isInteracting = false;
     
+    // Track which agents have already used this interaction behavior ⭐ NUOVO
+    private HashSet<int> usedByAgents = new HashSet<int>();
+    
     /// <summary>
     /// Called by ArtifactNavigationHandler when agent reaches the artifact
     /// </summary>
     public void StartInteraction(GameObject agent, System.Action onInteractionComplete)
     {
-        if (isInteracting) return;
+        if (isInteracting) 
+        {
+            if (debugging)
+                Debug.Log($"[ArtifactInteractionBehavior] Already interacting - skipping for {agent.name}");
+            onInteractionComplete?.Invoke();
+            return;
+        }
+        
+        // Check if this agent has already the artifact, skip
+        int agentId = agent.GetInstanceID();
+        if (oneTimeUsePerAgent && usedByAgents.Contains(agentId))
+        {
+            if (debugging)
+                Debug.Log($"[ArtifactInteractionBehavior] Agent {agent.name} has already used this interaction - skipping");
+            
+            onInteractionComplete?.Invoke();
+            return;
+        }
         
         StartCoroutine(HandleInteraction(agent, onInteractionComplete));
     }
@@ -35,6 +56,15 @@ public class ArtifactInteractionBehavior : MonoBehaviour
     private IEnumerator HandleInteraction(GameObject agent, System.Action onInteractionComplete)
     {
         isInteracting = true;
+        
+        // For one time user per agent, track usage
+        int agentId = agent.GetInstanceID();
+        if (oneTimeUsePerAgent)
+        {
+            usedByAgents.Add(agentId);
+            if (debugging)
+                Debug.Log($"[ArtifactInteractionBehavior] Marked agent {agent.name} as having used this interaction");
+        }
         
         if (debugging)
             Debug.Log($"[ArtifactInteractionBehavior] Starting interaction for {agent.name}");
@@ -83,6 +113,24 @@ public class ArtifactInteractionBehavior : MonoBehaviour
         
         // Notify completion
         onInteractionComplete?.Invoke();
+    }
+    
+    /// <summary>
+    /// Resets the usage tracking (call this on episode reset if needed) ⭐ NUOVO METODO
+    /// </summary>
+    public void ResetUsageTracking()
+    {
+        usedByAgents.Clear();
+        if (debugging)
+            Debug.Log($"[ArtifactInteractionBehavior] Reset usage tracking");
+    }
+    
+    /// <summary>
+    /// Checks if a specific agent has already used this interaction ⭐ NUOVO METODO
+    /// </summary>
+    public bool HasAgentUsedInteraction(GameObject agent)
+    {
+        return oneTimeUsePerAgent && usedByAgents.Contains(agent.GetInstanceID());
     }
     
     /// <summary>
