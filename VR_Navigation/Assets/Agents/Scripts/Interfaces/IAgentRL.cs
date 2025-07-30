@@ -3,7 +3,7 @@ using System.Collections;
 
 public interface IAgentRL
 {
-    void SetRun(bool value);
+    void SetWalking(bool value);
     Rigidbody GetRigidBody();
     Coroutine StartCoroutine(IEnumerator routine);
 }

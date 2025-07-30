@@ -6,79 +6,52 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
 
-[System.Serializable]
-public class ArtifactInteractionEvent : UnityEvent<Artifact> { }
-
-[System.Serializable]
-public class ArtifactEventSubscription
-{
-    public Artifact artifact;
-    public bool subscribeToPropertyChanged;
-}
-
-[System.Serializable]
-public class PropertyChangeEvent
-{
-    public string propertyName;
-    public UnityEvent<object> onChanged;
-}
-
-
-[RequireComponent(typeof(ObjectiveInteractionHandler))]
-[RequireComponent(typeof(ObjectiveObserver))]
-[RequireComponent(typeof(RLPlanningAnimationManager))]
-
-/**
- * \class RLAgentPlanning
- * \brief Represents the RL agent. Inherits from the Agent class of ML-Agents.
- */
+[RequireComponent(typeof(ObjectiveInteractionHandler))
+]
+[RequireComponent(typeof(ObjectiveObserver))
+]
+[RequireComponent(typeof(RLPlanningAnimationManager))
+]
+[RequireComponent(typeof(ArtifactAgentManager))
+]
+[RequireComponent(typeof(OrderAgentManager))
+]
 public class RLAgentPlanning : Agent, IAgentRL
 {
-    // Artifact Setup
+    // Artifacts
 
-
+    // Artifact Selection
     [Header("Artifacts Selection")]
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
-    [Header("Artifacts Interaction")]
-    public ArtifactInteractionEvent onTotemInteraction;
-    public ArtifactInteractionEvent onMonitorInteraction;
-    public ArtifactInteractionEvent onGenericArtifactInteraction;
+    // Artifact Manager - Handles artifact interactions 
+    private ArtifactAgentManager artifactManager;
 
-    // New interactions can be placed here (when new artifacts are added)
+    // Order Manager - Handles order logic
+    private OrderAgentManager orderManager;
 
-    [Header("Artifacts Subscriptions")]
-    public List<ArtifactEventSubscription> artifactEventSubscriptions = new List<ArtifactEventSubscription>();
+    // Order tracking properties (OrderAgentManager)
+    public int? MyOrderId => orderManager?.MyOrderId;
+    public bool IsMyOrderReady => orderManager?.IsMyOrderReady ?? false;
 
-    [Header("Artifacts Observable Properties")]
-    public List<PropertyChangeEvent> artifactPropertyEvents = new List<PropertyChangeEvent>();
-
-
-
-
-    /// <summary>
-    /// True if the agent is using NavMesh for navigation.
-    /// </summary>
     [System.NonSerialized]
     private bool isUsingNavMesh = false;
 
 
-    /*public TotemArtifact totemArtifact;
-    public MonitorArtifact monitorArtifact;*/
-
-    // Order tracking for this agent
-    private int? myOrderId = null;
-    public int? MyOrderId => myOrderId;
-    private bool hasPlacedOrder = false;
-
-    // For order readiness
-    private bool isMyOrderReady = false;
-    public bool IsMyOrderReady => isMyOrderReady;
-
+    /// <summary>
+    /// Crossings count for the agent.
+    /// </summary>
     public int numberOfCrossings = 0;
 
-    private bool run = true;
+    private bool walking = true;
+
+    /// <summary>
+    /// Public accessor for the agent's Rigidbody component.
+    /// </summary>
+    public Rigidbody RigidBody => rigidBody;
+
+    private HashSet<int> insideTargets = new HashSet<int>();
 
     /// <summary>
     /// Reference to constants.
@@ -305,6 +278,8 @@ public class RLAgentPlanning : Agent, IAgentRL
         objectiveObserver = GetComponent<ObjectiveObserver>();
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
+        artifactManager = GetComponent<ArtifactAgentManager>();
+        orderManager = GetComponent<OrderAgentManager>();
 
         // Constants
         constants = new ConstantsPlanning();
@@ -324,6 +299,10 @@ public class RLAgentPlanning : Agent, IAgentRL
 
 
         // Check if all required components are present
+        if (artifactManager == null)
+            Debug.LogError($"ArtifactAgentManager component missing on {gameObject.name}");
+        if (orderManager == null)
+            Debug.LogError($"OrderAgentManager component missing on {gameObject.name}");
         if (agentSensorsManager == null)
             Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
         if (agentObserver == null)
@@ -395,12 +374,6 @@ public class RLAgentPlanning : Agent, IAgentRL
             default:
                 break;
         }
-    }
-
-    private void Start()
-    {
-        // Artifacts setup
-        SetupArtifactEventListeners();
     }
 
     private void Update()
@@ -536,6 +509,10 @@ public class RLAgentPlanning : Agent, IAgentRL
         numberOfIteraction = 0;
         InitCrossings(numberOfCrossings);
         // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // Disabilita randomizzazione
+
+        // Reset order state
+        orderManager?.ResetOrderState();
+        
         resetAgent?.Invoke(this);
     }
 
@@ -611,7 +588,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (run && !isUsingNavMesh)
+        if (walking && !isUsingNavMesh)
         {
             //float realSpeed = rigidBody.velocity.magnitude;
             float actionSpeed;
@@ -637,7 +614,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             }
         }
 
-        if (run)
+        if (walking)
         {
             int agentID = gameObject.GetInstanceID();
             numberOfIteraction++;
@@ -744,26 +721,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     private void OnTriggerEnter(Collider other)
     {
         GameObject triggerObject = other.gameObject;
-
-        /*if (triggerObject.CompareTag("ArtifactZone"))
-        {
-            Artifact artifact = triggerObject.GetComponent<Artifact>() ??
-                               triggerObject.GetComponentInParent<Artifact>();
-
-            if (artifact != null && assignedArtifacts.Contains(artifact))
-            {
-                Debug.Log($"[Agent {gameObject.name}] Collided with assigned artifact: {artifact.ArtifactName}");
-
-                int agentId = gameObject.GetInstanceID();
-                //artifact.Use(agentId, "agent_collision", gameObject);
-            }
-            else if (artifact != null)
-            {
-                Debug.Log($"[Agent {gameObject.name}] Collided with unassigned artifact: {artifact.ArtifactName}");
-            }
-
-            return;
-        }*/
 
         entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
         if (triggerObject.CompareTag("Target"))
@@ -1210,9 +1167,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     }
 
 
-    public void SetRun(bool value)
+    public void SetWalking(bool value)
     {
-        run = value;
+        walking = value;
     }
 
 
@@ -1224,13 +1181,6 @@ public class RLAgentPlanning : Agent, IAgentRL
     {
         return rigidBody;
     }
-
-    /// <summary>
-    /// Public accessor for the agent's Rigidbody component.
-    /// </summary>
-    public Rigidbody RigidBody => rigidBody;
-
-    private HashSet<int> insideTargets = new HashSet<int>();
 
 
     // NavMesh Control Methods
@@ -1284,76 +1234,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     }
 
 
-
-    // Artifact Setup and Event Handling Methods
-
-
-
-    /// <summary>
-    /// Sets up event listeners for all assigned artifacts
-    /// </summary>
-    private void SetupArtifactEventListeners()
-    {
-        // For Observable properties
-        foreach (var subscription in artifactEventSubscriptions)
-        {
-            if (subscription.subscribeToPropertyChanged)
-            {
-                subscription.artifact.OnPropertyChanged += HandleObsPropertyChanged;
-                Debug.Log($"[RLAgentPlanning] Subscribed to property changed on {subscription.artifact.ArtifactName}");
-            }
-
-        }
-    }
-
-    /// <summary>
-    /// Removes event listeners for all assigned artifacts
-    /// </summary>
-    private void RemoveArtifactEventListeners()
-    {
-        foreach (var subscription in artifactEventSubscriptions)
-        {
-            if (subscription.subscribeToPropertyChanged)
-            {
-                subscription.artifact.OnPropertyChanged -= HandleObsPropertyChanged;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets the first artifact of a specific type from assigned artifacts
-    /// </summary>
-    private T GetArtifactOfType<T>() where T : Artifact
-    {
-        foreach (var artifact in _assignedArtifacts)
-        {
-            if (artifact is T typedArtifact)
-            {
-                return typedArtifact;
-            }
-        }
-        return null;
-    }
-
-
-
-    // Artifact Interaction Methods
-
-
-    /// <summary>
-    /// Handles property changes for artifacts
-    /// </summary>
-    public void HandleObsPropertyChanged(string propertyName, object value)
-    {
-        foreach (var obsProp in artifactPropertyEvents)
-        {
-            if (obsProp.propertyName == propertyName)
-            {
-                obsProp.onChanged?.Invoke(value);
-                break;
-            }
-        }
-    }
+    // Artifact Methods
 
 
     /// <summary>
@@ -1361,126 +1242,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public void HandleArtifactInteraction(Artifact artifact)
     {
-        if (!_assignedArtifacts.Contains(artifact))
-        {
-            Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
-            return;
-        }
-
-        // Check artifact type and handle interaction accordingly
-        switch (artifact)
-        {
-            case TotemArtifact totemArtifact:
-                onTotemInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
-                break;
-
-            case MonitorArtifact monitorArtifact:
-                onMonitorInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
-                break;
-
-            default:
-                // Default interaction
-                onGenericArtifactInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
-                break;
-        }
-    }
-
-
-    /// <summary>
-    /// Method for agent to place an order at the totem
-    /// </summary>
-    public void PlaceOrder(Artifact totemArtifact)
-    {
-        
-        if (totemArtifact != null && !hasPlacedOrder)
-        {
-            hasPlacedOrder = true;
-
-            int agentId = gameObject.GetInstanceID();
-            totemArtifact.Use(agentId);
-
-            Debug.Log($"[Agent {gameObject.name}] Placed Order at {totemArtifact.ArtifactName}");
-        }
-        else if (hasPlacedOrder)
-        {
-            Debug.Log($"[Agent {gameObject.name}] Already Placed Order");
-        }
-        else
-        {
-            Debug.LogWarning($"[Agent {gameObject.name}] No TotemArtifact assigned for placing order");
-        }
-    }
-
-    /// <summary>
-    /// Method for agent to pick up a ready order
-    /// </summary>
-    public void PickUpOrder(Artifact monitorArtifact)
-    {
-        
-        if (monitorArtifact == null || !myOrderId.HasValue)
-        {
-            Debug.Log($"[Agent {gameObject.name}] Cannot pick up order: monitor artifact missing or orderId not set");
-            return;
-        }
-
-        int agentId = gameObject.GetInstanceID();
-        monitorArtifact.Use(agentId, myOrderId.Value);
-
-        // Reset flags 
-        isMyOrderReady = false;
-        hasPlacedOrder = false;
-        myOrderId = null;
-
-        Debug.Log($"[Agent {gameObject.name}] Picked up order from {monitorArtifact.ArtifactName} and reset order tracking");
-    }
-
-
-
-    private void OnDestroy()
-    {
-        // Cleanup all artifact event listeners
-        RemoveArtifactEventListeners();
-    }
-    
-    public void OnPlacedOrdersChanged(object value)
-    {
-        var orders = value as List<OrderPlacedData>;
-        if (orders != null && !myOrderId.HasValue && hasPlacedOrder)
-        {
-            foreach (var order in orders)
-            {
-                if (order.agentId == gameObject.GetInstanceID())
-                {
-                    myOrderId = order.orderId;
-                    isMyOrderReady = false; // reset order ready flag
-                    Debug.Log($"[Agent {gameObject.name}] (Event) My order ID set to {myOrderId.Value}");
-                    break;
-                }
-            }
-        }
-    }
-
-    public void OnOrdersReadyChanged(object value)
-    {
-        var readyOrderIds = value as List<int>;
-        if (myOrderId.HasValue && readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
-        {
-            isMyOrderReady = true; // Order ready flag
-            Debug.Log($"[Agent {gameObject.name}] (Event) My order {myOrderId.Value} ready!");
-        }
-    }
-
-    public void OnOrdersInPreparationChanged(object value)
-    {
-        var prepOrderIds = value as List<int>;
-        if (myOrderId.HasValue && prepOrderIds != null && prepOrderIds.Contains(myOrderId.Value))
-        {
-            isMyOrderReady = false; // Order not ready flag
-            Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
-        }
+        artifactManager?.HandleArtifactInteraction(artifact);
     }
 
     

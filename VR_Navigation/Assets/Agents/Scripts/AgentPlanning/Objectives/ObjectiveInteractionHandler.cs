@@ -186,7 +186,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         // If setted to stop the agent during animations
         if (animationData.stopAgentDuringAnimations)
         {
-            agent.SetRun(false);
+            agent.SetWalking(false);
             agent.GetRigidBody().velocity = Vector3.zero;
             
             // Wait a frame to ensure the agent is stopped
@@ -257,7 +257,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         // Reactivate the agent if it was stopped during animations
         if (animationData.stopAgentDuringAnimations)
         {
-            agent.SetRun(true);
+            agent.SetWalking(true);
             //Debug.Log("[Objective Animation] Agent reactivated after animations completed");
             
             // Wait a moment before allowing further actions

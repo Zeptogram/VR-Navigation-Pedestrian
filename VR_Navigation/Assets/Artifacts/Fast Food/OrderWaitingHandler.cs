@@ -122,7 +122,7 @@ public class OrderWaitingHandler : MonoBehaviour
     private void ActivateAgent(IAgentRL agent)
     {
         if (agent != null)
-            agent.SetRun(true);
+            agent.SetWalking(true);
 
     }
     
@@ -133,7 +133,7 @@ public class OrderWaitingHandler : MonoBehaviour
     {
         if (agent != null)
         {
-            agent.SetRun(false);
+            agent.SetWalking(false);
             agent.GetRigidBody().velocity = Vector3.zero;
         }
     }

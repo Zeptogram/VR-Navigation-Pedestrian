@@ -26,7 +26,7 @@ public class RLAgent : Agent, IAgentRL
     }
 
     public action[] goalAction;
-    private bool run = true;
+    private bool walking = true;
     private int nextTargetCount = 0;
 
     public IAgentConstants constants { get; private set; }
@@ -212,7 +212,7 @@ public class RLAgent : Agent, IAgentRL
     [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (run)
+        if (walking)
         {
             float realSpeed = rigidBody.velocity.magnitude;
             float actionSpeed;
@@ -565,9 +565,9 @@ public class RLAgent : Agent, IAgentRL
         }
     }
 
-    public void SetRun(bool value)
+    public void SetWalking(bool value)
     {
-        run = value;
+        walking = value;
     }
 
 }

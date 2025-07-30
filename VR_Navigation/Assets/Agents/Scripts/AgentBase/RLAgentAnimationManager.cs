@@ -63,12 +63,12 @@ public class RLAgentAnimationManager : AgentAnimationManager
 
         if (delay > 0)
         {
-            agent.SetRun(false);
+            agent.SetWalking(false);
             agent.GetRigidBody().velocity = Vector3.zero;
             yield return new WaitForSeconds(delay);
         }
-        SetWalking(true);
-        agent.SetRun(true);
+        this.SetWalking(true);
+        agent.SetWalking(true);
         if (agent is RLAgent rlAgent)
             rlAgent.MoveToNextTarget();
     }
@@ -99,7 +99,7 @@ public class RLAgentAnimationManager : AgentAnimationManager
         // For boolean states like walking or idle, set them directly
         if (triggerName == "isWalking")
         {
-            SetWalking(true);
+            this.SetWalking(true);
             return;
         }
         else if (triggerName == "isIdle")
@@ -136,9 +136,8 @@ public class RLAgentAnimationManager : AgentAnimationManager
     {
         yield return new WaitUntil(() => animator != null);
 
-        // Ora molto più pulito!
         agent.SetAnimationSequenceMode(true);
-        agent.SetRun(false);
+        agent.SetWalking(false);
         agent.GetRigidBody().velocity = Vector3.zero;
 
         foreach (var anim in animations)
@@ -153,8 +152,8 @@ public class RLAgentAnimationManager : AgentAnimationManager
         }
 
         agent.SetAnimationSequenceMode(false);
-        SetWalking(true);
-        agent.SetRun(true);
+        this.SetWalking(true);
+        agent.SetWalking(true);
         agent.MoveToNextTarget();
     }
 }
