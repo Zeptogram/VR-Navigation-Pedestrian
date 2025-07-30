@@ -34,25 +34,28 @@ public class PropertyChangeEvent
  */
 public class RLAgentPlanning : Agent, IAgentRL
 {
-    // Artifact lists
+    // Artifact Setup
+
+
+    [Header("Artifacts Selection")]
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+    public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
-    // Config artifact in inspector (to change a bit)
-
-    [Header("Artifact Event Subscriptions")]
-    public List<ArtifactEventSubscription> artifactEventSubscriptions = new List<ArtifactEventSubscription>();
-
-    [Header("Artifact Interaction Events")]
+    [Header("Artifacts Interaction")]
     public ArtifactInteractionEvent onTotemInteraction;
     public ArtifactInteractionEvent onMonitorInteraction;
     public ArtifactInteractionEvent onGenericArtifactInteraction;
 
+    // New interactions can be placed here (when new artifacts are added)
 
-    [Header("Artifact Property Change Events")]
+    [Header("Artifacts Subscriptions")]
+    public List<ArtifactEventSubscription> artifactEventSubscriptions = new List<ArtifactEventSubscription>();
+
+    [Header("Artifacts Observable Properties")]
     public List<PropertyChangeEvent> artifactPropertyEvents = new List<PropertyChangeEvent>();
 
 
-    public List<Artifact> assignedArtifacts => _assignedArtifacts;
+
 
     /// <summary>
     /// True if the agent is using NavMesh for navigation.
@@ -1296,7 +1299,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         {
             if (subscription.subscribeToPropertyChanged)
             {
-                subscription.artifact.OnPropertyChanged += HandlePropertyChangedGeneric;
+                subscription.artifact.OnPropertyChanged += HandleObsPropertyChanged;
                 Debug.Log($"[RLAgentPlanning] Subscribed to property changed on {subscription.artifact.ArtifactName}");
             }
 
@@ -1312,7 +1315,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         {
             if (subscription.subscribeToPropertyChanged)
             {
-                subscription.artifact.OnPropertyChanged -= HandlePropertyChangedGeneric;
+                subscription.artifact.OnPropertyChanged -= HandleObsPropertyChanged;
             }
         }
     }
@@ -1337,6 +1340,21 @@ public class RLAgentPlanning : Agent, IAgentRL
     // Artifact Interaction Methods
 
 
+    /// <summary>
+    /// Handles property changes for artifacts
+    /// </summary>
+    public void HandleObsPropertyChanged(string propertyName, object value)
+    {
+        foreach (var obsProp in artifactPropertyEvents)
+        {
+            if (obsProp.propertyName == propertyName)
+            {
+                obsProp.onChanged?.Invoke(value);
+                break;
+            }
+        }
+    }
+
 
     /// <summary>
     /// Automatically handles artifact interaction based on artifact type
@@ -1353,80 +1371,21 @@ public class RLAgentPlanning : Agent, IAgentRL
         switch (artifact)
         {
             case TotemArtifact totemArtifact:
-                //PlaceOrder(totemArtifact);
                 onTotemInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
                 break;
 
             case MonitorArtifact monitorArtifact:
-                //PickUpOrder(monitorArtifact);
                 onMonitorInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
                 break;
 
             default:
                 // Default interaction
-                int agentId = gameObject.GetInstanceID();
-                //artifact.Use(agentId, "default", gameObject);
                 onGenericArtifactInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
                 break;
         }
-    }
-
-    /// <summary>
-    /// Handles property changes from the monitor artifact.
-    /// </summary>
-    private void HandleMonitorPropertyChanged(string propertyName, object value)
-    {
-        /*foreach (var evt in monitorPropertyEvents)
-        {
-            if (evt.propertyName == propertyName)
-            {
-                evt.onChanged?.Invoke(value);
-                break;
-            }
-        }
-        switch (propertyName)
-        {
-            case "placedOrders":
-                var orders = value as List<OrderPlacedData>;
-                if (orders != null && !myOrderId.HasValue && hasPlacedOrder)
-                {
-                    foreach (var order in orders)
-                    {
-                        if (order.agentId == gameObject.GetInstanceID())
-                        {
-                            myOrderId = order.orderId;
-                            isMyOrderReady = false; // reset order ready flag
-                            Debug.Log($"[Agent {gameObject.name}] (ObsProp) My order ID set to {myOrderId.Value}");
-                            break;
-                        }
-                    }
-                }
-                break;
-
-            case "ordersReady":
-                var readyOrderIds = value as List<int>;
-                if (myOrderId.HasValue && readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
-                {
-                    isMyOrderReady = true; // Order ready flag
-                    Debug.Log($"[Agent {gameObject.name}] (ObsProp) My order {myOrderId.Value} ready!");
-                }
-                break;
-
-            case "ordersInPreparation":
-                var prepOrderIds = value as List<int>;
-                if (myOrderId.HasValue && prepOrderIds != null && prepOrderIds.Contains(myOrderId.Value))
-                {
-                    isMyOrderReady = false; // Order not ready flag
-                    Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
-                }
-                break;
-
-            default:
-                break;
-        }*/
     }
 
 
@@ -1524,15 +1483,5 @@ public class RLAgentPlanning : Agent, IAgentRL
         }
     }
 
-    public void HandlePropertyChangedGeneric(string propertyName, object value)
-{
-    foreach (var evt in artifactPropertyEvents)
-    {
-        if (evt.propertyName == propertyName)
-        {
-            evt.onChanged?.Invoke(value);
-            break;
-        }
-    }
-}
+    
 }
