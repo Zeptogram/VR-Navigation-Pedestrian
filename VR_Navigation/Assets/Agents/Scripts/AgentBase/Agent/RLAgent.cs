@@ -26,6 +26,12 @@ public class RLAgent : Agent, IAgentRL
     }
 
     public action[] goalAction;
+
+    // Artifacts
+    [Header("Artifacts")]
+    [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+    public List<Artifact> assignedArtifacts => _assignedArtifacts;
+
     private bool walking = true;
     private int nextTargetCount = 0;
 

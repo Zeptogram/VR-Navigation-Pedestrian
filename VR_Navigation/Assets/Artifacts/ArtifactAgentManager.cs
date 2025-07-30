@@ -6,12 +6,15 @@ using UnityEngine.Events;
 public class ArtifactInteractionEvent : UnityEvent<Artifact> { }
 
 [System.Serializable]
+
+// Mini class for artifact + boolean for property change subscription
 public class ArtifactEventSubscription
 {
     public Artifact artifact;
     public bool subscribeToPropertyChanged;
 }
 
+// Mini class for artifact property change event (from inspector i can use onChanged like onClick and put a method)
 [System.Serializable]
 public class PropertyChangeEvent
 {
@@ -19,8 +22,10 @@ public class PropertyChangeEvent
     public UnityEvent<object> onChanged;
 }
 
+[RequireComponent(typeof(IAgentRL))]
 public class ArtifactAgentManager : MonoBehaviour
 {
+    // Event for handling interactions with different artifact types
     [Header("Artifacts Interaction")]
     public ArtifactInteractionEvent onTotemInteraction;
     public ArtifactInteractionEvent onMonitorInteraction;
@@ -33,19 +38,20 @@ public class ArtifactAgentManager : MonoBehaviour
     public List<PropertyChangeEvent> artifactPropertyEvents = new List<PropertyChangeEvent>();
 
     // Reference to the agent
-    private RLAgentPlanning agent;
+    private IAgentRL agent;
 
     private void Awake()
     {
-        agent = GetComponent<RLAgentPlanning>();
+        agent = GetComponent<IAgentRL>();
         if (agent == null)
         {
-            Debug.LogError($"ArtifactAgentManager requires RLAgentPlanning component on {gameObject.name}");
+            Debug.LogError($"ArtifactAgentManager requires IAgentRL component on {gameObject.name}");
         }
     }
 
     private void Start()
     {
+        // For obs properties
         SetupArtifactEventListeners();
     }
 
@@ -58,6 +64,7 @@ public class ArtifactAgentManager : MonoBehaviour
         {
             if (subscription.subscribeToPropertyChanged)
             {
+                // OnPropertyChanged is the one in the Artifact class
                 subscription.artifact.OnPropertyChanged += HandleObsPropertyChanged;
                 Debug.Log($"[ArtifactAgentManager] Subscribed to property changed on {subscription.artifact.ArtifactName}");
             }
@@ -103,9 +110,10 @@ public class ArtifactAgentManager : MonoBehaviour
             Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
             return;
         }
-
+        // Here i call the events for each artifact type
         switch (artifact)
         {
+            // Add more artifact types as needed in the future (here the switch case for each artifact)
             case TotemArtifact totemArtifact:
                 onTotemInteraction?.Invoke(artifact);
                 Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");

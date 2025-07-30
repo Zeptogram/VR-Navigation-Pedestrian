@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class OrderAgentManager : MonoBehaviour
 {
-    // Order tracking
+    // Order tracking (referenced by the Agent too)
     private int? myOrderId = null;
     public int? MyOrderId => myOrderId;
     private bool hasPlacedOrder = false;
@@ -28,6 +28,10 @@ public class OrderAgentManager : MonoBehaviour
             Debug.LogError($"OrderAgentManager requires ArtifactAgentManager component on {gameObject.name}");
         }
     }
+
+
+    // Base Methods that call the Artifact use method
+
 
     /// <summary>
     /// Method for agent to place an order at the totem
@@ -72,6 +76,13 @@ public class OrderAgentManager : MonoBehaviour
 
         Debug.Log($"[Agent {gameObject.name}] Picked up order from {monitorArtifact.ArtifactName} and reset order tracking");
     }
+
+
+
+
+    // Observable Properties Methods, called by ArtifactAgentManager when properties change
+
+
 
     /// <summary>
     /// Handles when orders are placed (triggered by artifact events)
@@ -121,7 +132,7 @@ public class OrderAgentManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Resets order state (call when episode begins)
+    /// Resets order state (call when episode begins if needed)
     /// </summary>
     public void ResetOrderState()
     {
@@ -129,39 +140,5 @@ public class OrderAgentManager : MonoBehaviour
         hasPlacedOrder = false;
         isMyOrderReady = false;
         Debug.Log($"[Agent {gameObject.name}] Order state reset");
-    }
-
-    /// <summary>
-    /// Gets the first totem artifact from assigned artifacts
-    /// </summary>
-    public TotemArtifact GetTotemArtifact()
-    {
-        if (agent?.assignedArtifacts == null) return null;
-
-        foreach (var artifact in agent.assignedArtifacts)
-        {
-            if (artifact is TotemArtifact totem)
-            {
-                return totem;
-            }
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Gets the first monitor artifact from assigned artifacts
-    /// </summary>
-    public MonitorArtifact GetMonitorArtifact()
-    {
-        if (agent?.assignedArtifacts == null) return null;
-
-        foreach (var artifact in agent.assignedArtifacts)
-        {
-            if (artifact is MonitorArtifact monitor)
-            {
-                return monitor;
-            }
-        }
-        return null;
     }
 }

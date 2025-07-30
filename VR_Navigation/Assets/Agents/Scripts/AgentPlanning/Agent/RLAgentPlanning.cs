@@ -18,10 +18,7 @@ using UnityEngine.Events;
 ]
 public class RLAgentPlanning : Agent, IAgentRL
 {
-    // Artifacts
-
-    // Artifact Selection
-    [Header("Artifacts Selection")]
+    // Artifacts Selection
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
@@ -35,6 +32,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     public int? MyOrderId => orderManager?.MyOrderId;
     public bool IsMyOrderReady => orderManager?.IsMyOrderReady ?? false;
 
+    /// <summary>
+    /// True if the agent is using NavMesh for movement.
+    /// </summary>
     [System.NonSerialized]
     private bool isUsingNavMesh = false;
 
@@ -44,6 +44,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     public int numberOfCrossings = 0;
 
+    /// <summary>
+    /// True if the agent is currently walking (moving).
+    /// </summary>
     private bool walking = true;
 
     /// <summary>
@@ -77,6 +80,9 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private float newAngle;
 
+    /// <summary>
+    /// True if the agent is fleeing.
+    /// </summary>
     private bool fleeing = false;
 
     /// <summary>
@@ -278,6 +284,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         objectiveObserver = GetComponent<ObjectiveObserver>();
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
+        // Artifacts
         artifactManager = GetComponent<ArtifactAgentManager>();
         orderManager = GetComponent<OrderAgentManager>();
 
@@ -313,26 +320,14 @@ public class RLAgentPlanning : Agent, IAgentRL
             Debug.LogError($"ObjectiveInteractionHandler component missing on {gameObject.name}");
         if (agentGizmosDrawer == null)
             Debug.LogError($"AgentGizmosDrawer component missing on {gameObject.name}");
-
-        // TODO: Keep or not
         if (agentSensorsManager != null)
         {
-            /*if (agentSensorsManager.invisibleTargets == null)
-            {
-                Debug.LogWarning($"invisibleTargets was null, initializing empty list for {gameObject.name}");
-                agentSensorsManager.invisibleTargets = new List<GameObject>();
-            }
-            
-            // Tutti i target sono ora sempre visibili - rimuovi tutti gli elementi dalla lista invisibleTargets
-            agentSensorsManager.invisibleTargets.Clear();*/
-
-            // Chiama questi metodi solo se agentSensorsManager è valido
             try
             {
                 agentSensorsManager.UpdateTargetSensorVision(group);
                 agentSensorsManager.UpdateObjectiveSensorVision(group);
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Error updating sensor vision for {gameObject.name}: {e.Message}");
             }
@@ -451,7 +446,7 @@ public class RLAgentPlanning : Agent, IAgentRL
             if (navAgent != null && navAgent.enabled)
             {
                 // For navmesh speed
-                return navAgent.velocity.magnitude * 4f;
+                return navAgent.velocity.magnitude * 4f; // 4f seems ok for the current Agent speed
             }
         }
 
@@ -470,9 +465,6 @@ public class RLAgentPlanning : Agent, IAgentRL
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
     }
-
-
-
 
     /// <summary>
     /// Gets the color associated with this agent's group.
@@ -508,11 +500,10 @@ public class RLAgentPlanning : Agent, IAgentRL
         currentSpeed = 0;
         numberOfIteraction = 0;
         InitCrossings(numberOfCrossings);
-        // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // Disabilita randomizzazione
+        // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // This line randomizes the maximum speed
 
         // Reset order state
         orderManager?.ResetOrderState();
-        
         resetAgent?.Invoke(this);
     }
 
@@ -575,7 +566,7 @@ public class RLAgentPlanning : Agent, IAgentRL
         vectorSensor.AddObservation(normalizedSpeed);
         vectorSensor.AddObservation(objectiveObserver.GetObjectivesObservation());
         //vectorSensor.AddObservation(GetCrossings());
-        vectorSensor.AddObservation(taskCompleted ? 1.0f : 0.0f); //TODO: check se ha senso
+        //vectorSensor.AddObservation(taskCompleted ? 1.0f : 0.0f); //TODO: check se ha senso
 
         rewardsWallsAndTargetsObservations(wallsAndTargets);
         rewardsWallsAndAgentsObservations(wallsAndAgents);
@@ -801,7 +792,7 @@ public class RLAgentPlanning : Agent, IAgentRL
 
 
         var sensors = gameObject.GetComponent<AgentSensorsManager>();
-        // TODo fix
+        // TODO: Fix if it's necessary for experiments
         foreach (GameObject target in fleeTargets)
         {
             if (target.name.Contains("Flee"))
@@ -939,7 +930,10 @@ public class RLAgentPlanning : Agent, IAgentRL
         continuousActionsOut[0] = Input.GetAxis("Vertical");
         continuousActionsOut[1] = Input.GetAxis("Horizontal");
     }
-
+    /**
+     * \brief Changes the agent's speed.
+     * \param deltaSpeed The change in speed.
+     */
     public void SpeedChange(float deltaSpeed)
     {
         currentSpeed += minMaxSpeed.y * deltaSpeed / 2f;
@@ -948,6 +942,10 @@ public class RLAgentPlanning : Agent, IAgentRL
         rigidBody.AddForce(velocityChange, ForceMode.VelocityChange);
     }
 
+    /**
+     * \brief Changes the agent's angle.
+     * \param deltaAngle The change in angle.
+     */
     private void AngleChange(float deltaAngle)
     {
         newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
@@ -1185,23 +1183,6 @@ public class RLAgentPlanning : Agent, IAgentRL
 
     // NavMesh Control Methods
 
-
-    /// <summary>
-    /// Method to switch back to RL control from NavMesh
-    /// </summary>
-    public void SwitchBackToRLControl()
-    {
-        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
-        if (navAgent != null)
-        {
-            navAgent.enabled = false;
-        }
-
-        this.enabled = true;
-
-        Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} switched back to RL control");
-    }
-
     /// <summary>
     /// Enables NavMesh navigation mode
     /// </summary>
@@ -1232,18 +1213,5 @@ public class RLAgentPlanning : Agent, IAgentRL
 
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
     }
-
-
-    // Artifact Methods
-
-
-    /// <summary>
-    /// Automatically handles artifact interaction based on artifact type
-    /// </summary>
-    public void HandleArtifactInteraction(Artifact artifact)
-    {
-        artifactManager?.HandleArtifactInteraction(artifact);
-    }
-
     
 }

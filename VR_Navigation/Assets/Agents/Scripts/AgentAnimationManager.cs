@@ -242,39 +242,6 @@ public class AgentAnimationManager : MonoBehaviour
         animator.SetTrigger(triggerName);
     }
 
-    /// <summary>
-    /// Checks if a turn animation is currently playing.
-    /// </summary>
-    /// <returns>True if any turn animation is active.</returns>
-    public virtual bool IsTurnAnimationActive()
-    {
-        if (animator == null) return false;
-        
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
-    }
-    
-    /// <summary>
-    /// Forces a smooth transition to the specified state after a turn animation.
-    /// </summary>
-    /// <param name="toWalking">True to transition to walking, false to idle.</param>
-    public virtual void ForceTransitionAfterTurn(bool toWalking)
-    {
-        if (animator == null) return;
-        
-        // Reset all triggers first
-        ResetAllTriggers();
-        
-        // Wait for current transition to complete if any
-        if (animator.IsInTransition(0))
-        {
-            StartCoroutine(WaitForTransitionComplete(toWalking));
-        }
-        else
-        {
-            SetLocomotionState(toWalking);
-        }
-    }
     
     /// <summary>
     /// Coroutine to wait for animation transition completion.

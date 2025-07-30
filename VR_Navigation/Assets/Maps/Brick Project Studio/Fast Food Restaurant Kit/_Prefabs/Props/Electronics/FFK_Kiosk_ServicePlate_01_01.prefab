@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 4692123614729747438}
   - component: {fileID: 6650695834814927955}
   m_Layer: 0
-  m_Name: ArtifactTriggerZone
+  m_Name: ArtifactTrigger
   m_TagString: ArtifactZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -152,8 +152,9 @@ MonoBehaviour:
   debugging: 0
   targetArtifact: {fileID: 0}
   destinationTransform: {fileID: 0}
+  exitDestination: {fileID: 0}
   enableNavMeshOnTrigger: 1
-  stoppingDistance: 1.5
+  stoppingDistance: 0.5
 --- !u!1 &1451931145011181372
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,8 +165,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7241745476321483606}
   - component: {fileID: 6761222921375426165}
+  - component: {fileID: 3653598791892156546}
   m_Layer: 0
-  m_Name: ArtifactUseZone
+  m_Name: ArtifactInteraction
   m_TagString: Artifact
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -207,6 +209,27 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 2, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3653598791892156546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451931145011181372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ad1e3fc24bd9434a834b74f505124d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionDuration: 2
+  stopAgentDuringInteraction: 1
+  oneTimeUsePerAgent: 0
+  animationTrigger: Point
+  playAnimation: 1
+  enableLookAt: 0
+  lookAtTarget: {fileID: 0}
+  lookAtSpeed: 90
+  debugging: 0
 --- !u!1 &2187788186361149455
 GameObject:
   m_ObjectHideFlags: 0
