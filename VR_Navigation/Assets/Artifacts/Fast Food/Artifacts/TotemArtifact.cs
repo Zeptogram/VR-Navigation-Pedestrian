@@ -14,12 +14,12 @@ public class TotemArtifact : Artifact
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI orderText; 
 
-    private int orderCounter;
+    private static int orderCounter = 0;
     private Dictionary<int, bool> orders = new Dictionary<int, bool>(); // orderId -> isReady
 
     protected override void Init()
     {
-        orderCounter = 0;
+        //orderCounter = 0;
         if (orderText != null)
             orderText.text = "";
     }
