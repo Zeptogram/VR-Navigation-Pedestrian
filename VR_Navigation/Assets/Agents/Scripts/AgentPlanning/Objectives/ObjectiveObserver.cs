@@ -15,6 +15,7 @@ public class ObjectiveObserver : MonoBehaviour
 
     public void InitializeObjectives(List<GameObject> objectives)
     {
+        Debug.Log($"[{agent.gameObject.name}] Initializing objectives with {objectives.Count} objectives.");
         // Reset all elements to 0
         for (int i = 0; i < objectivesObservation.Length; i++)
             objectivesObservation[i] = 0;

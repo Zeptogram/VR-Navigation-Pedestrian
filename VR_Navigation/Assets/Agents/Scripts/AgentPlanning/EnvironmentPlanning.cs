@@ -12,6 +12,8 @@ public class EnvironmentPlanning : MonoBehaviour
     private List<RLAgentPlanning> agents;
     private int agentsTerminated = 0;
     [SerializeField] int maxSteps;
+    [SerializeField] bool initIndividualObjectives = true;
+
 
     public Action<float, EnvironmentPlanning> environmentTerminated;
     public Action<RLAgentPlanning> agentInitialized;
@@ -29,6 +31,16 @@ public class EnvironmentPlanning : MonoBehaviour
 
     void Start()
     {
+        if (initIndividualObjectives)
+        {
+            // Active here the ObjectiveAssigner if it exists
+            ObjectiveAssigner objectiveAssigner = GetComponent<ObjectiveAssigner>();
+            if (objectiveAssigner != null)
+            {
+                objectiveAssigner.enabled = true;
+                Debug.Log($"ObjectiveAssigner enabled in EnvironmentPlanning {envID}");
+            }
+        }
         tempoIniziale = (int)Time.time;
         if (canvasScore == null)
         {
@@ -92,7 +104,6 @@ public class EnvironmentPlanning : MonoBehaviour
             // Attiva l'agente SOLO DOPO che tutto è stato inizializzato
             agent.gameObject.SetActive(true);
             
-            // Invoke the event that inform the agent that the environment is ready
             print("Agent " + agent.name + " informed that the environment is ready");
             agentInitialized.Invoke(agent);
         }
@@ -102,6 +113,10 @@ public class EnvironmentPlanning : MonoBehaviour
     private void InitializeObjectives()
     {
         objectives = new List<GameObject>();
+        
+        ObjectiveAssigner objectiveAssigner = GetComponent<ObjectiveAssigner>();
+        bool useIndividualAssignment = objectiveAssigner != null && objectiveAssigner.enabled;
+        
         ObjectiveActivator objectiveActivator = GetComponent<ObjectiveActivator>();
         ObjectiveColorManager colorManager = GetComponent<ObjectiveColorManager>();
         if (colorManager == null)
@@ -109,8 +124,39 @@ public class EnvironmentPlanning : MonoBehaviour
             colorManager = gameObject.AddComponent<ObjectiveColorManager>();
         }
         colorManager.ClearAllAssignments();
-        if (objectiveActivator != null)
+        
+        if (useIndividualAssignment)
         {
+            // Dont use ObjectiveActivator, use ObjectiveAssigner
+            Debug.Log($"[{envID}] ObjectiveAssigner active - skipping ObjectiveActivator");
+            
+            // Disable ObjectiveActivator if it exists
+            if (objectiveActivator != null)
+            {
+                objectiveActivator.enabled = false;
+                Debug.Log($"[{envID}] ObjectiveActivator disabled for individual assignment");
+            }
+            
+            // Find all objectives in the environment
+            Transform[] childTransforms = GetComponentsInChildren<Transform>();
+            foreach (Transform child in childTransforms)
+            {
+                if (child.CompareTag("Obiettivo"))
+                {
+                    objectives.Add(child.gameObject);
+                    Debug.Log($"Objective found (individual mode): {child.name} in environment {envID}");
+                }
+            }
+            Debug.Log($"Environment {envID}: found {objectives.Count} objectives (managed by ObjectiveAssigner)");
+            AssignLocalTargetIds();
+
+            // ObjectiveAssigner will handle assignment when allAgentsInitialized is invoked
+        }
+        else if (objectiveActivator != null)
+        {
+            // Old behaviour (in ML-Agents-Pedestrians Project) Use ObjectiveActivator
+            Debug.Log($"[{envID}] Using ObjectiveActivator for group assignment");
+            
             objectives = objectiveActivator.GetActiveObjectives();
             AssignLocalTargetIds();
             if (objectives != null && objectives.Count > 0 && agents != null && agents.Count > 0)
@@ -123,18 +169,21 @@ public class EnvironmentPlanning : MonoBehaviour
         }
         else
         {
+            // No ObjectiveActivator or ObjectiveAssigner 
+            Debug.Log($"[{envID}] No ObjectiveActivator or ObjectiveAssigner - fallback mode");
+            
             Transform[] childTransforms = GetComponentsInChildren<Transform>();
             foreach (Transform child in childTransforms)
             {
                 if (child.CompareTag("Obiettivo"))
                 {
                     objectives.Add(child.gameObject);
-                    Debug.Log($"Obiettivo trovato: {child.name} in ambiente {envID}");
+                    Debug.Log($"Objective found: {child.name} in environment {envID}");
                 }
             }
-            Debug.Log($"Ambiente {envID}: trovati {objectives.Count} obiettivi");
+            Debug.Log($"Environment {envID}: found {objectives.Count} objectives");
             AssignLocalTargetIds();
-            if (objectiveActivator == null && objectives != null && objectives.Count > 0 && agents != null && agents.Count > 0)
+            if (objectives != null && objectives.Count > 0 && agents != null && agents.Count > 0)
             {
                 foreach (var agent in agents)
                 {
@@ -147,7 +196,7 @@ public class EnvironmentPlanning : MonoBehaviour
         EnsureObjectiveSensorsForAgents();
         Debug.Log($"EnvironmentPlanning {envID} completed objective initialization and updated agent sensors");
 
-        VerifyObjectiveLayers(); // Verifica e imposta i layer degli obiettivi
+        VerifyObjectiveLayers(); // Verify and set objective layers
     }
 
     public List<GameObject> GetObjectives()

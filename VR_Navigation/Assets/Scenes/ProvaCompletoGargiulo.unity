@@ -316,7 +316,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: orderedObjectives
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectives.Array.size
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: objectives.Array.data[0]
@@ -399,12 +403,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectivesObservation.Array.data[2]
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: objectivesObservation.Array.data[3]
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: objectivesObservation.Array.data[4]
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31785,11 +31793,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 893066319}
-  - component: {fileID: 893066316}
   - component: {fileID: 893066318}
   - component: {fileID: 893066317}
   - component: {fileID: 893066320}
   - component: {fileID: 893066321}
+  - component: {fileID: 893066324}
   - component: {fileID: 893066322}
   - component: {fileID: 893066323}
   m_Layer: 0
@@ -31799,33 +31807,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &893066316
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 893066314}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3eb3c8f69143d0e49a2c9ea65e35ca7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  canvas: {fileID: 893066317}
-  navMeshComparison: 0
-  maxSteps: 1000
-  toroidal: 0
-  toroidalSteps: 0
-  agentPrefab: {fileID: 9200512954962299093, guid: a55819fb2d81a9445a66aa5edf6b0255, type: 3}
-  objToSwitch: []
-  ObjToTranslate: []
-  activationList1: []
-  activationList2: []
-  totalSteps: 1000
-  currentSteps: 0
-  curriculumHandler: {fileID: 0}
-  activeNumber1: 1
-  activeNumber2: 1
 --- !u!114 &893066317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31916,12 +31897,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 893066314}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f7c6a01ab2137d4db5915922572c4e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxSteps: 10000000
+  initIndividualObjectives: 1
   canvasScore: {fileID: 0}
   penaltyTakesTargetsAgain: 0
 --- !u!114 &893066322
@@ -31952,6 +31934,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoConnectOnStart: 1
   debugConnections: 1
+--- !u!114 &893066324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893066314}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d9a4cec820a68747b1619c0ecd2ea48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  individualAssignments:
+  - agent: {fileID: 3888577150204003563}
+    objectives:
+    - {fileID: 1777512026}
+    - {fileID: 1926522894}
+    - {fileID: 345340963}
+    orderedObjectives: 1
+  - agent: {fileID: 1763411631}
+    objectives:
+    - {fileID: 1828438637}
+    - {fileID: 1216423298}
+    - {fileID: 345340963}
+    orderedObjectives: 1
+  environment: {fileID: 893066321}
 --- !u!1 &894900442
 GameObject:
   m_ObjectHideFlags: 0
@@ -65731,6 +65739,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8c565f534ef70fc4bbe3ede8f7750d96, type: 3}
+--- !u!114 &1763411631 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+  m_PrefabInstance: {fileID: 7777469}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5d23a98ef3f494ba8d9bbd6b434b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1766161718
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -80496,6 +80515,14 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: orderedObjectives
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectives.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1442240774951765705, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: objectives.Array.data[0]
       value: 
       objectReference: {fileID: 1777512026}
@@ -80567,6 +80594,18 @@ PrefabInstance:
       propertyPath: _assignedArtifacts.Array.data[1]
       value: 
       objectReference: {fileID: 802023357}
+    - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectivesObservation.Array.data[0]
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectivesObservation.Array.data[1]
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: objectivesObservation.Array.data[2]
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -80577,6 +80616,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2755391130271537640, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
   m_PrefabInstance: {fileID: 3879881104453524015}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3888577150204003563 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+  m_PrefabInstance: {fileID: 3879881104453524015}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5d23a98ef3f494ba8d9bbd6b434b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &4104756243978959011
 PrefabInstance:
   m_ObjectHideFlags: 0
