@@ -210,16 +210,25 @@ public class EnvironmentPlanning : MonoBehaviour
 
     private void HandleAgentTerminated(float agentCumulativeReward, EnvironmentPlanning env)
     {
-        agentsTerminated++;
+
+        Debug.Log($"[{envID}] Agent terminated - Reward: {agentCumulativeReward}");
+        /*agentsTerminated++;
         envReward += agentCumulativeReward;
+        
+        if (agents == null)
+        {
+            Debug.LogError("Agents list is null in HandleAgentTerminated!");
+            return;
+        }
+        
         if (agents.Count == agentsTerminated)
         {
             envReward /= agents.Count;
 
-            /*environmentTerminated.Invoke(envReward, env);
+            environmentTerminated?.Invoke(envReward, env);
             StatsWriter.WriteEnvRewards(agents.Count, envReward);
-            ResetEpisode();*/
-        }
+            ResetEpisode(); 
+        }*/
     }
 
     private void ResetEpisode()

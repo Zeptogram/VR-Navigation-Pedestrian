@@ -671,6 +671,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      */
     public void Finished()
     {
+        // If i want to change behaviour on end, edit here. (And in EnvPlanning the HandleAgentTerminated method)
         cumulativeReward = GetCumulativeReward();
         gameObject.SetActive(false);
         StatsWriter.WriteEnvStats(group, (int)(Time.time - tempoIniziale));
