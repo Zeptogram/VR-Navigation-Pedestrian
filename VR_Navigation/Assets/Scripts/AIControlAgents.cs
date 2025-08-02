@@ -133,11 +133,12 @@ public class AIControlAgents : MonoBehaviour
     {
         if (other.CompareTag("waypoint") || other.CompareTag("Target"))
         {
-            if (currentTargetIndex < goalAction.Length && other.gameObject.Equals(goalAction[currentTargetIndex].goalLocation))
+            if (currentTargetIndex >= 0 && currentTargetIndex < goalAction.Length && 
+                other.gameObject.Equals(goalAction[currentTargetIndex].goalLocation))
             {
                 agent.isStopped = true;
-                //agent.transform.rotation = goalAction[currentTargetIndex].goalLocation.rotation;
-                if(goalAction[currentTargetIndex].animationName != "")
+                
+                if (goalAction[currentTargetIndex].animationName != "")
                 {
                     animator.SetTrigger(goalAction[currentTargetIndex].animationName);
                 }
@@ -145,18 +146,26 @@ public class AIControlAgents : MonoBehaviour
                 {
                     animator.SetTrigger("isIdle");
                 }
+                
                 agent.angularSpeed = 0;
                 float wait = goalAction[currentTargetIndex].wait;
 
-                if (reversed) currentTargetIndex--;
-                else currentTargetIndex++;
+                if (reversed) 
+                    currentTargetIndex--;
+                else 
+                    currentTargetIndex++;
 
-                if (currentTargetIndex == goalAction.Length || currentTargetIndex == -1)
+                if (currentTargetIndex >= goalAction.Length)
                 {
-                    reversed = !reversed;
-                    if (reversed) currentTargetIndex -= 2;
-                    else currentTargetIndex += 2;
+                    reversed = true;
+                    currentTargetIndex = goalAction.Length - 2; 
                 }
+                else if (currentTargetIndex < 0)
+                {
+                    reversed = false;
+                    currentTargetIndex = 1; 
+                }
+                
                 StartCoroutine(MoveToNextTargetWithWait(wait));
             }
         }
