@@ -5,6 +5,7 @@
     TakenTarget,
     Agent
 }
+
 public static class MyGizmosTagExtensions
 {
     public static GizmosTag ToMyGizmosTag(this Tag tag, bool taken = false)
@@ -17,3 +18,4 @@ public static class MyGizmosTagExtensions
             throw new System.NotImplementedException($"GizmosTag: {tag} not implemented");
     }
 }
+

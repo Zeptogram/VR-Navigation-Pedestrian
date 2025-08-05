@@ -133,50 +133,11 @@ public class ObjectiveInteractionHandler : MonoBehaviour
     private IEnumerator ExecuteObjectiveAnimations(GameObject objectiveObject, Action onAnimationsComplete = null)
     {
         ObjectiveAnimationData animationData = objectiveObject.GetComponent<ObjectiveAnimationData>();
-        var trigger = objectiveObject.GetComponent<ObjectiveTrigger>();
-        /*bool waitedForOrder = false;
         
-        if (trigger != null && trigger.triggerWaitForOrderReady)
-        {
-            RLAgentPlanning agentPlanning = agent;
-            var monitor = agentPlanning.monitorArtifact;
-            if (monitor != null)
-            {
-                int? myOrderId = agent.MyOrderId;
-
-                if (myOrderId.HasValue)
-                {
-                    float waited = 0f;
-                    float checkInterval = 0.2f;
-                    isOrderReady = false;
-
-                    while (!isOrderReady)
-                    {
-                        agentPlanning.SetRun(false);
-                        agentPlanning.GetRigidBody().velocity = Vector3.zero;
-
-                        // Text animation
-                        if (animationManager != null)
-                            animationManager.PlayActionTrigger("Text");
-
-                        yield return new WaitForSeconds(checkInterval);
-                        waited += checkInterval;
-                    }
-                    Debug.Log($"[ObjectiveHandler] Waited {waited:F1}s for order (WaitForOrderReady)");
-                    waitedForOrder = true;
-                }
-            }
-        }*/
 
         if (animationData == null)
         {
-            /*Debug.LogWarning($"[ObjectiveHandler] No ObjectiveAnimationData found on objective {objectiveObject.name}. Skipping animations.");
-            
-            if (waitedForOrder)
-            {
-                agent.SetRun(true);
-                Debug.Log("[ObjectiveHandler] Agent reactivated after waiting for order (no animations)");
-            }*/
+            //Debug.Log($"[Objective Animation] No ObjectiveAnimationData found on {objectiveObject.name}. Skipping animations.");
             yield break;
         }
 

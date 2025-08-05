@@ -20,7 +20,6 @@ public class EnvironmentPlanning : MonoBehaviour
     public Action allAgentsInitialized;
 
     public Action envStartedInitialization;
-    private float envReward = 0f;
     private float cumulativeRewards;
     public Text canvasScore;
     private string envID;
@@ -44,7 +43,7 @@ public class EnvironmentPlanning : MonoBehaviour
         tempoIniziale = (int)Time.time;
         if (canvasScore == null)
         {
-            Debug.LogWarning("Canvas non assegnato! Assegna il Canvas nell'Editor.");
+            //Debug.LogWarning("Canvas non assegnato! Assegna il Canvas nell'Editor.");
             //return;
         }
 
@@ -242,7 +241,6 @@ public class EnvironmentPlanning : MonoBehaviour
         StatsWriter.WriteEnvTimeStats((int)(Time.time - tempoIniziale));
 
         agentsTerminated = 0;
-        envReward = 0f;
         cumulativeRewards = 0;
         envID = Guid.NewGuid().ToString();
         tempoIniziale = (int)Time.time;

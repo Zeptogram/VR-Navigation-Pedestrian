@@ -47,7 +47,7 @@ public class ArtifactTrigger : MonoBehaviour
 
                 if (enableNavMeshOnTrigger)
                 {
-                    RLAgentPlanning rlAgent = other.GetComponent<RLAgentPlanning>();
+                    IAgentRL rlAgent = other.GetComponent<IAgentRL>();
                     NavMeshAgent navAgent = other.GetComponent<NavMeshAgent>();
 
                     if (rlAgent != null && navAgent != null)
@@ -100,10 +100,10 @@ public class ArtifactTrigger : MonoBehaviour
         return false; // Activate navmesh
     }
 
-    private void SwitchToNavMesh(RLAgentPlanning rlAgent, NavMeshAgent navAgent, GameObject agentObj)
+    private void SwitchToNavMesh(IAgentRL rlAgent, NavMeshAgent navAgent, GameObject agentObj)
     {
         if (debugging)
-            Debug.Log($"[ArtifactTrigger] Switching agent {rlAgent.name} to NavMesh mode");
+            Debug.Log($"[ArtifactTrigger] Switching agent {agentObj.name} to NavMesh mode");
 
         // Capture current movement data
         Vector3 currentVelocity = rlAgent.GetRigidBody().velocity;
@@ -129,7 +129,7 @@ public class ArtifactTrigger : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[ArtifactTrigger] Agent {rlAgent.name} is not on NavMesh");
+            Debug.LogWarning($"[ArtifactTrigger] Agent {agentObj.name} is not on NavMesh");
         }
         
         // Handle navigation handler setup
@@ -181,7 +181,7 @@ public class ArtifactTrigger : MonoBehaviour
 
     private void SwitchBackToRLAgent(GameObject agentObj)
     {
-        RLAgentPlanning rlAgent = agentObj.GetComponent<RLAgentPlanning>();
+        IAgentRL rlAgent = agentObj.GetComponent<IAgentRL>();
         NavMeshAgent navAgent = agentObj.GetComponent<NavMeshAgent>();
 
         if (rlAgent != null && navAgent != null)

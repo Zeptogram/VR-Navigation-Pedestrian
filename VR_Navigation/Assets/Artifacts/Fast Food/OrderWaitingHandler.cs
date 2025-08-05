@@ -21,32 +21,33 @@ public class OrderWaitingHandler : MonoBehaviour
         if (!enableWaiting || !other.CompareTag("Agente"))
             return;
 
-        RLAgentPlanning agent = other.GetComponent<RLAgentPlanning>();
+        IAgentRL agent = other.GetComponent<IAgentRL>();
         if (agent != null)
         {
-            StartCoroutine(HandleAgentWait(agent));
+            StartCoroutine(HandleAgentWait(agent, other.gameObject));
+
         }
     }
 
-    private IEnumerator HandleAgentWait(RLAgentPlanning agent)
+    private IEnumerator HandleAgentWait(IAgentRL agent, GameObject agentObject)
     {
         if (debugging)
-            Debug.Log($"[OrderWaitingHandler] Agent {agent.name} entered wait zone");
+            Debug.Log($"[OrderWaitingHandler] Agent {agentObject.name} entered wait zone");
 
         if (useFixedWaitTime)
         {
-            yield return StartCoroutine(WaitFixedTime(agent));
+            yield return StartCoroutine(WaitFixedTime(agent, agentObject));
         }
         else
         {
-            yield return StartCoroutine(WaitForOrderReady(agent));
+            yield return StartCoroutine(WaitForOrderReady(agent, agentObject));
         }
 
         if (debugging)
-            Debug.Log($"[OrderWaitingHandler] Agent {agent.name} finished waiting");
+            Debug.Log($"[OrderWaitingHandler] Agent {agentObject.name} finished waiting");
     }
 
-    private IEnumerator WaitFixedTime(RLAgentPlanning agent)
+    private IEnumerator WaitFixedTime(IAgentRL agent, GameObject agentObject)
     {
         float waited = 0f;
 
@@ -56,7 +57,7 @@ public class OrderWaitingHandler : MonoBehaviour
         // Stop agent movement
         DeactivateAgent(agent);
 
-        AgentAnimationManager animationManager = agent.GetComponent<AgentAnimationManager>();
+        AgentAnimationManager animationManager = agentObject.GetComponent<AgentAnimationManager>();
 
         while (waited < fixedWaitDuration)
         {
@@ -75,27 +76,34 @@ public class OrderWaitingHandler : MonoBehaviour
             Debug.Log($"[OrderWaitingHandler] Fixed wait completed ({waited:F1}s)");
     }
 
-    private IEnumerator WaitForOrderReady(RLAgentPlanning agent)
+    private IEnumerator WaitForOrderReady(IAgentRL agent, GameObject agentObject)
     {
-        // Check if agent has placed an order
-        if (!agent.MyOrderId.HasValue)
+        var orderAgent = agent as IAgentOrder;
+        if (orderAgent == null)
         {
-            Debug.LogWarning($"[OrderWaitingHandler] Agent {agent.name} has no order ID - cannot wait for order!");
+            Debug.LogWarning($"[OrderWaitingHandler] Agent {agentObject.name} does not support orders!");
+            yield break;
+        }
+
+        // Check if agent has placed an order
+        if (!orderAgent.MyOrderId.HasValue)
+        {
+            Debug.LogWarning($"[OrderWaitingHandler] Agent {agentObject.name} has no order ID - cannot wait for order!");
             yield break;
         }
 
         float waited = 0f;
 
         if (debugging)
-            Debug.Log($"[OrderWaitingHandler] Starting to wait for order {agent.MyOrderId.Value}");
+            Debug.Log($"[OrderWaitingHandler] Starting to wait for order {orderAgent.MyOrderId.Value}");
 
         // Stop agent movement
         DeactivateAgent(agent);
 
-        AgentAnimationManager animationManager = agent.GetComponent<AgentAnimationManager>();
+        AgentAnimationManager animationManager = agentObject.GetComponent<AgentAnimationManager>();
 
         // Check if order is ready
-        while (!agent.IsMyOrderReady)
+        while (!orderAgent.IsMyOrderReady)
         {
             // Text animation
             if (enableWaitingAnimation && animationManager != null)

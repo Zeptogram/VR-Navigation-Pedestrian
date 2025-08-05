@@ -57,8 +57,6 @@ public class ConstantsBase : IAgentConstants
 
     public float target_alredy_crossed_reward => throw new NotImplementedException();
 
-    Proxemic[] IAgentConstants.Proxemics => throw new NotImplementedException();
-
     //Proxemic
 
     public Proxemic[] Proxemics => new Proxemic[]{

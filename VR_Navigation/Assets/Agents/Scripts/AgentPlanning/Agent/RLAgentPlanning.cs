@@ -16,7 +16,7 @@ using UnityEngine.Events;
 ]
 [RequireComponent(typeof(OrderAgentManager))
 ]
-public class RLAgentPlanning : Agent, IAgentRL
+public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
 {
     // Artifacts Selection
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
@@ -113,7 +113,12 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// <summary>
     /// List of targets taken by the agent.
     /// </summary>
-    [NonSerialized] public List<GameObject> targetsTaken = new List<GameObject>();
+    private List<GameObject> _targetsTaken = new List<GameObject>();
+
+    /// <summary>
+    /// Public property for targets taken by the agent.
+    /// </summary>
+    public List<GameObject> targetsTaken => _targetsTaken;
 
     /// <summary>
     /// Reference to the agent's sensors manager.
@@ -387,7 +392,7 @@ public class RLAgentPlanning : Agent, IAgentRL
     /// </summary>
     private void UpdateAnimations()
     {
-        // Get Speed
+        // Get Speed for Animations
         float speed = GetCurrentSpeed();
 
         animationManager.UpdateSpeed(speed / 10);
@@ -613,7 +618,7 @@ public class RLAgentPlanning : Agent, IAgentRL
                 transform.position.x,
                 transform.position.z,
                 group,
-                GetCurrentSpeed(),
+                currentSpeed,
                 GetCurrentSpeed(),
                 transform.rotation.eulerAngles.y,
                 envID,
@@ -947,7 +952,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      * \brief Changes the agent's angle.
      * \param deltaAngle The change in angle.
      */
-    private void AngleChange(float deltaAngle)
+    public void AngleChange(float deltaAngle)
     {
         newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
         newAngle %= 360;
@@ -980,7 +985,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      * \brief Applies rewards based on proximity to walls and targets.
      * \param wallsAndTargets List of detected walls and targets.
      */
-    private void rewardsWallsAndTargetsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndTargets)
+    public void rewardsWallsAndTargetsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndTargets)
     {
         bool proxemic_small_wall = false;
 
@@ -1069,7 +1074,7 @@ public class RLAgentPlanning : Agent, IAgentRL
      * \brief Applies rewards based on proximity to walls and agents.
      * \param wallsAndAgents List of detected walls and agents.
      */
-    private void rewardsWallsAndAgentsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndAgents)
+    public void rewardsWallsAndAgentsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndAgents)
     {
         int id = 0;
         foreach (var (tag, position) in wallsAndAgents)

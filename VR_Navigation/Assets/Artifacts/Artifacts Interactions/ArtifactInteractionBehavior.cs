@@ -80,7 +80,7 @@ public class ArtifactInteractionBehavior : MonoBehaviour
         
         // Components
         UnityEngine.AI.NavMeshAgent navAgent = agent.GetComponent<UnityEngine.AI.NavMeshAgent>();
-        RLAgentPlanning rlAgent = agent.GetComponent<RLAgentPlanning>();
+        IAgentRL rlAgent = agent.GetComponent<IAgentRL>();
         Animator animator = agent.GetComponent<Animator>();
         
         // Stop agent if the boolean is true

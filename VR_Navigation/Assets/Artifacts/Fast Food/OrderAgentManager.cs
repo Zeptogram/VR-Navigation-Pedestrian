@@ -11,17 +11,17 @@ public class OrderAgentManager : MonoBehaviour
     public bool IsMyOrderReady => isMyOrderReady;
 
     // References
-    private RLAgentPlanning agent;
+    private IAgentRL agent;
     private ArtifactAgentManager artifactManager;
 
     private void Awake()
     {
-        agent = GetComponent<RLAgentPlanning>();
+        agent = GetComponent<IAgentRL>();
         artifactManager = GetComponent<ArtifactAgentManager>();
         
         if (agent == null)
         {
-            Debug.LogError($"OrderAgentManager requires RLAgentPlanning component on {gameObject.name}");
+            Debug.LogError($"OrderAgentManager requires IAgentRL component on {gameObject.name}");
         }
         if (artifactManager == null)
         {

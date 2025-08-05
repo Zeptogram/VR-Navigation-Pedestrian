@@ -16,8 +16,6 @@ public class ObjectiveAssigner : MonoBehaviour
     
     [Header("Individual Agent Assignments")]
     [SerializeField] private List<AgentObjectiveMapping> individualAssignments = new List<AgentObjectiveMapping>();
-    
-    [Header("Riferimenti")]
     [SerializeField] private EnvironmentPlanning environment;
     
     private void Start()

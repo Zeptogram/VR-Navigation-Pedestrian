@@ -9,7 +9,7 @@ using UnityEngine.Events;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(RLAgentAnimationManager))]
-public class RLAgent : Agent, IAgentRL
+public class RLAgent : Agent, IAgentRLBase
 {
     [Serializable]
     public struct AnimationAction
@@ -43,11 +43,17 @@ public class RLAgent : Agent, IAgentRL
 
     private float currentSpeed;
 
-    private bool isPlayingAnimationSequence = false; 
+    private bool isPlayingAnimationSequence = false;
 
     private float newAngle;
 
     private bool fleeing = false;
+
+    /// <summary>
+    /// True if the agent is using NavMesh for movement.
+    /// </summary>
+    [System.NonSerialized]
+    private bool isUsingNavMesh = false;
 
     [NonSerialized] public Vector3 startPosition;
     [NonSerialized] public Quaternion startRotation;
@@ -59,7 +65,9 @@ public class RLAgent : Agent, IAgentRL
 
     private Vector2 speedMaxRange;
 
-    [NonSerialized] public List<GameObject> targetsTaken = new List<GameObject>();
+    private List<GameObject> _targetsTaken = new List<GameObject>();
+
+    public List<GameObject> targetsTaken => _targetsTaken;
 
     private AgentSensorsManager agentSensorsManager;
     private AgentGizmosDrawer agentGizmosDrawer;
@@ -124,7 +132,7 @@ public class RLAgent : Agent, IAgentRL
         // No animations if the agent is playing an animation sequence
         if (isPlayingAnimationSequence) return;
 
-        float speed = rigidBody.velocity.magnitude;
+        float speed = GetCurrentSpeed();
         animationManager.UpdateSpeed(speed / 10);
 
         // Idle/Walking
@@ -218,9 +226,9 @@ public class RLAgent : Agent, IAgentRL
     [Obsolete]
     public override void OnActionReceived(float[] vectorAction)
     {
-        if (walking)
+        if (walking && !isUsingNavMesh)
         {
-            float realSpeed = rigidBody.velocity.magnitude;
+            //float realSpeed = GetCurrentSpeed();
             float actionSpeed;
             float actionAngle;
             if (constants.discrete)
@@ -249,7 +257,7 @@ public class RLAgent : Agent, IAgentRL
                 transform.position.z,
                 group,
                 currentSpeed,
-                realSpeed,
+                GetCurrentSpeed(),
                 (actionAngle * constants.angleRange),
                 envID,
                 uniqueID,
@@ -455,7 +463,7 @@ public class RLAgent : Agent, IAgentRL
         rigidBody.AddForce(velocityChange, ForceMode.VelocityChange);
     }
 
-    private void AngleChange(float deltaAngle)
+    public void AngleChange(float deltaAngle)
     {
         newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
         newAngle %= 360;
@@ -463,7 +471,7 @@ public class RLAgent : Agent, IAgentRL
         transform.eulerAngles = new Vector3(0, newAngle, 0);
     }
 
-    private void rewardsWallsAndTargetsObservations(List<(GizmosTag, Vector3)> wallsAndTargets)
+    public void rewardsWallsAndTargetsObservations(List<(GizmosTag, Vector3)> wallsAndTargets)
     {
         bool target = false;
         bool proxemic_small_wall = false;
@@ -504,7 +512,7 @@ public class RLAgent : Agent, IAgentRL
         }
     }
 
-    private void rewardsWallsAndAgentsObservations(List<(GizmosTag, Vector3)> wallsAndAgents)
+    public void rewardsWallsAndAgentsObservations(List<(GizmosTag, Vector3)> wallsAndAgents)
     {
         bool proxemic_large_agent = false;
         bool proxemic_medium_agent = false;
@@ -576,4 +584,52 @@ public class RLAgent : Agent, IAgentRL
         walking = value;
     }
 
+    private float GetCurrentSpeed()
+    {
+        if (isUsingNavMesh)
+        {
+
+            NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+            if (navAgent != null && navAgent.enabled)
+            {
+                // For navmesh speed
+                return navAgent.velocity.magnitude * 4f; // 4f seems ok for the current Agent speed
+            }
+        }
+
+        // Otherwise use Rigidbody speed
+        return rigidBody.velocity.magnitude;
+    }
+
+
+    /// <summary>
+    /// Enables NavMesh navigation mode
+    /// </summary>
+    public void EnableNavMeshMode()
+    {
+        isUsingNavMesh = true;
+        
+        // Use Kinematic for NavMesh navigation
+        if (rigidBody != null && !rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = true;
+        }
+        Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
+    }
+
+    /// <summary>
+    /// Disables NavMesh navigation mode and returns to RL control
+    /// </summary>
+    public void DisableNavMeshMode()
+    {        
+        isUsingNavMesh = false;
+
+        // Re-enable Rigidbody physics for RL control
+       if (rigidBody != null && rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = false;
+        }
+
+        Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
+    }
 }
