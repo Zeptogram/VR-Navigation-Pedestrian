@@ -89,63 +89,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e4b34305adda67458b4d37e5e9b3c87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoGenerateMappings: 1
-  artifactInteractionMappings: []
-  onGenericArtifactInteraction:
-    m_PersistentCalls:
-      m_Calls: []
-  artifactEventSubscriptions:
-  - artifact: {fileID: 0}
-    subscribeToPropertyChanged: 1
-  artifactPropertyEvents:
-  - propertyName: placedOrders
-    onChanged:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 5367730968854325568}
-          m_TargetAssemblyTypeName: OrderAgentManager, Assembly-CSharp
-          m_MethodName: OnPlacedOrdersChanged
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - propertyName: ordersReady
-    onChanged:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 5367730968854325568}
-          m_TargetAssemblyTypeName: OrderAgentManager, Assembly-CSharp
-          m_MethodName: OnOrdersReadyChanged
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - propertyName: ordersInPreparation
-    onChanged:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 5367730968854325568}
-          m_TargetAssemblyTypeName: OrderAgentManager, Assembly-CSharp
-          m_MethodName: OnOrdersInPreparationChanged
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
+  generateAutomatically: 1
+  artifactInteractions: []
+  artifactSubscriptions: []
+  OnPropertyChanged: []
 --- !u!114 &5367730968854325568
 MonoBehaviour:
   m_ObjectHideFlags: 0

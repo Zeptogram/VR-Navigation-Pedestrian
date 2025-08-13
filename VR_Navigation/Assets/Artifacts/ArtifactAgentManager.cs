@@ -9,7 +9,7 @@ public class ArtifactInteractionEvent : UnityEvent<Artifact> { }
 public class PropertyChangeEvent
 {
     public string propertyName;
-    public UnityEvent<object> onChanged;
+    public UnityEvent<object> onPropertyChanged;
 }
 
 [System.Serializable]
@@ -165,7 +165,7 @@ public class ArtifactAgentManager : MonoBehaviour
         {
             if (obsProp.propertyName == propertyName)
             {
-                obsProp.onChanged?.Invoke(value);
+                obsProp.onPropertyChanged?.Invoke(value);
                 break;
             }
         }

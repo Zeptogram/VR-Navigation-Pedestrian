@@ -16,6 +16,10 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     [Header("Food Assignment Logic")]
     [SerializeField] private bool useOrderBasedFood = true; // Hamburger odd orders, Hotdog even orders
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip orderReadySound;
+    private AudioSource audioSource;
+
     // Track connected totems
     private List<TotemArtifact> connectedTotems = new List<TotemArtifact>();
 
@@ -36,16 +40,15 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     public List<int> ReadyOrderIds => readyOrdersWithFood.Keys.ToList();
 
     // For Artifact Interface
-
     protected override void Init()
     {
         DefineObsProperty("ordersInPreparation", ordersInPreparation.ToList());
         DefineObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
         DefineObsProperty("placedOrders", new List<OrderPlacedData>(placedOrders));
+            
         UpdateUI();
         UpdateFoodVisuals();
     }
-
 
     public override void Use(int agentId, params object[] args)
     {
@@ -56,8 +59,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             PickUpOrder(agentId, orderId);
         else
             Debug.LogWarning($"[{ArtifactName}] Use not supported without orderId argument");
-        
-
     }
 
     public void ConnectTo(Artifact other)
@@ -144,8 +145,22 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             readyOrdersWithFood[orderId] = foodType;
             UpdateObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
             UpdateObsProperty("ordersInPreparation", ordersInPreparation.ToList());
+            
+            PlayOrderReadySound();
+            
             UpdateUI();
             UpdateFoodVisuals();
+        }
+    }
+
+    /// <summary>
+    /// Plays order ready sound if assigned
+    /// </summary>
+    private void PlayOrderReadySound()
+    {
+        if (orderReadySound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(orderReadySound);
         }
     }
 
@@ -221,7 +236,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         return false;
     }
 
-
     // RemoveOrderFromReady(int orderId): Removes an order from the ready orders
     private void RemoveOrderFromReady(int orderId)
     {
@@ -255,7 +269,4 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         }
         connectedTotems.Clear();
     }
-
-
-
 }
