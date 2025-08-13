@@ -6,36 +6,33 @@ using UnityEngine.Events;
 public class ArtifactInteractionEvent : UnityEvent<Artifact> { }
 
 [System.Serializable]
-
-// Mini class for artifact + boolean for property change subscription
-public class ArtifactEventSubscription
-{
-    public Artifact artifact;
-    public bool subscribeToPropertyChanged;
-}
-
-// Mini class for artifact property change event (from inspector i can use onChanged like onClick and put a method)
-[System.Serializable]
 public class PropertyChangeEvent
 {
     public string propertyName;
     public UnityEvent<object> onChanged;
 }
 
+[System.Serializable]
+public class ArtifactInteraction
+{
+    [Header("On Interaction Configuration")]
+    public Artifact artifact;
+    public ArtifactInteractionEvent onInteraction;
+}
+
 [RequireComponent(typeof(IAgentRL))]
 public class ArtifactAgentManager : MonoBehaviour
 {
-    // Event for handling interactions with different artifact types
-    [Header("Artifacts Interaction")]
-    public ArtifactInteractionEvent onTotemInteraction;
-    public ArtifactInteractionEvent onMonitorInteraction;
-    public ArtifactInteractionEvent onGenericArtifactInteraction;
 
-    [Header("Artifacts Subscriptions")]
-    public List<ArtifactEventSubscription> artifactEventSubscriptions = new List<ArtifactEventSubscription>();
+    [Header("Artifact Interaction Configuration")]
+    public bool generateAutomatically = true;
+
+    public List<ArtifactInteraction> artifactInteractions = new List<ArtifactInteraction>();
 
     [Header("Artifacts Observable Properties")]
-    public List<PropertyChangeEvent> artifactPropertyEvents = new List<PropertyChangeEvent>();
+    public List<Artifact> artifactSubscriptions = new List<Artifact>();
+
+    public List<PropertyChangeEvent> OnPropertyChanged = new List<PropertyChangeEvent>();
 
     // Reference to the agent
     private IAgentRL agent;
@@ -51,22 +48,96 @@ public class ArtifactAgentManager : MonoBehaviour
 
     private void Start()
     {
-        // For obs properties
         SetupArtifactEventListeners();
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Called in the editor when inspector values change
+    /// </summary>
+    private void OnValidate()
+    {
+        if (generateAutomatically && Application.isPlaying == false)
+        {
+            // Delay the execution to avoid issues during inspector updates
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this != null) // Check if object still exists
+                {
+                    SyncMappingsWithAssignedArtifacts();
+                }
+            };
+        }
+    }
+
+    /// <summary>
+    /// Synchronizes mappings with assigned artifacts from RLAgentPlanning
+    /// </summary>
+    private void SyncMappingsWithAssignedArtifacts()
+    {
+        if (agent == null)
+        {
+            agent = GetComponent<IAgentRL>();
+            if (agent == null) return;
+        }
+
+        if (agent.assignedArtifacts == null) return;
+
+        // Remove mappings for artifacts that are no longer assigned
+        for (int i = artifactInteractions.Count - 1; i >= 0; i--)
+        {
+            if (artifactInteractions[i].artifact == null || 
+                !agent.assignedArtifacts.Contains(artifactInteractions[i].artifact))
+            {
+                artifactInteractions.RemoveAt(i);
+            }
+        }
+
+        // Add mappings for new assigned artifacts
+        foreach (var artifact in agent.assignedArtifacts)
+        {
+            if (artifact != null && FindMappingForArtifact(artifact) == null)
+            {
+                ArtifactInteraction newMapping = new ArtifactInteraction
+                {
+                    artifact = artifact,
+                    onInteraction = new ArtifactInteractionEvent()
+                };
+
+                // Auto-configure the mapping
+                ConfigureArtifactMapping(newMapping, artifact);
+                artifactInteractions.Add(newMapping);
+            }
+        }
+
+        // Mark the object as dirty so Unity saves the changes
+        if (Application.isEditor && !Application.isPlaying)
+        {
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+    }
+
+    /// <summary>
+    /// Configures the artifact mapping based on artifact type or name
+    /// </summary>
+    private void ConfigureArtifactMapping(ArtifactInteraction mapping, Artifact artifact)
+    {
+        string artifactName = artifact.ArtifactName.ToLower();
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(mapping.onInteraction, CallGenericUseMethod);
+    }
+#endif
 
     /// <summary>
     /// Sets up event listeners for all assigned artifacts
     /// </summary>
     private void SetupArtifactEventListeners()
     {
-        foreach (var subscription in artifactEventSubscriptions)
+        foreach (var artifact in artifactSubscriptions)
         {
-            if (subscription.subscribeToPropertyChanged)
+            if (artifact != null)
             {
-                // OnPropertyChanged is the one in the Artifact class
-                subscription.artifact.OnPropertyChanged += HandleObsPropertyChanged;
-                Debug.Log($"[ArtifactAgentManager] Subscribed to property changed on {subscription.artifact.ArtifactName}");
+                artifact.OnPropertyChanged += HandleObsPropertyChanged;
+                Debug.Log($"[ArtifactAgentManager] Subscribed to property changed on {artifact.ArtifactName}");
             }
         }
     }
@@ -76,11 +147,11 @@ public class ArtifactAgentManager : MonoBehaviour
     /// </summary>
     private void RemoveArtifactEventListeners()
     {
-        foreach (var subscription in artifactEventSubscriptions)
+        foreach (var artifact in artifactSubscriptions)
         {
-            if (subscription.subscribeToPropertyChanged)
+            if (artifact != null)
             {
-                subscription.artifact.OnPropertyChanged -= HandleObsPropertyChanged;
+                artifact.OnPropertyChanged -= HandleObsPropertyChanged;
             }
         }
     }
@@ -90,7 +161,7 @@ public class ArtifactAgentManager : MonoBehaviour
     /// </summary>
     public void HandleObsPropertyChanged(string propertyName, object value)
     {
-        foreach (var obsProp in artifactPropertyEvents)
+        foreach (var obsProp in OnPropertyChanged)
         {
             if (obsProp.propertyName == propertyName)
             {
@@ -101,7 +172,7 @@ public class ArtifactAgentManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Automatically handles artifact interaction based on artifact type
+    /// Automatically handles artifact interaction based on configured mappings
     /// </summary>
     public void HandleArtifactInteraction(Artifact artifact)
     {
@@ -110,25 +181,39 @@ public class ArtifactAgentManager : MonoBehaviour
             Debug.LogWarning($"[Agent {gameObject.name}] Trying to interact with unassigned artifact: {artifact.ArtifactName}");
             return;
         }
-        // Here i call the events for each artifact type
-        switch (artifact)
+
+        // Look for specific mapping for this artifact
+        ArtifactInteraction mapping = FindMappingForArtifact(artifact);
+        
+        if (mapping != null)
         {
-            // Add more artifact types as needed in the future (here the switch case for each artifact)
-            case TotemArtifact totemArtifact:
-                onTotemInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Totem: {totemArtifact.ArtifactName}");
-                break;
-
-            case MonitorArtifact monitorArtifact:
-                onMonitorInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Interacted with Monitor: {monitorArtifact.ArtifactName}");
-                break;
-
-            default:
-                onGenericArtifactInteraction?.Invoke(artifact);
-                Debug.Log($"[Agent {gameObject.name}] Generic interaction with {artifact.ArtifactName}");
-                break;
+            mapping.onInteraction?.Invoke(artifact);
+            Debug.Log($"[Agent {gameObject.name}] Specific interaction with {artifact.ArtifactName}");
         }
+    }
+
+    /// <summary>
+    /// Finds the interaction mapping for a specific artifact
+    /// </summary>
+    private ArtifactInteraction FindMappingForArtifact(Artifact artifact)
+    {
+        foreach (var mapping in artifactInteractions)
+        {
+            if (mapping.artifact == artifact)
+            {
+                return mapping;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Generic artifact use method
+    /// </summary>
+    public void CallGenericUseMethod(Artifact artifact)
+    {
+        int agentId = gameObject.GetInstanceID();
+        artifact.Use(agentId);
     }
 
     private void OnDestroy()

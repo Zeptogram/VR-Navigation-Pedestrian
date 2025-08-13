@@ -530,7 +530,7 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
                 }
                 else
                 {
-                    Debug.LogError($"Agent {gameObject.name}: EnvironmentPlanning is null!");
+                    Debug.LogError($"Agent {gameObject.name}: EnvironmentPlanning is null");
                 }
 
                 if (objectiveHandler != null)

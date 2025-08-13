@@ -9,6 +9,7 @@ public class OrderAgentManager : MonoBehaviour
     private bool hasPlacedOrder = false;
     private bool isMyOrderReady = false;
     public bool IsMyOrderReady => isMyOrderReady;
+    private bool wasMyOrderInPreparation = false;
 
     // References
     private IAgentRL agent;
@@ -29,9 +30,7 @@ public class OrderAgentManager : MonoBehaviour
         }
     }
 
-
     // Base Methods that call the Artifact use method
-
 
     /// <summary>
     /// Method for agent to place an order at the totem
@@ -73,16 +72,12 @@ public class OrderAgentManager : MonoBehaviour
         isMyOrderReady = false;
         hasPlacedOrder = false;
         myOrderId = null;
+        wasMyOrderInPreparation = false; 
 
         Debug.Log($"[Agent {gameObject.name}] Picked up order from {monitorArtifact.ArtifactName} and reset order tracking");
     }
 
-
-
-
     // Observable Properties Methods, called by ArtifactAgentManager when properties change
-
-
 
     /// <summary>
     /// Handles when orders are placed (triggered by artifact events)
@@ -98,6 +93,7 @@ public class OrderAgentManager : MonoBehaviour
                 {
                     myOrderId = order.orderId;
                     isMyOrderReady = false;
+                    wasMyOrderInPreparation = false; // Reset flag when getting new order
                     Debug.Log($"[Agent {gameObject.name}] (Event) My order ID set to {myOrderId.Value}");
                     break;
                 }
@@ -114,6 +110,7 @@ public class OrderAgentManager : MonoBehaviour
         if (myOrderId.HasValue && readyOrderIds != null && readyOrderIds.Contains(myOrderId.Value))
         {
             isMyOrderReady = true;
+            wasMyOrderInPreparation = false; 
             Debug.Log($"[Agent {gameObject.name}] (Event) My order {myOrderId.Value} ready!");
         }
     }
@@ -124,10 +121,20 @@ public class OrderAgentManager : MonoBehaviour
     public void OnOrdersInPreparationChanged(object value)
     {
         var prepOrderIds = value as List<int>;
-        if (myOrderId.HasValue && prepOrderIds != null && prepOrderIds.Contains(myOrderId.Value))
+        if (myOrderId.HasValue && prepOrderIds != null)
         {
-            isMyOrderReady = false;
-            Debug.Log($"[Agent {gameObject.name}] My order {myOrderId.Value} is now in preparation");
+            bool isMyOrderCurrentlyInPrep = prepOrderIds.Contains(myOrderId.Value);
+            
+            if (isMyOrderCurrentlyInPrep && !wasMyOrderInPreparation)
+            {
+                isMyOrderReady = false;
+                wasMyOrderInPreparation = true;
+                Debug.Log($"[Agent {gameObject.name}] (Event) My order {myOrderId.Value} is now in preparation");
+            }
+            else if (!isMyOrderCurrentlyInPrep && wasMyOrderInPreparation)
+            {
+                wasMyOrderInPreparation = false;
+            }
         }
     }
 
@@ -139,6 +146,7 @@ public class OrderAgentManager : MonoBehaviour
         myOrderId = null;
         hasPlacedOrder = false;
         isMyOrderReady = false;
+        wasMyOrderInPreparation = false; 
         Debug.Log($"[Agent {gameObject.name}] Order state reset");
     }
 }

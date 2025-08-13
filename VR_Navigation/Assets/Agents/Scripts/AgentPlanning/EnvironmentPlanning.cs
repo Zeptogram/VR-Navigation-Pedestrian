@@ -10,7 +10,7 @@ public class EnvironmentPlanning : MonoBehaviour
 {
     // Start is called before the first frame update
     private List<RLAgentPlanning> agents;
-    private int agentsTerminated = 0;
+    //private int agentsTerminated = 0;
     [SerializeField] int maxSteps;
     [SerializeField] bool initIndividualObjectives = true;
 
@@ -240,7 +240,8 @@ public class EnvironmentPlanning : MonoBehaviour
 
         StatsWriter.WriteEnvTimeStats((int)(Time.time - tempoIniziale));
 
-        agentsTerminated = 0;
+        //agentsTerminated = 0;
+        //envReward = 0f;
         cumulativeRewards = 0;
         envID = Guid.NewGuid().ToString();
         tempoIniziale = (int)Time.time;

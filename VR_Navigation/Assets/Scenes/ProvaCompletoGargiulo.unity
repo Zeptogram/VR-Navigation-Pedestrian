@@ -335,7 +335,23 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 345340963}
     - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: autoGenerateMappings
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: artifactEventSubscriptions.Array.data[0].artifact
+      value: 
+      objectReference: {fileID: 802023357}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].artifact
+      value: 
+      objectReference: {fileID: 1746577335}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].artifact
       value: 
       objectReference: {fileID: 802023357}
     - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
@@ -346,6 +362,54 @@ PrefabInstance:
       propertyPath: onMonitorInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
       value: 
       objectReference: {fileID: 802023357}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1841486596}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1841486596}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlaceOrder
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PickUpOrder
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: OrderAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: OrderAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 2755391130271537640, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -15.09
@@ -69641,6 +69705,17 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1841486596 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5367730968854325568, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+  m_PrefabInstance: {fileID: 7777469}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8c1093249b9f8449ba6795e8e28b2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1842209878
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -81679,9 +81754,41 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 345340963}
     - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: autoGenerateMappings
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: artifactEventSubscriptions.Array.data[0].artifact
       value: 
       objectReference: {fileID: 802023357}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].artifact
+      value: 
+      objectReference: {fileID: 800182755}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].artifact
+      value: 
+      objectReference: {fileID: 802023357}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].artifact
+      value: 
+      objectReference: {fileID: 1746577335}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: onArtifactInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: onArtifactInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 761033654}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: onArtifactInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: onTotemInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
       value: 
@@ -81690,6 +81797,114 @@ PrefabInstance:
       propertyPath: onMonitorInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
       value: 
       objectReference: {fileID: 802023357}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].onInteraction.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 3888577150204003580}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 3888577150204003580}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 3888577150204003580}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 3888577150204003581}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlaceOrder
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: PlaceOrder
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PickUpOrder
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: CallGenericUseMethod
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: OrderAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: OrderAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: OrderAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[2].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: ArtifactAgentManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[0].onInteraction.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: Artifact, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: artifactInteractionMappings.Array.data[1].onInteraction.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 2755391130271537640, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -10.54
@@ -81731,6 +81946,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: _assignedArtifacts.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: _assignedArtifacts.Array.data[0]
       value: 
       objectReference: {fileID: 800182755}
@@ -81738,6 +81957,10 @@ PrefabInstance:
       propertyPath: _assignedArtifacts.Array.data[1]
       value: 
       objectReference: {fileID: 802023357}
+    - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: _assignedArtifacts.Array.data[2]
+      value: 
+      objectReference: {fileID: 1746577335}
     - target: {fileID: 7908670155551314657, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: objectivesObservation.Array.data[0]
       value: 0
@@ -81769,6 +81992,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba5d23a98ef3f494ba8d9bbd6b434b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3888577150204003580 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5367730968854325568, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+  m_PrefabInstance: {fileID: 3879881104453524015}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8c1093249b9f8449ba6795e8e28b2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3888577150204003581 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2042032739876750154, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+  m_PrefabInstance: {fileID: 3879881104453524015}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e4b34305adda67458b4d37e5e9b3c87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &4104756243978959011
