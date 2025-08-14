@@ -83,13 +83,21 @@ public class ArtifactNavigationHandler : MonoBehaviour
 
         // Check for interaction behavior on the artifact
         ArtifactInteractionBehavior interactionBehavior = targetArtifact.GetComponentInChildren<ArtifactInteractionBehavior>();
-        if (interactionBehavior != null)
+        if (interactionBehavior != null && interactionBehavior.CallUseAfterAnimation)
         {
             // Animation (Interaction) and then use the artifact
             interactionBehavior.StartInteraction(gameObject, () =>
             {
                 // Once the animation is done, handle the artifact use
                 HandleArtifactUse();
+                Invoke(nameof(StartExitNavigation), interactionDelay);
+            });
+        }
+        else if (interactionBehavior != null && !interactionBehavior.CallUseAfterAnimation)
+        { 
+            HandleArtifactUse();
+            interactionBehavior.StartInteraction(gameObject, () =>
+            {              
                 Invoke(nameof(StartExitNavigation), interactionDelay);
             });
         }

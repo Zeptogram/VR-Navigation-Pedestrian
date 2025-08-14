@@ -19,7 +19,6 @@ public class TotemArtifact : Artifact
 
     protected override void Init()
     {
-        //orderCounter = 0;
         if (orderText != null)
             orderText.text = "";
     }
@@ -27,8 +26,6 @@ public class TotemArtifact : Artifact
     // From Artifact Interface
     public override void Use(int agentId, params object[] args)
     {
-        // Call the interface method (for logging)
-        base.Use(agentId, args);
 
         // Order ID set, uses a counter
         int orderId = ++orderCounter;

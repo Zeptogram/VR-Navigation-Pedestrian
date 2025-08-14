@@ -5,8 +5,6 @@
     including animations, stopping the agent, and checking if the interaction is one-time use.
 */
 
-
-
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,6 +15,13 @@ public class ArtifactInteractionBehavior : MonoBehaviour
     [SerializeField] private float interactionDuration = 2f;
     [SerializeField] private bool stopAgentDuringInteraction = true;
     [SerializeField] private bool oneTimeUsePerAgent = false; 
+
+    [Header("Use() Call Timing")]
+    [SerializeField] private bool callUseAfterAnimation = true; 
+    public bool CallUseAfterAnimation => callUseAfterAnimation;
+
+    // Expose duration so artifacts can sync sit timing
+    public float InteractionDuration => interactionDuration;
     
     [Header("Animation Settings")]
     [SerializeField] private string animationTrigger = "Point";
@@ -31,10 +36,8 @@ public class ArtifactInteractionBehavior : MonoBehaviour
     [SerializeField] private bool debugging = false;
     
     private bool isInteracting = false;
-    
-    // Track which agents have already used this interaction behavior
     private HashSet<int> usedByAgents = new HashSet<int>();
-    
+
     /// <summary>
     /// Called by ArtifactNavigationHandler when agent reaches the artifact
     /// </summary>
@@ -47,14 +50,13 @@ public class ArtifactInteractionBehavior : MonoBehaviour
             onInteractionComplete?.Invoke();
             return;
         }
-        
+
         // Check if this agent has already used the artifact, skip
         int agentId = agent.GetInstanceID();
         if (oneTimeUsePerAgent && usedByAgents.Contains(agentId))
         {
             if (debugging)
                 Debug.Log($"[ArtifactInteractionBehavior] Agent {agent.name} has already used this interaction - skipping");
-            
             onInteractionComplete?.Invoke();
             return;
         }
@@ -78,39 +80,34 @@ public class ArtifactInteractionBehavior : MonoBehaviour
         if (debugging)
             Debug.Log($"[ArtifactInteractionBehavior] Starting interaction for {agent.name}");
         
-        // Components
-        UnityEngine.AI.NavMeshAgent navAgent = agent.GetComponent<UnityEngine.AI.NavMeshAgent>();
-        IAgentRL rlAgent = agent.GetComponent<IAgentRL>();
-        Animator animator = agent.GetComponent<Animator>();
+        var navAgent = agent.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        var animator = agent.GetComponent<Animator>();
         
-        // Stop agent if the boolean is true
-        if (stopAgentDuringInteraction && navAgent != null)
+        // Stop agent if true
+        if (stopAgentDuringInteraction && navAgent != null && navAgent.enabled)
         {
             navAgent.ResetPath();
             navAgent.velocity = Vector3.zero;
             navAgent.isStopped = true;
         }
         
-        // Look at (should be ok to not use it)
+        // Look at if needed
         if (enableLookAt && lookAtTarget != null)
-        {
             yield return StartCoroutine(LookAtTarget(agent.transform));
-        }
         
-        // Animation trigger (animatior has to set the transitions for the triggers etc.)
+        // Animation trigger
         if (playAnimation && !string.IsNullOrEmpty(animationTrigger) && animator != null)
         {
             if (debugging)
                 Debug.Log($"[ArtifactInteractionBehavior] Playing animation trigger: {animationTrigger}");
-            
             animator.SetTrigger(animationTrigger);
         }
         
-        // Wait for interaction duration
+        // Wait for duration
         yield return new WaitForSeconds(interactionDuration);
         
         // Resume agent movement
-        if (stopAgentDuringInteraction && navAgent != null)
+        if (stopAgentDuringInteraction && navAgent != null && navAgent.enabled)
         {
             navAgent.isStopped = false;
         }
@@ -119,7 +116,7 @@ public class ArtifactInteractionBehavior : MonoBehaviour
             Debug.Log($"[ArtifactInteractionBehavior] Interaction completed for {agent.name}");
         
         isInteracting = false;
-        
+
         // Notify completion
         onInteractionComplete?.Invoke();
     }

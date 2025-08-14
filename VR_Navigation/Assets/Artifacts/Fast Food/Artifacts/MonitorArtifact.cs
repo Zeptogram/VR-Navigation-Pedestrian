@@ -45,14 +45,20 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
         DefineObsProperty("ordersInPreparation", ordersInPreparation.ToList());
         DefineObsProperty("ordersReady", readyOrdersWithFood.Keys.ToList());
         DefineObsProperty("placedOrders", new List<OrderPlacedData>(placedOrders));
-            
+        
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+        }
+        
         UpdateUI();
         UpdateFoodVisuals();
     }
 
     public override void Use(int agentId, params object[] args)
     {
-        base.Use(agentId, args);
 
         // If args contains an orderId, pick up that order
         if (args != null && args.Length > 0 && args[0] is int orderId)

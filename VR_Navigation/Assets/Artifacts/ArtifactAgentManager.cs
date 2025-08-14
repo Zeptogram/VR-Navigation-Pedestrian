@@ -212,8 +212,9 @@ public class ArtifactAgentManager : MonoBehaviour
     /// </summary>
     public void CallGenericUseMethod(Artifact artifact)
     {
+        Debug.Log($"[Agent {gameObject.name}] Using artifact: {artifact.ArtifactName}");
         int agentId = gameObject.GetInstanceID();
-        artifact.Use(agentId);
+        artifact.Use(agentId, gameObject);
     }
 
     private void OnDestroy()

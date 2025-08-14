@@ -22,7 +22,10 @@ public abstract class Artifact : MonoBehaviour {
     }
 
     // Init(): Initialization method to be overridden by subclasses
-    protected virtual void Init() { }
+    protected abstract void Init();
+
+    // Use(int agentId, params object[] args): Method used by agents to interact with the artifact
+    public abstract void Use(int agentId, params object[] args);
 
     // DefineObsProperty(string propertyName, object initialValue): Define an observable property with an initial value
     protected void DefineObsProperty(string propertyName, object initialValue)
@@ -49,11 +52,6 @@ public abstract class Artifact : MonoBehaviour {
             return value;
         Debug.LogWarning($"[{ArtifactName}] Observable property not found: {propertyName}");
         return null;
-    }
-
-    // Use(int agentId, params object[] args): Method used by agents to interact with the artifact
-    public virtual void Use(int agentId, params object[] args) {
-        Debug.Log($"[{ArtifactName}] Use by agent {agentId}");
     }
 
     // EmitSignal(string name, object data): Method to emit direct signals to other artifacts
