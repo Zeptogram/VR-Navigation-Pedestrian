@@ -158,13 +158,15 @@ public class AIControlAgents : MonoBehaviour
                 if (currentTargetIndex >= goalAction.Length)
                 {
                     reversed = true;
-                    currentTargetIndex = goalAction.Length - 2; 
+                    currentTargetIndex = Mathf.Max(0, goalAction.Length - 2);
                 }
                 else if (currentTargetIndex < 0)
                 {
                     reversed = false;
-                    currentTargetIndex = 1; 
+                    currentTargetIndex = Mathf.Min(1, goalAction.Length - 1);
                 }
+                
+                currentTargetIndex = Mathf.Clamp(currentTargetIndex, 0, goalAction.Length - 1);
                 
                 StartCoroutine(MoveToNextTargetWithWait(wait));
             }
