@@ -17,7 +17,7 @@ public class ArtifactTrigger : MonoBehaviour
 
     private HashSet<GameObject> agentsInNavigation = new HashSet<GameObject>();
 
-    void Awake()
+    private Artifact GetTargetArtifact()
     {
         if (targetArtifact == null)
         {
@@ -25,13 +25,10 @@ public class ArtifactTrigger : MonoBehaviour
             if (targetArtifact == null)
                 targetArtifact = GetComponent<Artifact>();
         }
-
-        if (targetArtifact == null)
-            Debug.LogWarning($"[ArtifactTrigger] No Artifact component found for {gameObject.name}");
-
-        if (exitDestination == null)
-            Debug.LogWarning($"[ArtifactTrigger] No exit destination set for {gameObject.name}");
+        return targetArtifact;
     }
+
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -40,6 +37,7 @@ public class ArtifactTrigger : MonoBehaviour
             if (agentsInNavigation.Contains(other.gameObject))
                 return;
 
+            Artifact targetArtifact = GetTargetArtifact();
             if (targetArtifact != null)
             {
                 if (debugging)
@@ -73,7 +71,7 @@ public class ArtifactTrigger : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning($"[ArtifactTrigger] Agent {other.name} missing RLAgentPlanning or NavMeshAgent component");
+                        //Debug.LogWarning($"[ArtifactTrigger] Agent {other.name} missing RLAgentPlanning or NavMeshAgent component");
                     }
                 }
             }

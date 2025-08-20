@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6691360905696163697}
   - component: {fileID: 1295482188800978677}
   - component: {fileID: 8191716579313376009}
+  - component: {fileID: 3613852113742651087}
   m_Layer: 29
   m_Name: Objective
   m_TagString: Obiettivo
@@ -105,3 +106,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3613852113742651087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5695143438376696120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b9a3425076199b4dbf9121c2d5f9db8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationActions: []
+  playInSequence: 1
+  delayBetweenAnimations: 0.5
+  stopAgentDuringAnimations: 0
+  totalDuration: -1
+  enableLookAt: 0
+  lookAtTarget: {fileID: 0}
+  lookAtSpeed: 90
+  lookAtBeforeAnimations: 1
+  horizontalLookOnly: 1

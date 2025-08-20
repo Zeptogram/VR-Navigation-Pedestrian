@@ -116,7 +116,7 @@ public class ObjectiveInteractionHandler : MonoBehaviour
         agent.AddReward(agent.constants.objective_completed_reward);
 
         observer.MarkObjectiveAsCompleted(triggerObject);
-        
+
         //triggerObject.SetActive(false); // TODO: make visible again if needed
 
         // Run the animations associated with the objective

@@ -8,16 +8,13 @@ public class AnimationAction
     
     [Header("Stop Duration")]
     public float duration = 2f;
-    
-    [Header("Optional Description")]
-    public string description = "";
 }
 
 public class ObjectiveAnimationData : MonoBehaviour
 {
     public AnimationAction[] animationActions = new AnimationAction[]
     {
-        new AnimationAction { animationTrigger = "isIdle", duration = 2f, description = "Rimani fermo per 2 secondi" }
+        new AnimationAction { animationTrigger = "isIdle", duration = 2f }
     };
     
     [Header("Sequences")]
