@@ -54,9 +54,12 @@ public class Evac : MonoBehaviour
     {
         mainCamera.SetActive(true);
         EvacCamera.SetActive(false);
-        foreach(RLAgent agent in GameObject.FindObjectsOfType<RLAgent>())
+        foreach (MonoBehaviour mb in GameObject.FindObjectsOfType<MonoBehaviour>())
         {
-            //agent.flee();
+            if (mb is IAgentRL agent)
+            {
+                //agent.flee();
+            }
         }
         foreach (NavMeshAgent agent in GameObject.FindObjectsOfType<NavMeshAgent>())
         {

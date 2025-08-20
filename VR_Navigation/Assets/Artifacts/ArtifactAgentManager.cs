@@ -29,7 +29,7 @@ public class ArtifactAgentManager : MonoBehaviour
 
     public List<ArtifactInteraction> artifactInteractions = new List<ArtifactInteraction>();
 
-    [Header("Artifacts Observable Properties")]
+    [Header("Artifacts Observable Properties (Focus)")]
     public List<Artifact> artifactSubscriptions = new List<Artifact>();
 
     public List<PropertyChangeEvent> OnPropertyChanged = new List<PropertyChangeEvent>();

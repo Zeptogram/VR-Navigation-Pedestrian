@@ -12,10 +12,6 @@ using UnityEngine.Events;
 ]
 [RequireComponent(typeof(RLPlanningAnimationManager))
 ]
-[RequireComponent(typeof(ArtifactAgentManager))
-]
-[RequireComponent(typeof(OrderAgentManager))
-]
 public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
 {
     // Artifacts Selection
@@ -203,6 +199,10 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
     /// Initial time of the episode.
     /// </summary>
     private int tempoIniziale;
+    /// <summary>
+    /// Reference to the NavMeshObstacle component.
+    /// </summary>
+    private NavMeshObstacle navMeshObstacle;
 
     /// <summary>
     /// Reference to the environment.
@@ -289,6 +289,7 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
         objectiveObserver = GetComponent<ObjectiveObserver>();
         objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
         rigidBody = GetComponent<Rigidbody>();
+        navMeshObstacle = GetComponent<NavMeshObstacle>();
         // Artifacts
         artifactManager = GetComponent<ArtifactAgentManager>();
         orderManager = GetComponent<OrderAgentManager>();
@@ -308,13 +309,14 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
             new ProxemicRange { Start = 0, End = constants.proxemic_small_distance, Reward = constants.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = constants.proxemic_small_ray }
         };
 
-
-
         // Check if all required components are present
         if (artifactManager == null)
-            Debug.LogError($"ArtifactAgentManager component missing on {gameObject.name}");
+            Debug.LogWarning($"ArtifactAgentManager component missing on {gameObject.name}");
+        // Check if NavMeshObstacle component is present
+        if (navMeshObstacle == null)
+            Debug.LogWarning($"NavMeshObstacle component missing on {gameObject.name}");
         if (orderManager == null)
-            Debug.LogError($"OrderAgentManager component missing on {gameObject.name}");
+            Debug.LogWarning($"OrderAgentManager component missing on {gameObject.name}");
         if (agentSensorsManager == null)
             Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
         if (agentObserver == null)
@@ -784,7 +786,7 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
                 if (insideTargets.Contains(target.id))
                 {
                     HandleIntermediateTarget(triggerObject);
-                    insideTargets.Remove(target.id); 
+                    insideTargets.Remove(target.id);
                 }
             }
         }
@@ -1195,29 +1197,54 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
     public void EnableNavMeshMode()
     {
         isUsingNavMesh = true;
-        
+
         // Use Kinematic for NavMesh navigation
         if (rigidBody != null && !rigidBody.isKinematic)
         {
             rigidBody.isKinematic = true;
         }
+
+        // Disable NavMeshObstacle when using NavMesh navigation
+        if (navMeshObstacle != null && navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = false;
+        }
+
         Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
     }
+
 
     /// <summary>
     /// Disables NavMesh navigation mode and returns to RL control
     /// </summary>
     public void DisableNavMeshMode()
-    {        
+    {
         isUsingNavMesh = false;
 
+
         // Re-enable Rigidbody physics for RL control
-       if (rigidBody != null && rigidBody.isKinematic)
+        if (rigidBody != null && rigidBody.isKinematic)
         {
             rigidBody.isKinematic = false;
         }
 
+        // Enable NavMeshObstacle with delay
+        StartCoroutine(EnableNavMeshObstacleWithDelay(0.5f));
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
     }
     
+    /// <summary>
+    /// Enables NavMeshObstacle after a delay
+    /// </summary>
+    public System.Collections.IEnumerator EnableNavMeshObstacleWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (navMeshObstacle != null && !navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = true;
+            Debug.Log($"[RLAgentPlanning] NavMeshObstacle enabled for {gameObject.name}");
+        }
+    }
+
 }

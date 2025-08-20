@@ -14,6 +14,7 @@ public interface IAgentRL
     List<Artifact> assignedArtifacts { get; }
     public void EnableNavMeshMode();
     public void DisableNavMeshMode();
+    public System.Collections.IEnumerator EnableNavMeshObstacleWithDelay(float delay);
 
     // Agent Constants
     IAgentConstants constants { get; }

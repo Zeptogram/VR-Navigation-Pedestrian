@@ -39,6 +39,8 @@ public class RLAgent : Agent, IAgentRLBase
 
     public Group group;
 
+    private NavMeshObstacle navMeshObstacle;
+
     private Vector2 minMaxSpeed;
 
     private float currentSpeed;
@@ -116,6 +118,7 @@ public class RLAgent : Agent, IAgentRLBase
         startRotation = transform.rotation;
         rigidBody = GetComponent<Rigidbody>();
         agentSensorsManager.UpdateTargetSensorVision(group);
+        navMeshObstacle = GetComponent<NavMeshObstacle>();
 
         // Constants
         constants = new ConstantsBase();
@@ -614,6 +617,13 @@ public class RLAgent : Agent, IAgentRLBase
         {
             rigidBody.isKinematic = true;
         }
+
+        // Disable NavMeshObstacle when using NavMesh navigation
+        if (navMeshObstacle != null && navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = false;
+        }
+        
         Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
     }
 
@@ -625,11 +635,27 @@ public class RLAgent : Agent, IAgentRLBase
         isUsingNavMesh = false;
 
         // Re-enable Rigidbody physics for RL control
-       if (rigidBody != null && rigidBody.isKinematic)
+        if (rigidBody != null && rigidBody.isKinematic)
         {
             rigidBody.isKinematic = false;
         }
 
+        // Enable NavMeshObstacle with delay
+        StartCoroutine(EnableNavMeshObstacleWithDelay(0.5f));
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
+    }
+    
+    /// <summary>
+    /// Enables NavMeshObstacle after a delay
+    /// </summary>
+    public System.Collections.IEnumerator EnableNavMeshObstacleWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (navMeshObstacle != null && !navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = true;
+            Debug.Log($"[RLAgentPlanning] NavMeshObstacle enabled for {gameObject.name}");
+        }
     }
 }
