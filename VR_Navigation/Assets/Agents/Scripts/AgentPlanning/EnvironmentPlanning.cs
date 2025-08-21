@@ -21,11 +21,9 @@ public class EnvironmentPlanning : MonoBehaviour
 
     public Action envStartedInitialization;
     private float cumulativeRewards;
-    public Text canvasScore;
     private string envID;
     private int tempoIniziale;
     private List<GameObject> objectives;
-    public bool penaltyTakesTargetsAgain;
 
 
     void Start()
@@ -41,11 +39,11 @@ public class EnvironmentPlanning : MonoBehaviour
             }
         }
         tempoIniziale = (int)Time.time;
-        if (canvasScore == null)
+        /*if (canvasScore == null)
         {
             //Debug.LogWarning("Canvas non assegnato! Assegna il Canvas nell'Editor.");
             //return;
-        }
+        }*/
 
          Invoke(nameof(InitializeAgents), 0.5f);
     }
