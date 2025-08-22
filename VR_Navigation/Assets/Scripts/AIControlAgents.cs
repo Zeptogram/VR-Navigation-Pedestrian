@@ -131,14 +131,13 @@ public class AIControlAgents : MonoBehaviour
     // and set the agent to reach the following target in the list.
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("waypoint") || other.CompareTag("Target"))
+        if (other.CompareTag("waypoint") || other.CompareTag("Target") || other.CompareTag("Obiettivo"))
         {
-            if (currentTargetIndex >= 0 && currentTargetIndex < goalAction.Length && 
-                other.gameObject.Equals(goalAction[currentTargetIndex].goalLocation))
+            if (currentTargetIndex < goalAction.Length && other.gameObject.Equals(goalAction[currentTargetIndex].goalLocation))
             {
                 agent.isStopped = true;
-                
-                if (goalAction[currentTargetIndex].animationName != "")
+                //agent.transform.rotation = goalAction[currentTargetIndex].goalLocation.rotation;
+                if(goalAction[currentTargetIndex].animationName != "")
                 {
                     animator.SetTrigger(goalAction[currentTargetIndex].animationName);
                 }
@@ -146,28 +145,18 @@ public class AIControlAgents : MonoBehaviour
                 {
                     animator.SetTrigger("isIdle");
                 }
-                
                 agent.angularSpeed = 0;
                 float wait = goalAction[currentTargetIndex].wait;
 
-                if (reversed) 
-                    currentTargetIndex--;
-                else 
-                    currentTargetIndex++;
+                if (reversed) currentTargetIndex--;
+                else currentTargetIndex++;
 
-                if (currentTargetIndex >= goalAction.Length)
+                if (currentTargetIndex == goalAction.Length || currentTargetIndex == -1)
                 {
-                    reversed = true;
-                    currentTargetIndex = Mathf.Max(0, goalAction.Length - 2);
+                    reversed = !reversed;
+                    if (reversed) currentTargetIndex -= 2;
+                    else currentTargetIndex += 2;
                 }
-                else if (currentTargetIndex < 0)
-                {
-                    reversed = false;
-                    currentTargetIndex = Mathf.Min(1, goalAction.Length - 1);
-                }
-                
-                currentTargetIndex = Mathf.Clamp(currentTargetIndex, 0, goalAction.Length - 1);
-                
                 StartCoroutine(MoveToNextTargetWithWait(wait));
             }
         }
@@ -177,6 +166,5 @@ public class AIControlAgents : MonoBehaviour
         }
     }
 }
-
 
 
