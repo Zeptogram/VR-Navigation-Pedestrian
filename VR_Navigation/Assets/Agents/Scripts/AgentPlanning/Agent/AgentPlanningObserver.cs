@@ -200,7 +200,7 @@ public class AgentPlanningObserver : MonoBehaviour
                     normalizedDistance = observation.distance / constants.MAXIMUM_VIEW_OTHER_AGENTS_DISTANCE;
                     break;
                 default:
-                    Debug.LogError($"Error in {nameof(ComputeWallsAndAgentsObservations)} should't see the tag: " + seenObject.tag);
+                    //Debug.LogError($"Error in {nameof(ComputeWallsAndAgentsObservations)} should't see the tag: " + seenObject.tag);
                     break;
             }
             wallsAndAgentsGizmos.Add((MyGizmosTagExtensionsPlanning.ToMyGizmosTag(objTag, tagIndex), observation.point));

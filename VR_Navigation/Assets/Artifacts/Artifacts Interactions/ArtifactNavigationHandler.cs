@@ -13,7 +13,7 @@ public class ArtifactNavigationHandler : MonoBehaviour
     private Transform exitDestination;
 
     [Header("Navigation Settings")]
-    [SerializeField] private float reachedDistance = 1.0f;
+    [SerializeField] private float reachedDistance = 0.5f;
     [SerializeField] private float interactionDelay = 0.2f;
 
     private bool isNavigatingToArtifact = false;

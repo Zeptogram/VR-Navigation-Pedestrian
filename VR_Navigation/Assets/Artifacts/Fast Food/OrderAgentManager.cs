@@ -68,6 +68,20 @@ public class OrderAgentManager : MonoBehaviour
         int agentId = gameObject.GetInstanceID();
         monitorArtifact.Use(agentId, myOrderId.Value);
 
+        BenchArtifact bench = FindObjectOfType<BenchArtifact>();
+        if (bench != null)
+        {
+            // Add to assignedArtifacts
+            var rlAgent = GetComponent<RLAgentPlanning>();
+            if (rlAgent != null && !rlAgent.assignedArtifacts.Contains(bench))
+            {
+                rlAgent.assignedArtifacts.Add(bench);
+                Debug.Log($"[Agent {gameObject.name}] BenchArtifact added to assignedArtifacts");
+            }
+        }
+
+
+
         // Reset flags 
         isMyOrderReady = false;
         hasPlacedOrder = false;
