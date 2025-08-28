@@ -15,6 +15,7 @@ TagManager:
   - Obiettivo
   - Artifact
   - ArtifactZone
+  - MapCamera
   layers:
   - Default
   - TransparentFX

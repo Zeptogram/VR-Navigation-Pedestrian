@@ -224,15 +224,13 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
     }
 
     // PickUpOrder(int agentId, int orderId): Called by Use method to pick up an order
-    public bool PickUpOrder(int agentId, int orderId)
+    private bool PickUpOrder(int agentId, int orderId)
     {
         if (readyOrdersWithFood.ContainsKey(orderId))
         {
             FoodType foodType = readyOrdersWithFood[orderId];
 
             RemoveOrderFromReady(orderId);
-
-            EmitSignal("orderPickedUp", new OrderPickedUpData(orderId, FindTotemNameForOrder(orderId)));
 
             Debug.Log($"[{ArtifactName}] {foodType} order #{orderId} retired by Agent {agentId}");
             return true;
@@ -252,17 +250,6 @@ public class MonitorArtifact : Artifact, IArtifactConnectable
             UpdateUI();
             UpdateFoodVisuals();
         }
-    }
-
-    // FindTotemNameForOrder(int orderId): Finds the totem name associated with an order
-    private string FindTotemNameForOrder(int orderId)
-    {
-        foreach (var totem in connectedTotems)
-        {
-            if (totem.HasOrder(orderId))
-                return totem.ArtifactName;
-        }
-        return null;
     }
     
     // OnDestroy(): Clean up connections when the monitor is destroyed

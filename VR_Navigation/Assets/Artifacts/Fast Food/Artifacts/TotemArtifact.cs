@@ -50,7 +50,6 @@ public class TotemArtifact : Artifact
 
     // Specific methods to handle order preparation
 
-
     // PrepareOrder(int orderId): Coroutine to simulate order preparation
     private IEnumerator PrepareOrder(int orderId)
     {
@@ -66,26 +65,6 @@ public class TotemArtifact : Artifact
             EmitSignal("orderReady", orderId);
             Debug.Log($"[{ArtifactName}] Order {orderId} ready");
         }
-    }
-
-    // OrderPickedUp(int orderId): Method to remove an order when picked up
-    public void OrderPickedUp(int orderId)
-    {
-        if (orders.ContainsKey(orderId))
-        {
-            orders.Remove(orderId);
-            Debug.Log($"[{ArtifactName}] Order {orderId} removed after pickup");
-        }
-        else
-        {
-            Debug.LogWarning($"[{ArtifactName}] Order {orderId} doesn't exist or has already been picked up");
-        }
-    }
-
-    // HasOrder(int orderId): Check if an order exists
-    public bool HasOrder(int orderId)
-    {
-        return orders.ContainsKey(orderId);
     }
     
      // ClearOrderTextAfterDelay(float delay): Coroutine to clear the order text after a delay

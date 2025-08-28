@@ -94,6 +94,7 @@ public class ArtifactConnectionManager : MonoBehaviour
     /// </summary>
     private void SetupConnectionRules()
     {
+        // Clear existing rules
         connectionRules.Clear();
 
         // Rule: N Totems to 1 Monitor (N:1)
@@ -103,7 +104,6 @@ public class ArtifactConnectionManager : MonoBehaviour
             targetType = typeof(MonitorArtifact),
             connectionType = ConnectionType.ManyToOne,
         });
-
 
     }
 
@@ -217,7 +217,7 @@ public class ArtifactConnectionManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"[ArtifactConnectionManager] Could not connect to {target.GetType().Name}");
+            Debug.LogError($"[ArtifactConnectionManager] Could not connect to {target.GetType().Name}, Rule: {rule}");
         }
     }
 }

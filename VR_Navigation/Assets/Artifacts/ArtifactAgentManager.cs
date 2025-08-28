@@ -122,7 +122,7 @@ public class ArtifactAgentManager : MonoBehaviour
     /// </summary>
     private void ConfigureArtifactMapping(ArtifactInteraction mapping, Artifact artifact)
     {
-        string artifactName = artifact.ArtifactName.ToLower();
+        //string artifactName = artifact.ArtifactName.ToLower();
         UnityEditor.Events.UnityEventTools.AddPersistentListener(mapping.onInteraction, CallGenericUseMethod);
     }
 #endif

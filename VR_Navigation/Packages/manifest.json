@@ -8,6 +8,7 @@
     "com.unity.ml-agents": "git+https://github.com/Unity-Technologies/ml-agents.git?path=com.unity.ml-agents#release_12",
     "com.unity.postprocessing": "3.4.0",
     "com.unity.progrids": "3.0.3-preview.6",
+    "com.unity.recorder": "4.0.3",
     "com.unity.test-framework": "1.1.33",
     "com.unity.textmeshpro": "3.0.9",
     "com.unity.timeline": "1.7.7",
