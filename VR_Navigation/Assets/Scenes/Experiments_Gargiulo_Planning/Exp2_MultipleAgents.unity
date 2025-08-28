@@ -32659,7 +32659,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d55fbbb41183f1c46b2274979c1a8766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoConnectOnStart: 1
   debugConnections: 1
 --- !u!114 &893066324
 MonoBehaviour:
@@ -65382,6 +65381,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: orderAgent
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: _assignedArtifacts.Array.size
       value: 0
       objectReference: {fileID: 0}
@@ -83379,6 +83382,10 @@ PrefabInstance:
     - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: group
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
+      propertyPath: orderAgent
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6171496881950570211, guid: ede55279accc7d44c9fd72ae44261eb3, type: 3}
       propertyPath: _assignedArtifacts.Array.size

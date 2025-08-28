@@ -12,7 +12,7 @@ using UnityEngine.Events;
 ]
 [RequireComponent(typeof(RLPlanningAnimationManager))
 ]
-public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
+public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order logic can be removed
 {
     // Artifacts Selection
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
@@ -21,12 +21,14 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
     // Artifact Manager - Handles artifact interactions 
     private ArtifactAgentManager artifactManager;
 
-    // Order Manager - Handles order logic
+    // Order Manager - Handles order logic (OPTIONAL)
     private OrderAgentManager orderManager;
 
     // Order tracking properties (OrderAgentManager)
     public int? MyOrderId => orderManager?.MyOrderId;
     public bool IsMyOrderReady => orderManager?.IsMyOrderReady ?? false;
+    public bool orderAgent = true;
+
 
     /// <summary>
     /// True if the agent is using NavMesh for movement.
@@ -292,7 +294,8 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
         navMeshObstacle = GetComponent<NavMeshObstacle>();
         // Artifacts
         artifactManager = GetComponent<ArtifactAgentManager>();
-        orderManager = GetComponent<OrderAgentManager>();
+        if (orderAgent)
+            orderManager = GetComponent<OrderAgentManager>();
 
         // Constants
         constants = new ConstantsPlanning();
@@ -315,7 +318,7 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
         // Check if NavMeshObstacle component is present
         if (navMeshObstacle == null)
             Debug.LogWarning($"NavMeshObstacle component missing on {gameObject.name}");
-        if (orderManager == null)
+        if (orderManager == null && orderAgent)
             Debug.LogWarning($"OrderAgentManager component missing on {gameObject.name}");
         if (agentSensorsManager == null)
             Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
@@ -510,7 +513,8 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder
         // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // This line randomizes the maximum speed
 
         // Reset order state
-        orderManager?.ResetOrderState();
+        if (orderAgent)
+            orderManager?.ResetOrderState();
         resetAgent?.Invoke(this);
     }
 

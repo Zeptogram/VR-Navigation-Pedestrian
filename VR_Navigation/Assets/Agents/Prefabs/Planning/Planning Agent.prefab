@@ -67,6 +67,7 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 10000000
   _assignedArtifacts: []
+  orderAgent: 0
   numberOfCrossings: 0
   group: 0
   envStep: 10000000

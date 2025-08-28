@@ -71,6 +71,7 @@ MonoBehaviour:
   _assignedArtifacts:
   - {fileID: 0}
   - {fileID: 0}
+  orderAgent: 1
   numberOfCrossings: 6
   group: 0
   envStep: 10000000
