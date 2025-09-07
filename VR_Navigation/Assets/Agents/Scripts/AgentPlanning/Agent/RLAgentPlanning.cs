@@ -18,6 +18,8 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order log
     [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
     public List<Artifact> assignedArtifacts => _assignedArtifacts;
 
+    bool debugging = false;
+
     // Artifact Manager - Handles artifact interactions 
     private ArtifactAgentManager artifactManager;
 
@@ -28,6 +30,10 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order log
     public int? MyOrderId => orderManager?.MyOrderId;
     public bool IsMyOrderReady => orderManager?.IsMyOrderReady ?? false;
     public bool orderAgent = true;
+
+    // Artifact Navigation Properties
+    private List<ArtifactTrigger> subscribedTriggers = new List<ArtifactTrigger>();
+    private ArtifactNavigationData? currentNavigationData;
 
 
     /// <summary>
@@ -379,6 +385,12 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order log
             default:
                 break;
         }
+    }
+
+    void Start()
+    {
+        ArtifactTrigger.OnAgentTriggerEntered += OnArtifactTriggerEntered;
+        ArtifactTrigger.OnAgentTriggerExited += OnArtifactTriggerExited;
     }
 
     private void Update()
@@ -1249,6 +1261,196 @@ public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order log
             navMeshObstacle.enabled = true;
             Debug.Log($"[RLAgentPlanning] NavMeshObstacle enabled for {gameObject.name}");
         }
+    }
+
+     // Artifact Navigation Methods
+
+    /// <summary>
+    /// Handles the trigger enter event
+    /// </summary>
+    public void OnArtifactTriggerEntered(GameObject agentObject, ArtifactNavigationData navigationData)
+    {
+        // If this event is for this agent
+        if (agentObject != gameObject)
+            return;
+
+        // Check if assigned to this artifact
+        if (!assignedArtifacts.Contains(navigationData.artifact))
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} not assigned to artifact {navigationData.artifact.ArtifactName}");
+            return;
+        }
+
+        // Check if already navigating
+        ArtifactTrigger sourceTrigger = FindTriggerForArtifact(navigationData.artifact);
+        if (sourceTrigger != null && sourceTrigger.IsAgentInNavigation(gameObject))
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} already in navigation - ignoring trigger");
+            return;
+        }
+
+        // Else start navigation
+        StartArtifactNavigation(navigationData, sourceTrigger);
+    }
+
+    /// <summary>
+    /// Handles the trigger exit event
+    /// </summary>
+    public void OnArtifactTriggerExited(GameObject agentObject)
+    {
+        // Check if this event is for this agent
+        if (agentObject != gameObject)
+            return;
+
+        // Check if there is an active handler
+        ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+        if (handler != null && handler.IsNavigatingToArtifact)
+        {
+            // Don't interrupt if still navigating to artifact
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} exited trigger but still navigating to artifact");
+            return;
+        }
+
+        // Return to RL control
+        StopArtifactNavigation();
+    }
+
+    /// <summary>
+    /// Finds the trigger associated with a specific artifact
+    /// </summary>
+    private ArtifactTrigger FindTriggerForArtifact(Artifact artifact)
+    {
+        foreach (var trigger in subscribedTriggers)
+        {
+            if (trigger != null && trigger.GetComponent<Artifact>() == artifact)
+            {
+                return trigger;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Starts the artifact navigation process
+    /// </summary>
+    private void StartArtifactNavigation(ArtifactNavigationData navigationData, ArtifactTrigger sourceTrigger)
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent == null)
+        {
+            Debug.LogWarning($"[RLAgentPlanning] Agent {gameObject.name} missing NavMeshAgent component");
+            return;
+        }
+
+        if (debugging)
+            Debug.Log($"[RLAgentPlanning] Starting navigation to artifact {navigationData.artifact.ArtifactName}");
+
+        // Navigation Data
+        currentNavigationData = navigationData;
+
+        // Add agent to navigation in trigger
+        if (sourceTrigger != null)
+        {
+            sourceTrigger.AddAgentToNavigation(gameObject);
+        }
+
+        // Capture current velocity
+        Vector3 currentVelocity = rigidBody.velocity;
+
+        // Enable NavMesh mode
+        EnableNavMeshMode();
+
+        // Configure NavMeshAgent
+        navAgent.stoppingDistance = navigationData.stoppingDistance;
+        navAgent.enabled = true;
+
+        // Apply velocity
+        Vector3 agentVelocity = Vector3.ClampMagnitude(currentVelocity, navAgent.speed);
+        navAgent.velocity = agentVelocity;
+
+        // Set destination
+        if (navAgent.isOnNavMesh)
+        {
+            navAgent.SetDestination(navigationData.destination.position);
+        }
+        else
+        {
+            Debug.LogWarning($"[RLAgentPlanning] Agent {gameObject.name} is not on NavMesh");
+        }
+
+        // Setup navigation handler
+        SetupNavigationHandler();
+    }
+
+    /// <summary>
+    /// Stops the artifact navigation
+    /// </summary>
+    private void StopArtifactNavigation()
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent != null)
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Stopping navigation for {gameObject.name}");
+
+            // Remove agent from navigation in trigger
+            if (currentNavigationData.HasValue)
+            {
+                ArtifactTrigger sourceTrigger = FindTriggerForArtifact(currentNavigationData.Value.artifact);
+                if (sourceTrigger != null)
+                {
+                    sourceTrigger.RemoveAgentFromNavigation(gameObject);
+                }
+            }
+
+            // NavMesh velocity
+            Vector3 navMeshVelocity = navAgent.velocity;
+
+            // Disable NavMesh
+            navAgent.enabled = false;
+            DisableNavMeshMode();
+
+            // Apply velocity to Rigidbody
+            Vector3 agentVelocity = Vector3.ClampMagnitude(navMeshVelocity, navAgent.speed);
+            rigidBody.velocity = agentVelocity;
+
+            // Cleanup handler
+            ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+            if (handler != null)
+            {
+                Debug.Log($"[RLAgentPlanning] Destroying ArtifactNavigationHandler on {gameObject.name}");
+                Destroy(handler);
+            }
+        }
+
+        currentNavigationData = null;
+    }
+
+    /// <summary>
+    /// Sets up the ArtifactNavigationHandler component 
+    /// </summary>
+    private void SetupNavigationHandler()
+    {
+        if (!currentNavigationData.HasValue)
+            return;
+
+        // Check if a handler already exists
+        ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+        if (handler == null)
+        {
+            handler = gameObject.AddComponent<ArtifactNavigationHandler>();
+            Debug.Log($"[RLAgentPlanning] Added new ArtifactNavigationHandler to {gameObject.name}");
+        }
+        else
+        {
+            Debug.Log($"[RLAgentPlanning] ArtifactNavigationHandler already exists on {gameObject.name}");
+        }
+
+        var navData = currentNavigationData.Value;
+        handler.StartNavigation(navData.artifact, navData.destination, navData.exitDestination);
     }
 
 }

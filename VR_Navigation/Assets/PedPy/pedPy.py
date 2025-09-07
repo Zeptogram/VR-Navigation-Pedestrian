@@ -44,14 +44,15 @@ img = plt.imread("BackgroundMap.png")
 ax.imshow(img, zorder=0, extent=[-1750, 1750, -1750, 1750])
 
 agent_names = {
-    -329742069: "ML-Agent Woman",
-    -1537545905: "ML-Agent Man",
-    -488862046: "NavMesh Agent",
+    -23748859: "ML-Agent Woman",
+    134436072: "ML-Agent Man",
+    484873562: "NavMesh Agent 2",
+    1960836270: "NavMesh Agent 1",
 }
 
 # Definisci gli id degli agenti ML e NavMesh
-ml_agent_ids = [-329742069, -1537545905]
-navmesh_agent_ids = [-488862046]
+ml_agent_ids = [-23748859, 134436072]
+navmesh_agent_ids = [1960836270, 484873562]
 
 # Colori per tipologia
 ml_colors = ['red', 'orange']
@@ -61,9 +62,6 @@ ml_idx = 0
 navmesh_idx = 0
 
 for agent_id in traj.data["id"].unique():
-    if agent_id in navmesh_agent_ids:
-        continue
-
     agent_traj = traj.data[traj.data["id"] == agent_id]
     agent_label = agent_names[agent_id] if agent_id in agent_names else f"Agent {agent_id}"
 
