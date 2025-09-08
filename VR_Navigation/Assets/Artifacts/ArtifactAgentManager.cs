@@ -34,12 +34,16 @@ public class ArtifactAgentManager : MonoBehaviour
 
     public List<PropertyChangeEvent> OnPropertyChanged = new List<PropertyChangeEvent>();
 
-    // Reference to the agent
+    // Reference to the agent (needed for assignedArtifacts, if you dont use IAgentRL, then add that variable to a new script agent)
+    private GameObject agentGameObject;
     private IAgentRL agent;
 
     private void Awake()
     {
-        agent = GetComponent<IAgentRL>();
+        agentGameObject = gameObject;
+
+        agent = agentGameObject.GetComponent<IAgentRL>();
+
         if (agent == null)
         {
             Debug.LogError($"ArtifactAgentManager requires IAgentRL component on {gameObject.name}");
