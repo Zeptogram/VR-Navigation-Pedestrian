@@ -1,5 +1,5 @@
 # VR-Navigation-Pedestrian
-> Unity project for master's thesis, dedicated to studies on pedestrian dynamics.
+> Unity project for master's thesis dedicated to studies on pedestrian dynamics.  University Bicocca, Milan. Elio Gargiulo 2025.
 
 [![Download Thesis PDF](https://img.shields.io/badge/Download%20Thesis-PDF-lime.svg?style=for-the-badge)](link)
 [![Download Presentation PDF](https://img.shields.io/badge/Download%20Presentation-PDF-orange.svg?style=for-the-badge)](link)
