@@ -27,5 +27,20 @@
   - conda activate pedpyvenv
   - pip install pedpy==1.2.0
 
+
+## Project Structure  
+
+Several reorganized folders structure the project, most notably:
+
+- **Agents**: Contains all scripts and objects related to agents, particularly ML-Agents, including brains and prefabs.  
+- **Artifacts**: Contains all scripts and objects related to the artifact system, which will be analyzed in Chapter 4.  
+- **Characters**: Includes all avatars and 3D models used to represent virtual agents in the environments, along with animations and animation controllers to properly animate and manage them.  
+- **Maps**: Contains all environment-related objects, such as buildings, terrains, and props.  
+- **Scenes**: Contains all scenes implemented in the project; this is the core folder housing the actual simulated environments.  
+- **PedPy**: Contains scripts and output files used by PedPy to analyze agent behavior.  
+- **Resources and Scripts**: Contain generic prefabs, audio, and scripts used throughout the project.  
+- **Oculus, XR, and XRI**: Contain the logic and components required for VR compatibility.  
+
+
 ## Utility
 - Repository ML-Agents: https://github.com/Zeptogram/ML-Agents-Pedestrian/tree/main
