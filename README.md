@@ -33,7 +33,7 @@
 Several reorganized folders structure the project, most notably:
 
 - **Agents**: Contains all scripts and objects related to agents, particularly ML-Agents, including brains and prefabs.  
-- **Artifacts**: Contains all scripts and objects related to the artifact system, which will be analyzed in Chapter 4.  
+- **Artifacts**: Contains all scripts and objects related to the artifact system.  
 - **Characters**: Includes all avatars and 3D models used to represent virtual agents in the environments, along with animations and animation controllers to properly animate and manage them.  
 - **Maps**: Contains all environment-related objects, such as buildings, terrains, and props.  
 - **Scenes**: Contains all scenes implemented in the project; this is the core folder housing the actual simulated environments.  
