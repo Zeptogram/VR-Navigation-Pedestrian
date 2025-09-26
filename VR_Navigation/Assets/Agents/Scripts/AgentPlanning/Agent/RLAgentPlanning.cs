@@ -1,0 +1,1456 @@
+using System;
+using System.Collections.Generic;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.Events;
+
+[RequireComponent(typeof(ObjectiveInteractionHandler))
+]
+[RequireComponent(typeof(ObjectiveObserver))
+]
+[RequireComponent(typeof(RLPlanningAnimationManager))
+]
+public class RLAgentPlanning : Agent, IAgentRLPlanning, IAgentOrder // order logic can be removed
+{
+    // Artifacts Selection
+    [SerializeField] private List<Artifact> _assignedArtifacts = new List<Artifact>();
+    public List<Artifact> assignedArtifacts => _assignedArtifacts;
+
+    bool debugging = false;
+
+    // Artifact Manager - Handles artifact interactions 
+    private ArtifactAgentManager artifactManager;
+
+    // Order Manager - Handles order logic (OPTIONAL)
+    private OrderAgentManager orderManager;
+
+    // Order tracking properties (OrderAgentManager)
+    public int? MyOrderId => orderManager?.MyOrderId;
+    public bool IsMyOrderReady => orderManager?.IsMyOrderReady ?? false;
+    public bool orderAgent = true;
+
+    // Artifact Navigation Properties
+    private List<ArtifactTrigger> subscribedTriggers = new List<ArtifactTrigger>();
+    private ArtifactNavigationData? currentNavigationData;
+
+
+    /// <summary>
+    /// True if the agent is using NavMesh for movement.
+    /// </summary>
+    [System.NonSerialized]
+    private bool isUsingNavMesh = false;
+
+
+    /// <summary>
+    /// Crossings count for the agent.
+    /// </summary>
+    public int numberOfCrossings = 0;
+
+    /// <summary>
+    /// True if the agent is currently walking (moving).
+    /// </summary>
+    private bool walking = true;
+
+    /// <summary>
+    /// Public accessor for the agent's Rigidbody component.
+    /// </summary>
+    public Rigidbody RigidBody => rigidBody;
+
+    private HashSet<int> insideTargets = new HashSet<int>();
+
+    /// <summary>
+    /// Reference to constants.
+    /// </summary>
+    public IAgentConstants constants { get; private set; }
+
+    /// <summary>
+    /// The group to which the agent belongs.
+    /// </summary>
+    public Group group;
+
+    /// <summary>
+    /// Minimum and maximum speed for the agent.
+    /// </summary>
+    private Vector2 minMaxSpeed;
+
+    /// <summary>
+    /// Current speed of the agent.
+    /// </summary>
+    private float currentSpeed;
+    /// <summary>
+    /// Current angle of the agent.
+    /// </summary>
+    private float newAngle;
+
+    /// <summary>
+    /// True if the agent is fleeing.
+    /// </summary>
+    private bool fleeing = false;
+
+    /// <summary>
+    /// Initial position of the agent.
+    /// </summary>
+    [NonSerialized] public Vector3 startPosition;
+    /// <summary>
+    /// Initial rotation of the agent.
+    /// </summary>
+    [NonSerialized] public Quaternion startRotation;
+
+    /// <summary>
+    /// Rigidbody component reference.
+    /// </summary>
+    private Rigidbody rigidBody;
+
+    /// <summary>
+    /// Animator component reference.
+    /// </summary>
+    private Animator animator;
+    private RLPlanningAnimationManager animationManager;
+
+    /// <summary>
+    /// Range for randomizing speed.
+    /// </summary>
+    private Vector2 speedMaxRange;
+
+    /// <summary>
+    /// List of targets taken by the agent.
+    /// </summary>
+    private List<GameObject> _targetsTaken = new List<GameObject>();
+
+    /// <summary>
+    /// Public property for targets taken by the agent.
+    /// </summary>
+    public List<GameObject> targetsTaken => _targetsTaken;
+
+    /// <summary>
+    /// Reference to the agent's sensors manager.
+    /// </summary>
+    private AgentPlanningSensorsManager agentSensorsManager;
+    /// <summary>
+    /// Reference to the agent's gizmos drawer.
+    /// </summary>
+    private AgentPlanningGizmosDrawer agentGizmosDrawer;
+    /// <summary>
+    /// Reference to the agent's observer.
+    /// </summary>
+    private AgentPlanningObserver agentObserver;
+    /// <summary>
+    /// Reference to the objective observer.
+    /// </summary>
+    private ObjectiveObserver objectiveObserver;
+
+    /// <summary>
+    /// Observations for walls and targets.
+    /// </summary>
+    private List<float> wallsAndTargetsObservations;
+    /// <summary>
+    /// Observations for walls and agents.
+    /// </summary>
+    private List<float> wallsAndAgentsObservations;
+    /// <summary>
+    /// Observations for walls and objectives.
+    /// </summary>
+    private List<float> wallsAndObjectivesObservations;
+
+    /// <summary>
+    /// List of walls and agents detected.
+    /// </summary>
+    private List<(GizmosTagPlanning, Vector3)> wallsAndAgents = new List<(GizmosTagPlanning, Vector3)>();
+    /// <summary>
+    /// List of walls and targets detected.
+    /// </summary>
+    private List<(GizmosTagPlanning, Vector3)> wallsAndTargets = new List<(GizmosTagPlanning, Vector3)>();
+    /// <summary>
+    /// List of walls and objectives detected.
+    /// </summary>
+    private List<(GizmosTagPlanning, Vector3)> wallsAndObjectives = new List<(GizmosTagPlanning, Vector3)>();
+
+    /// <summary>
+    /// Event triggered when the agent is terminated.
+    /// </summary>
+    public event Action<float, EnvironmentPlanning> agentTerminated;
+    /// <summary>
+    /// Event triggered to reset the agent.
+    /// </summary>
+    public event Action<RLAgentPlanning> resetAgent;
+
+    /// <summary>
+    /// Unique identifier for the agent.
+    /// </summary>
+    private string uniqueID;
+    /// <summary>
+    /// Number of steps in the environment.
+    /// </summary>
+    /// TODO: CHECK IF NECESSARY HERE
+    //[NonSerialized] public int envStep = -1;
+    public int envStep;
+    /// <summary>
+    /// Steps left in the episode.
+    /// </summary>
+    private int stepLeft;
+
+    /// <summary>
+    /// Number of iterations performed by the agent.
+    /// </summary>
+    private int numberOfIteraction;
+    /// <summary>
+    /// Cumulative reward collected by the agent.
+    /// </summary>
+    private float cumulativeReward;
+    /// <summary>
+    /// If true, the agent's position is locked.
+    /// </summary>
+    public bool lockPosition;
+    /// <summary>
+    /// Initial time of the episode.
+    /// </summary>
+    private int tempoIniziale;
+    /// <summary>
+    /// Reference to the NavMeshObstacle component.
+    /// </summary>
+    private NavMeshObstacle navMeshObstacle;
+
+    /// <summary>
+    /// Reference to the environment.
+    /// </summary>
+    [NonSerialized] public EnvironmentPlanning env;
+
+    /// <summary>
+    /// Value used for entry direction calculation.
+    /// </summary>
+    float entryValue;
+    /// <summary>
+    /// Value used for exit direction calculation.
+    /// </summary>
+    float exitValue;
+    /// <summary>
+    /// EnvironmentPlanning identifier.
+    /// </summary>
+    [NonSerialized] public string envID;
+
+    private float lastYRotation;
+
+    /// <summary>
+    /// True if the task is completed.
+    /// </summary>
+    [NonSerialized] public bool taskCompleted = false;
+    /// <summary>
+    /// True if the environment is ready.
+    /// </summary>
+    //private bool isEnvReady = false;
+
+    /// <summary>
+    /// Reference to the objective interaction handler.
+    /// </summary>
+    private ObjectiveInteractionHandler objectiveHandler;
+
+    // Variabili reflection per screenshot curriculum
+#if UNITY_EDITOR
+    private Curriculum curriculum;
+    private Testing testing;
+    private System.Reflection.FieldInfo videoRecorderField;
+    private System.Reflection.FieldInfo waitingExtraEpisodesField;
+#endif
+
+    /**
+     * \class ProxemicRange
+     * \brief Helper class for proxemic reward ranges.
+     */
+    private class ProxemicRange
+    {
+        public float Start { get; set; }
+        public float End { get; set; }
+        public float Reward { get; set; }
+        public string StatsTag { get; set; }
+        public float RaysNumber { get; set; }
+    }
+
+    /// <summary>
+    /// List of proxemic ranges for agent proximity rewards.
+    /// </summary>
+    private List<ProxemicRange> ProxemicRanges;
+
+    /// <summary>
+    /// Array of front crossings for the agent.
+    /// </summary>
+    public float[] crossings;
+
+    /// <summary>
+    /// Maximum number of intermediate targets that can be handled by the agent.
+    /// </summary>
+    public const int MaxIntermediateTargets = 15;
+
+    /**
+     * \brief Called when the script instance is being loaded.
+     * Initializes the agent's components and sets its initial position and rotation.
+     */
+    private void Awake()
+    {
+        // Init all components
+        animator = GetComponent<Animator>();
+        animationManager = GetComponent<RLPlanningAnimationManager>();
+        agentSensorsManager = GetComponent<AgentPlanningSensorsManager>();
+        agentGizmosDrawer = GetComponent<AgentPlanningGizmosDrawer>();
+        agentObserver = GetComponent<AgentPlanningObserver>();
+        objectiveObserver = GetComponent<ObjectiveObserver>();
+        objectiveHandler = GetComponent<ObjectiveInteractionHandler>();
+        rigidBody = GetComponent<Rigidbody>();
+        navMeshObstacle = GetComponent<NavMeshObstacle>();
+        // Artifacts
+        artifactManager = GetComponent<ArtifactAgentManager>();
+        if (orderAgent)
+            orderManager = GetComponent<OrderAgentManager>();
+
+        // Constants
+        constants = new ConstantsPlanning();
+        agentSensorsManager.constants = this.constants;
+        agentObserver.constants = this.constants;
+        agentGizmosDrawer.constants = this.constants;
+        minMaxSpeed = constants.minMaxSpeed;
+        speedMaxRange = constants.speedMaxRange;
+
+        ProxemicRanges = new List<ProxemicRange>
+        {
+            new ProxemicRange { Start = constants.proxemic_medium_distance, End = constants.proxemic_large_distance, Reward = constants.proxemic_large_agent_reward, StatsTag = "Large", RaysNumber = constants.proxemic_large_ray },
+            new ProxemicRange { Start = constants.proxemic_small_distance, End = constants.proxemic_medium_distance, Reward = constants.proxemic_medium_agent_reward, StatsTag = "Medium", RaysNumber = constants.proxemic_medium_ray },
+            new ProxemicRange { Start = 0, End = constants.proxemic_small_distance, Reward = constants.proxemic_small_agent_reward, StatsTag = "Small", RaysNumber = constants.proxemic_small_ray }
+        };
+
+        // Check if all required components are present
+        if (artifactManager == null)
+            Debug.LogWarning($"ArtifactAgentManager component missing on {gameObject.name}");
+        // Check if NavMeshObstacle component is present
+        if (navMeshObstacle == null)
+            Debug.LogWarning($"NavMeshObstacle component missing on {gameObject.name}");
+        if (orderManager == null && orderAgent)
+            Debug.LogWarning($"OrderAgentManager component missing on {gameObject.name}");
+        if (agentSensorsManager == null)
+            Debug.LogError($"AgentSensorsManager component missing on {gameObject.name}");
+        if (agentObserver == null)
+            Debug.LogError($"AgentObserver component missing on {gameObject.name}");
+        if (objectiveObserver == null)
+            Debug.LogError($"ObjectiveObserver component missing on {gameObject.name}");
+        if (objectiveHandler == null)
+            Debug.LogError($"ObjectiveInteractionHandler component missing on {gameObject.name}");
+        if (agentGizmosDrawer == null)
+            Debug.LogError($"AgentGizmosDrawer component missing on {gameObject.name}");
+        if (agentSensorsManager != null)
+        {
+            try
+            {
+                agentSensorsManager.UpdateTargetSensorVision(group);
+                agentSensorsManager.UpdateObjectiveSensorVision(group);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error updating sensor vision for {gameObject.name}: {e.Message}");
+            }
+        }
+
+        startPosition = transform.position;
+        startRotation = transform.rotation;
+
+        // Default walking state
+        if (animationManager != null)
+        {
+            animationManager.SetWalking(true);
+        }
+
+#if UNITY_EDITOR
+        curriculum = FindObjectOfType<Curriculum>();
+        if (curriculum != null)
+        {
+            videoRecorderField = curriculum.GetType().GetField("videoRecorder", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            waitingExtraEpisodesField = curriculum.GetType().GetField("waitingExtraEpisodes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        }
+        testing = FindObjectOfType<Testing>();
+#endif
+
+        switch (group)
+        {
+            case Group.First:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.red;
+                break;
+            case Group.Second:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.cyan;
+                break;
+            case Group.Third:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.green;
+                break;
+            case Group.Fourth:
+                GetComponentInChildren<SkinnedMeshRenderer>().material.color = Color.yellow;
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Start()
+    {
+        ArtifactTrigger.OnAgentTriggerEntered += OnArtifactTriggerEntered;
+        ArtifactTrigger.OnAgentTriggerExited += OnArtifactTriggerExited;
+    }
+
+    private void Update()
+    {
+        // If the objective handler is executing animations, skip the update
+        if (objectiveHandler != null && objectiveHandler.IsExecutingObjectiveAnimations())
+        {
+            return; // No basic movement or animation updates while executing animations
+        }
+
+        UpdateAnimations();
+    }
+
+    /// <summary>
+    /// Updates agent animations based on current movement
+    /// </summary>
+    private void UpdateAnimations()
+    {
+        // Get Speed for Animations
+        float speed = GetCurrentSpeed();
+
+        animationManager.UpdateSpeed(speed / 10);
+
+        // Idle/Walking
+        if (speed < 0.25f)
+        {
+            //Debug.Log("Animation State: Idle");
+            animationManager.SetWalking(false);
+
+            float currentYRotation = transform.eulerAngles.y;
+            float deltaY = Mathf.DeltaAngle(lastYRotation, currentYRotation);
+            float angularSpeed = Mathf.Abs(deltaY) / Time.deltaTime;
+
+            // Turn - only if not already turning and significant rotation
+            if (Mathf.Abs(deltaY) > 10f && !IsTurnAnimationPlaying())
+            {
+                Debug.Log("Animation State: Turn");
+                float normalizedTurnSpeed = Mathf.Clamp(angularSpeed / 90f, 0.5f, 1.0f);
+                if (deltaY > 0)
+                    animationManager.PlayTurn(true, normalizedTurnSpeed); // TurnRight
+                else
+                    animationManager.PlayTurn(false, normalizedTurnSpeed); // TurnLeft
+            }
+            else if (Mathf.Abs(deltaY) < 2f && IsTurnAnimationPlaying())
+            {
+                // Stop turn if rotation is minimal
+                animationManager.StopTurn();
+                animationManager.SetIdle(true);
+            }
+        }
+        else
+        {
+            //Debug.Log("Animation State: Walking");
+            // Stop any turn animations when walking
+            if (IsTurnAnimationPlaying())
+            {
+                animationManager.StopTurn();
+            }
+            animationManager.SetWalking(true);
+        }
+
+        lastYRotation = transform.eulerAngles.y;
+    }
+
+    /// <summary>
+    /// Gets the current speed from either Rigidbody or NavMeshAgent
+    /// </summary>
+    /// <returns>Current movement speed</returns>
+    private float GetCurrentSpeed()
+    {
+        if (isUsingNavMesh)
+        {
+
+            NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+            if (navAgent != null && navAgent.enabled)
+            {
+                // For navmesh speed
+                return navAgent.velocity.magnitude * 4f; // 4f seems ok for the current Agent speed
+            }
+        }
+
+        // Otherwise use Rigidbody speed
+        return rigidBody.velocity.magnitude;
+    }
+
+    /// <summary>
+    /// Checks if a turn animation is currently playing
+    /// </summary>
+    /// <returns>True if turn animation is active</returns>
+    private bool IsTurnAnimationPlaying()
+    {
+        if (animator == null) return false;
+
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        return stateInfo.IsName("TurnLeft") || stateInfo.IsName("TurnRight");
+    }
+
+    /// <summary>
+    /// Gets the color associated with this agent's group.
+    /// </summary>
+    /// <returns>The agent's group color</returns>
+    public Color GetAgentColor()
+    {
+        switch (group)
+        {
+            case Group.First:
+                return Color.red;
+            case Group.Second:
+                return Color.cyan;
+            case Group.Third:
+                return Color.green;
+            case Group.Fourth:
+                return Color.yellow;
+            default:
+                return Color.white; // Colore di default per gruppi non riconosciuti
+        }
+    }
+
+    /**
+     * \brief Called at the beginning of each episode.
+     * Resets the agent's state.
+     */
+    public override void OnEpisodeBegin()
+    {
+        stepLeft = envStep;
+        uniqueID = Guid.NewGuid().ToString();
+        rigidBody.velocity = Vector3.zero;
+        tempoIniziale = (int)Time.time;
+        currentSpeed = 0;
+        numberOfIteraction = 0;
+        InitCrossings(numberOfCrossings);
+        // minMaxSpeed.y = RandomGaussian(speedMaxRange.x, speedMaxRange.y); // This line randomizes the maximum speed
+
+        // Reset order state
+        if (orderAgent)
+            orderManager?.ResetOrderState();
+        resetAgent?.Invoke(this);
+    }
+
+    /**
+     * \brief Makes the agent listen for environment readiness.
+     * \param action Reference to the action to subscribe to.
+     */
+    public void MakeListenEnvReady(ref Action<RLAgentPlanning> action)
+    {
+        action += (agent) =>
+        {
+            if (agent == this)
+            {
+                if (env != null)
+                {
+                    numberOfCrossings = env.GetNumIntermediateTargets();
+                    InitCrossings(numberOfCrossings);
+                    Debug.Log($"Agent {gameObject.name}: initialized {numberOfCrossings} crossings");
+                }
+                else
+                {
+                    Debug.LogError($"Agent {gameObject.name}: EnvironmentPlanning is null");
+                }
+
+                if (objectiveHandler != null)
+                {
+                    objectiveHandler.InitializeObjectivesFromEnvironment();
+                    Debug.Log($"Agent {gameObject.name} initialized objectives via ObjectiveInteractionHandler");
+                }
+                else
+                {
+                    Debug.LogWarning($"Agent {gameObject.name} does not have an ObjectiveInteractionHandler component");
+                }
+            }
+        };
+
+        print("Agent " + gameObject.name + " is listening to the environment");
+    }
+
+    /**
+     * \brief Collects observations from the environment to feed to the neural network.
+     * \param vectorSensor The vector sensor for observations.
+     */
+    public override void CollectObservations(VectorSensor vectorSensor)
+    {
+        Dictionary<AgentPlanningSensorsManager.Sensore, RaycastHit[]> sensorsResults = agentSensorsManager.ComputeSensorResults();
+
+        wallsAndAgents = agentObserver.WallsAndAgentsGizmos;
+        wallsAndTargets = agentObserver.WallsAndTargetsGizmos;
+        wallsAndObjectives = agentObserver.WallsAndObjectivesGizmos;
+
+        (wallsAndTargetsObservations, wallsAndAgentsObservations, wallsAndObjectivesObservations) = agentObserver.ComputeObservations(sensorsResults);
+
+        float normalizedSpeed = (currentSpeed - minMaxSpeed.x) / (minMaxSpeed.y - minMaxSpeed.x);
+        agentGizmosDrawer.SetObservationsResults(wallsAndTargets, wallsAndAgents, wallsAndObjectives);
+
+        vectorSensor.AddObservation(wallsAndTargetsObservations);
+        vectorSensor.AddObservation(wallsAndAgentsObservations);
+        vectorSensor.AddObservation(wallsAndObjectivesObservations);
+        vectorSensor.AddObservation(normalizedSpeed);
+        vectorSensor.AddObservation(objectiveObserver.GetObjectivesObservation());
+        //vectorSensor.AddObservation(GetCrossings());
+        //vectorSensor.AddObservation(taskCompleted ? 1.0f : 0.0f); //TODO: check se ha senso
+
+        rewardsWallsAndTargetsObservations(wallsAndTargets);
+        rewardsWallsAndAgentsObservations(wallsAndAgents);
+    }
+
+    /**
+     * \brief Applies the actions received from the neural network.
+     * \param vectorAction Array of actions.
+     */
+    [Obsolete]
+    public override void OnActionReceived(float[] vectorAction)
+    {
+        if (walking && !isUsingNavMesh)
+        {
+            //float realSpeed = rigidBody.velocity.magnitude;
+            float actionSpeed;
+            float actionAngle;
+            if (constants.discrete)
+            {
+                actionSpeed = vectorAction[0];
+                actionSpeed = (actionSpeed - 5f) / 5f;
+                actionAngle = vectorAction[1];
+                actionAngle = (actionAngle - 5f) / 5f;
+            }
+            else
+            {
+                actionSpeed = Mathf.Clamp(vectorAction[0], -1f, 1f);
+                actionAngle = Mathf.Clamp(vectorAction[1], -1f, 1f);
+            }
+
+            // Non applicare movimenti se le animazioni degli obiettivi sono in corso
+            if (!lockPosition && !(objectiveHandler != null && objectiveHandler.IsExecutingObjectiveAnimations()))
+            {
+                AngleChange(actionAngle);
+                SpeedChange(actionSpeed);
+            }
+        }
+
+        if (walking)
+        {
+            int agentID = gameObject.GetInstanceID();
+            numberOfIteraction++;
+            StatsWriter.WriteAgentStats(
+                transform.position.x,
+                transform.position.z,
+                group,
+                currentSpeed,
+                GetCurrentSpeed(),
+                transform.rotation.eulerAngles.y,
+                envID,
+                uniqueID,
+                numberOfIteraction
+                );
+            StatsWriter.WritePedPyStats(
+                transform.position.x,
+                transform.position.y,
+                transform.position.z,
+                uniqueID.GetHashCode());
+            ComputeSteps();
+        }
+    }
+
+    /**
+     * \brief Computes the steps and applies step rewards.
+     */
+    public void ComputeSteps()
+    {
+#if UNITY_EDITOR
+        // Screenshot logic TRAINING 
+        if (curriculum != null && videoRecorderField != null && waitingExtraEpisodesField != null)
+        {
+            var videoRecorder = videoRecorderField.GetValue(curriculum) as EnvironmentVideoRecorder;
+            bool waitingExtraEpisodes = (bool)waitingExtraEpisodesField.GetValue(curriculum);
+            if (waitingExtraEpisodes && videoRecorder != null && videoRecorder.IsRecording)
+            {
+                videoRecorder.TakeScreenshot();
+            }
+        }
+        // Screenshot logic TESTING
+
+        if (testing != null)
+        {
+            testing.OnAgentStep();
+        }
+#endif
+        AddReward(constants.step_reward);
+        stepLeft--;
+        if (!taskCompleted)
+        {
+            AddReward(constants.incomplete_task_step_reward * objectiveHandler.GetRemainingObjectivesPercentage()); /// inomplete_task_step_reward is moltiplied by the percentage of objectives not completed
+        }
+        if (stepLeft <= 0)
+        {
+            AddReward(constants.step_finished_reward);
+            print("finished_step");
+            Finished();
+        }
+    }
+
+    /**
+     * \brief Ends the episode and resets the agent.
+     */
+    public void Finished()
+    {
+        // If i want to change behaviour on end, edit here. (And in EnvPlanning the HandleAgentTerminated method)
+        cumulativeReward = GetCumulativeReward();
+        gameObject.SetActive(false);
+        StatsWriter.WriteEnvStats(group, (int)(Time.time - tempoIniziale));
+        targetsTaken.Clear();
+        transform.position = startPosition;
+        transform.rotation = startRotation;
+        EndEpisode();
+        agentTerminated?.Invoke(cumulativeReward, env);
+    }
+
+    /**
+     * \brief Generates a random value with a Gaussian distribution.
+     * \param minValue Minimum value.
+     * \param maxValue Maximum value.
+     * \return Random Gaussian value.
+     */
+    public static float RandomGaussian(float minValue = 0.0f, float maxValue = 1.0f)
+    {
+        float u, v, S;
+        do
+        {
+            u = 2.0f * UnityEngine.Random.value - 1.0f;
+            v = 2.0f * UnityEngine.Random.value - 1.0f;
+            S = u * u + v * v;
+        }
+        while (S >= 1.0f);
+
+        float std = u * Mathf.Sqrt(-2.0f * Mathf.Log(S) / S);
+
+        float mean = (minValue + maxValue) / 2.0f;
+        float sigma = (maxValue - mean) / 3.0f;
+        return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
+    }
+
+    /**
+     * \brief Triggered when the agent enters a collider.
+     * \param other The collider entered.
+     */
+    private void OnTriggerEnter(Collider other)
+    {
+        GameObject triggerObject = other.gameObject;
+
+        entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+        if (triggerObject.CompareTag("Target"))
+        {
+            Target target = triggerObject.GetComponent<Target>();
+
+            if (IsFinalTarget(target))
+            {
+                if (taskCompleted)
+                {
+                    Debug.Log("Final target and all objectives completed!");
+                    AddReward(constants.finale_target_all_objectives_completed_reward);
+                    Finished();
+                }
+                else
+                {
+                    Debug.Log("Final target reached but not all objectives completed!");
+                    AddReward(constants.finale_target_incomplete_objectives_reward);
+                    Finished();
+                }
+            }
+            else if (IsIntermediateTarget(target))
+            {
+                insideTargets.Add(target.id);
+            }
+        }
+        else if (fleeing && other.gameObject.name.Contains("Flee"))
+        {
+            Target target = triggerObject.GetComponent<Target>();
+            entryValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+            if ((target.group == group || target.group == Group.Generic) && target.targetType == TargetType.Final)
+            {
+                if (taskCompleted)
+                {
+                    AddReward(constants.finale_target_all_objectives_completed_reward);
+                }
+                else
+                {
+                    AddReward(constants.finale_target_incomplete_objectives_reward);
+                }
+                print("Final target");
+                Finished();
+            }
+        }
+    }
+
+    /**
+     * \brief Triggered when the agent exits a collider.
+     * \param other The collider exited.
+     */
+    private void OnTriggerExit(Collider other)
+    {
+        GameObject triggerObject = other.gameObject;
+
+        if (objectiveHandler != null && objectiveHandler.IsValidObjective(triggerObject))
+        {
+            objectiveHandler.HandleObjectiveTrigger(triggerObject);
+        }
+        else if (triggerObject.CompareTag("Target"))
+        {
+            Target target = triggerObject.GetComponent<Target>();
+            if (IsIntermediateTarget(target))
+            {
+                if (insideTargets.Contains(target.id))
+                {
+                    HandleIntermediateTarget(triggerObject);
+                    insideTargets.Remove(target.id);
+                }
+            }
+        }
+    }
+
+    public void flee()
+    {
+        //animationManager.SetRunning();
+        GameObject[] fleeTargets = GameObject.FindGameObjectsWithTag("Target");
+        fleeing = true;
+
+
+        var sensors = gameObject.GetComponent<AgentSensorsManager>();
+        // TODO: Fix if it's necessary for experiments
+        foreach (GameObject target in fleeTargets)
+        {
+            if (target.name.Contains("Flee"))
+            {
+                //sensors.invisibleTargets.Remove(target);
+            }
+            else
+            {
+                //if (!sensors.invisibleTargets.Contains(target))
+                //sensors.invisibleTargets.Add(target);
+            }
+        }
+    }
+
+    /**
+     * \brief Returns whether the task is completed.
+     * \return True if task is completed.
+     */
+    public bool IsTaskCompleted()
+    {
+        return taskCompleted;
+    }
+
+    public List<GameObject> GetObjective()
+    {
+        return objectiveHandler.objectives;
+    }
+
+    /**
+     * \brief Checks if a direction is valid based on the array returned by DetermineVisualizationDirection.
+     * \param Array of directions to check
+     * \return True if the direction is valid, false otherwise.
+    */
+    public bool CheckForValidDirection(float[] direction)
+    {
+        if (direction == null || direction.Length == 0)
+        {
+            Debug.LogWarning("Direction array is null or empty in CheckForValidDirection");
+            return false;
+        }
+
+        float[] objectives = objectiveObserver.GetObjectivesObservation();
+        int lastIndex = direction.Length - 1;
+
+        if (!taskCompleted)
+        {
+            // Check if the direction matches any of the objectives
+            for (int i = 0; i < direction.Length - 1; i++)
+            {
+                if (direction[i] == 1 && direction[i] == objectives[i])
+                {
+                    //Debug.Log($"Valid direction found at index {i}");
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            // Task is completed, check only the last index
+            if (direction[lastIndex] == 1 && direction[lastIndex] == objectives[lastIndex])
+            {
+                //Debug.Log("Valid direction for final target");
+                return true;
+            }
+        }
+
+        //Debug.Log("No valid direction found");
+        return false;
+    }
+
+    /**
+     * \brief Determines the visualization direction based on the target object.
+     * 
+     * This method calculates the direction from the agent to the target and checks if it aligns with the target's forward direction.
+     * It returns an array of float values representing the compatibility of the direction with the original system.
+     * 
+     * If the DirectionsObjectives component is not found on the target object, an error is logged and an empty array is returned.
+     * 
+     * @param targetObject The target GameObject to evaluate.
+     * @return An array of float values representing the direction compatibility.
+     */
+    public float[] DetermineVisualizationDirection(GameObject targetObject)
+    {
+        Vector3 agentToTarget = targetObject.transform.position - transform.position;
+        agentToTarget.y = 0;
+
+        Vector3 targetForward = targetObject.transform.forward;
+        targetForward.y = 0;
+
+        float alignment = Vector3.Dot(targetForward, agentToTarget.normalized);
+
+        int passDirection = (alignment > 0) ? 0 : 1;
+
+        DirectionsObjectives directions = targetObject.GetComponent<DirectionsObjectives>();
+        if (directions == null)
+        {
+            Debug.LogError("DirectionsObjectives component not found on " + targetObject.name);
+            return new float[0];
+        }
+
+        return directions.getDirections(passDirection);
+    }
+
+    /**
+     * \brief Determines the passing direction based on the trigger object.
+     * 
+     * This method calculates the passing direction based on the entry value and retrieves the direction objectives from the DirectionsObjectives component.
+     * If the DirectionsObjectives component is not found, an error is logged and an empty array is returned.
+     * 
+     * @param triggerObject The GameObject that triggered the event.
+     * @return An array of float values representing the passing direction.
+     */
+    public float[] DeterminePassingDirection(GameObject triggerObject)
+    {
+        int passDirection = (entryValue > 0) ? 0 : 1;
+        DirectionsObjectives directions = triggerObject.GetComponent<DirectionsObjectives>();
+        if (directions == null)
+        {
+            Debug.LogError("DirectionsObjectives component not found on " + triggerObject.name);
+            return new float[0];
+        }
+
+        float[] directionObjectives = directions.getDirections(passDirection);
+        return directionObjectives;
+    }
+    /**
+     * \brief Provides manual control for the agent (for debugging).
+     * \param actionsOut Output actions array.
+     */
+    [Obsolete]
+    public override void Heuristic(float[] actionsOut)
+    {
+        // move agent by keyboard
+        var continuousActionsOut = actionsOut;
+        continuousActionsOut[0] = Input.GetAxis("Vertical");
+        continuousActionsOut[1] = Input.GetAxis("Horizontal");
+    }
+    /**
+     * \brief Changes the agent's speed.
+     * \param deltaSpeed The change in speed.
+     */
+    public void SpeedChange(float deltaSpeed)
+    {
+        currentSpeed += minMaxSpeed.y * deltaSpeed / 2f;
+        currentSpeed = Mathf.Clamp(currentSpeed, minMaxSpeed.x, minMaxSpeed.y);
+        Vector3 velocityChange = (transform.forward * currentSpeed * 5) - rigidBody.velocity;
+        rigidBody.AddForce(velocityChange, ForceMode.VelocityChange);
+    }
+
+    /**
+     * \brief Changes the agent's angle.
+     * \param deltaAngle The change in angle.
+     */
+    public void AngleChange(float deltaAngle)
+    {
+        newAngle = Mathf.Round((deltaAngle * constants.angleRange) + transform.rotation.eulerAngles.y);
+        newAngle %= 360;
+        if (newAngle < 0) { newAngle += 360f; }
+        transform.eulerAngles = new Vector3(0, newAngle, 0);
+    }
+
+    /**
+     * \brief Checks if the target is a final target for this agent.
+     * \param target The target to check.
+     * \return True if it is a final target.
+     */
+    private bool IsFinalTarget(Target target)
+    {
+        return target.targetType == TargetType.Final && (target.group == group || target.group == Group.Generic);
+    }
+
+    /**
+     * \brief Checks if the target is an intermediate target for this agent.
+     * \param target The target to check.
+     * \return True if it is an intermediate target.
+     */
+    private bool IsIntermediateTarget(Target target)
+    {
+        return target.targetType == TargetType.Intermediate &&
+            (target.group == group || target.group == Group.Generic);
+    }
+
+    /**
+     * \brief Applies rewards based on proximity to walls and targets.
+     * \param wallsAndTargets List of detected walls and targets.
+     */
+    public void rewardsWallsAndTargetsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndTargets)
+    {
+        bool proxemic_small_wall = false;
+
+        for (int i = 0; i < wallsAndTargets.Count; i++)
+        {
+            (GizmosTagPlanning wallsAndTargetTag, Vector3 wallsAndTargetVector) = wallsAndTargets[i];
+            float agentAndWallsAndTargetDistance = Vector3.Distance(transform.position + Vector3.up, wallsAndTargetVector);
+            if ((agentAndWallsAndTargetDistance < constants.proxemic_small_distance + constants.rayOffset) &&
+                (wallsAndTargetTag == GizmosTagPlanning.Wall))
+            {
+                StatsWriter.WriteAgentCollision(
+                   transform.position.x,
+                   transform.position.z,
+                   "Wall",
+                   "Small",
+                   uniqueID
+                );
+                proxemic_small_wall = true;
+            }
+        }
+
+        if (proxemic_small_wall)
+        {
+            AddReward(constants.proxemic_small_wall_reward);
+            print("proxemic_small_wall_reward");
+        }
+    }
+
+    /**
+     * \brief Checks if the ray index is within the limit.
+     * \param rayIndex Index of the ray.
+     * \param proxemicRaysNumber Number of proxemic rays.
+     * \return True if within the limit.
+     */
+    private bool IsRayWithinTheLimit(int rayIndex, float proxemicRaysNumber)
+    {
+        return rayIndex < (proxemicRaysNumber * 2) + 1;
+    }
+
+    /**
+     * \brief Checks if the distance is within the proxemic range and tag matches.
+     * \param distance Distance to check.
+     * \param start Start of the range.
+     * \param end End of the range.
+     * \param RaysNumber Number of rays.
+     * \param tag Tag to check.
+     * \param expectedTag Expected tag.
+     * \return True if within range and tag matches.
+     */
+    private bool IsWithinProxemicRange(float distance, float start, float end, float RaysNumber, GizmosTagPlanning tag, GizmosTagPlanning expectedTag)
+    {
+        return (distance >= start + constants.rayOffset &&
+            distance < end + constants.rayOffset &&
+            tag == expectedTag);
+    }
+
+    /**
+     * \brief Checks proxemic ranges and applies rewards.
+     * \param distance Distance to the object.
+     * \param tag Tag of the object.
+     * \param uniqueID Unique agent ID.
+     * \param id Ray index.
+     */
+    private void CheckProxemicRanges(float distance, GizmosTagPlanning tag, string uniqueID, int id)
+    {
+        foreach (var range in ProxemicRanges)
+        {
+            if (IsWithinProxemicRange(distance, range.Start, range.End, range.RaysNumber, tag, GizmosTagPlanning.Agent)
+                && IsRayWithinTheLimit(id, range.RaysNumber))
+            {
+                StatsWriter.WriteAgentCollision(
+                    transform.position.x,
+                    transform.position.z,
+                    "Agent",
+                    range.StatsTag,
+                    uniqueID
+                );
+                AddReward(range.Reward);
+                print($"{range.StatsTag} reward applied");
+                break; // Exit the loop if a match is found
+            }
+        }
+    }
+
+    /**
+     * \brief Applies rewards based on proximity to walls and agents.
+     * \param wallsAndAgents List of detected walls and agents.
+     */
+    public void rewardsWallsAndAgentsObservations(List<(GizmosTagPlanning, Vector3)> wallsAndAgents)
+    {
+        int id = 0;
+        foreach (var (tag, position) in wallsAndAgents)
+        {
+            float distance = Vector3.Distance(transform.position + Vector3.up, position);
+            CheckProxemicRanges(distance, tag, uniqueID, id++);
+        }
+    }
+
+    /**
+     * \brief Handles logic when passing through an intermediate target.
+     * \param triggerObject The target object.
+     */
+    private void HandleIntermediateTarget(GameObject triggerObject)
+    {
+        exitValue = Vector3.Dot(transform.forward, triggerObject.transform.forward);
+        float crossingValue = entryValue * exitValue;
+
+        if (crossingValue >= 0)
+        {
+            targetsTaken.Add(triggerObject);
+            Target target = triggerObject.GetComponent<Target>();
+            if (crossings[target.id] > 0)
+            {
+                AddReward(constants.target_alredy_crossed_reward * crossings[target.id]);
+                Debug.Log("Target already crossed");
+            }
+            IncrementCrossing(target);
+
+            float[] directionObjectives = DeterminePassingDirection(triggerObject);
+
+            if (directionObjectives != null && directionObjectives.Length > 0)
+            {
+                if (CheckForValidDirection(directionObjectives))
+                {
+                    //Debug.Log($"Correct direction taken (entryValue: {entryValue})");
+                    //AddReward(constants.correct_direction_reward);
+                }
+                else
+                {
+                    //Debug.Log($"Wrong direction taken (entryValue: {entryValue})");
+                    AddReward(constants.wrong_direction_reward);
+                }
+            }
+            if (targetsTaken.Contains(triggerObject))
+            {
+                AddReward(constants.already_taken_target_reward);
+                Debug.Log("Target already taken");
+            }
+        }
+        else
+        {
+            AddReward(constants.target_taken_incorrectly_reward);
+            Debug.Log("Target taken incorrectly");
+        }
+    }
+
+    // Method to initialize the crossing arrays (call when you know the number of intermediate targets)
+    public void InitCrossings(int numIntermediateTargets)
+    {
+        crossings = new float[MaxIntermediateTargets];
+        for (int i = 0; i < MaxIntermediateTargets; i++)
+        {
+            if (i < numIntermediateTargets)
+                crossings[i] = 0;
+            else
+                crossings[i] = -1f;
+        }
+        Debug.Log($"Agent {gameObject.name}: inizializzato array crossings con {numIntermediateTargets} target intermedi");
+    }
+
+    // Method to increment only if the index is valid (not a sentinel cell)
+    public void IncrementCrossing(Target target)
+    {
+        if (target.targetType == TargetType.Intermediate && target.id >= 0 && target.id < crossings.Length && crossings[target.id] != -1f)
+        {
+            crossings[target.id]++;
+        }
+    }
+
+    // Getters for the neural network (arrays always have fixed size)
+    public float[] GetCrossings() => crossings;
+
+    public float GetCrossings(int index)
+    {
+        if (index >= 0 && index < crossings.Length)
+        {
+            return crossings[index];
+        }
+        else
+        {
+            return -1f;
+        }
+    }
+
+
+    public void SetWalking(bool value)
+    {
+        walking = value;
+    }
+
+
+    /// <summary>
+    /// Returns the agent's Rigidbody component.
+    /// </summary>
+    /// <returns>The Rigidbody component</returns>
+    public Rigidbody GetRigidBody()
+    {
+        return rigidBody;
+    }
+
+
+    // NavMesh Control Methods
+
+    /// <summary>
+    /// Enables NavMesh navigation mode
+    /// </summary>
+    public void EnableNavMeshMode()
+    {
+        isUsingNavMesh = true;
+
+        // Use Kinematic for NavMesh navigation
+        if (rigidBody != null && !rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = true;
+        }
+
+        // Disable NavMeshObstacle when using NavMesh navigation
+        if (navMeshObstacle != null && navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = false;
+        }
+
+        Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
+    }
+
+
+    /// <summary>
+    /// Disables NavMesh navigation mode and returns to RL control
+    /// </summary>
+    public void DisableNavMeshMode()
+    {
+        isUsingNavMesh = false;
+
+
+        // Re-enable Rigidbody physics for RL control
+        if (rigidBody != null && rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = false;
+        }
+
+        // Enable NavMeshObstacle with delay
+        StartCoroutine(EnableNavMeshObstacleWithDelay(0.5f));
+        Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
+    }
+    
+    /// <summary>
+    /// Enables NavMeshObstacle after a delay
+    /// </summary>
+    public System.Collections.IEnumerator EnableNavMeshObstacleWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (navMeshObstacle != null && !navMeshObstacle.enabled)
+        {
+            navMeshObstacle.enabled = true;
+            Debug.Log($"[RLAgentPlanning] NavMeshObstacle enabled for {gameObject.name}");
+        }
+    }
+
+     // Artifact Navigation Methods
+
+    /// <summary>
+    /// Handles the trigger enter event
+    /// </summary>
+    public void OnArtifactTriggerEntered(GameObject agentObject, ArtifactNavigationData navigationData)
+    {
+        // If this event is for this agent
+        if (agentObject != gameObject)
+            return;
+
+        // Check if assigned to this artifact
+        if (!assignedArtifacts.Contains(navigationData.artifact))
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} not assigned to artifact {navigationData.artifact.ArtifactName}");
+            return;
+        }
+
+        // Check if already navigating
+        ArtifactTrigger sourceTrigger = FindTriggerForArtifact(navigationData.artifact);
+        if (sourceTrigger != null && sourceTrigger.IsAgentInNavigation(gameObject))
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} already in navigation - ignoring trigger");
+            return;
+        }
+
+        // Else start navigation
+        StartArtifactNavigation(navigationData, sourceTrigger);
+    }
+
+    /// <summary>
+    /// Handles the trigger exit event
+    /// </summary>
+    public void OnArtifactTriggerExited(GameObject agentObject)
+    {
+        // Check if this event is for this agent
+        if (agentObject != gameObject)
+            return;
+
+        // Check if there is an active handler
+        ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+        if (handler != null && handler.IsNavigatingToArtifact)
+        {
+            // Don't interrupt if still navigating to artifact
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Agent {gameObject.name} exited trigger but still navigating to artifact");
+            return;
+        }
+
+        // Return to RL control
+        StopArtifactNavigation();
+    }
+
+    /// <summary>
+    /// Finds the trigger associated with a specific artifact
+    /// </summary>
+    private ArtifactTrigger FindTriggerForArtifact(Artifact artifact)
+    {
+        foreach (var trigger in subscribedTriggers)
+        {
+            if (trigger != null && trigger.GetComponent<Artifact>() == artifact)
+            {
+                return trigger;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Starts the artifact navigation process
+    /// </summary>
+    private void StartArtifactNavigation(ArtifactNavigationData navigationData, ArtifactTrigger sourceTrigger)
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent == null)
+        {
+            Debug.LogWarning($"[RLAgentPlanning] Agent {gameObject.name} missing NavMeshAgent component");
+            return;
+        }
+
+        if (debugging)
+            Debug.Log($"[RLAgentPlanning] Starting navigation to artifact {navigationData.artifact.ArtifactName}");
+
+        // Navigation Data
+        currentNavigationData = navigationData;
+
+        // Add agent to navigation in trigger
+        if (sourceTrigger != null)
+        {
+            sourceTrigger.AddAgentToNavigation(gameObject);
+        }
+
+        // Capture current velocity
+        Vector3 currentVelocity = rigidBody.velocity;
+
+        // Enable NavMesh mode
+        EnableNavMeshMode();
+
+        // Configure NavMeshAgent
+        navAgent.stoppingDistance = navigationData.stoppingDistance;
+        navAgent.enabled = true;
+
+        // Apply velocity
+        Vector3 agentVelocity = Vector3.ClampMagnitude(currentVelocity, navAgent.speed);
+        navAgent.velocity = agentVelocity;
+
+        // Set destination
+        if (navAgent.isOnNavMesh)
+        {
+            navAgent.SetDestination(navigationData.destination.position);
+        }
+        else
+        {
+            Debug.LogWarning($"[RLAgentPlanning] Agent {gameObject.name} is not on NavMesh");
+        }
+
+        // Setup navigation handler
+        SetupNavigationHandler();
+    }
+
+    /// <summary>
+    /// Stops the artifact navigation
+    /// </summary>
+    private void StopArtifactNavigation()
+    {
+        NavMeshAgent navAgent = GetComponent<NavMeshAgent>();
+        if (navAgent != null)
+        {
+            if (debugging)
+                Debug.Log($"[RLAgentPlanning] Stopping navigation for {gameObject.name}");
+
+            // Remove agent from navigation in trigger
+            if (currentNavigationData.HasValue)
+            {
+                ArtifactTrigger sourceTrigger = FindTriggerForArtifact(currentNavigationData.Value.artifact);
+                if (sourceTrigger != null)
+                {
+                    sourceTrigger.RemoveAgentFromNavigation(gameObject);
+                }
+            }
+
+            // NavMesh velocity
+            Vector3 navMeshVelocity = navAgent.velocity;
+
+            // Disable NavMesh
+            navAgent.enabled = false;
+            DisableNavMeshMode();
+
+            // Apply velocity to Rigidbody
+            Vector3 agentVelocity = Vector3.ClampMagnitude(navMeshVelocity, navAgent.speed);
+            rigidBody.velocity = agentVelocity;
+
+            // Cleanup handler
+            ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+            if (handler != null)
+            {
+                Debug.Log($"[RLAgentPlanning] Destroying ArtifactNavigationHandler on {gameObject.name}");
+                Destroy(handler);
+            }
+        }
+
+        currentNavigationData = null;
+    }
+
+    /// <summary>
+    /// Sets up the ArtifactNavigationHandler component 
+    /// </summary>
+    private void SetupNavigationHandler()
+    {
+        if (!currentNavigationData.HasValue)
+            return;
+
+        // Check if a handler already exists
+        ArtifactNavigationHandler handler = GetComponent<ArtifactNavigationHandler>();
+        if (handler == null)
+        {
+            handler = gameObject.AddComponent<ArtifactNavigationHandler>();
+            Debug.Log($"[RLAgentPlanning] Added new ArtifactNavigationHandler to {gameObject.name}");
+        }
+        else
+        {
+            Debug.Log($"[RLAgentPlanning] ArtifactNavigationHandler already exists on {gameObject.name}");
+        }
+
+        var navData = currentNavigationData.Value;
+        handler.StartNavigation(navData.artifact, navData.destination, navData.exitDestination);
+    }
+
+}
