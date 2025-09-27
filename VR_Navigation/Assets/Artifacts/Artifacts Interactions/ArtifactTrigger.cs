@@ -1,3 +1,6 @@
+/* ArtifactTrigger.cs
+This class notifies agents about the artifact's presence and provides navigation data for interaction.
+*/
 using System;
 using System.Collections.Generic;
 using UnityEngine;
