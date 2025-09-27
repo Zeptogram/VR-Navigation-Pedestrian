@@ -611,7 +611,7 @@ public class RLAgent : Agent, IAgentRLBase
     public void EnableNavMeshMode()
     {
         isUsingNavMesh = true;
-        
+
         // Use Kinematic for NavMesh navigation
         if (rigidBody != null && !rigidBody.isKinematic)
         {
@@ -623,7 +623,7 @@ public class RLAgent : Agent, IAgentRLBase
         {
             navMeshObstacle.enabled = false;
         }
-        
+
         Debug.Log($"[RLAgentPlanning] NavMesh mode enabled for {gameObject.name}");
     }
 
@@ -631,7 +631,7 @@ public class RLAgent : Agent, IAgentRLBase
     /// Disables NavMesh navigation mode and returns to RL control
     /// </summary>
     public void DisableNavMeshMode()
-    {        
+    {
         isUsingNavMesh = false;
 
         // Re-enable Rigidbody physics for RL control
@@ -644,18 +644,20 @@ public class RLAgent : Agent, IAgentRLBase
         StartCoroutine(EnableNavMeshObstacleWithDelay(0.5f));
         Debug.Log($"[RLAgentPlanning] NavMesh mode disabled for {gameObject.name} - back to RL control");
     }
-    
+
     /// <summary>
     /// Enables NavMeshObstacle after a delay
     /// </summary>
     public System.Collections.IEnumerator EnableNavMeshObstacleWithDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        
+
         if (navMeshObstacle != null && !navMeshObstacle.enabled)
         {
             navMeshObstacle.enabled = true;
             Debug.Log($"[RLAgentPlanning] NavMeshObstacle enabled for {gameObject.name}");
         }
     }
+    
+    // Add here other methods for handling navigation (like from RLAgentPlanning)
 }

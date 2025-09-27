@@ -63,6 +63,11 @@ public class ObjectiveAssigner : MonoBehaviour
             }
         }
     }
+    
+
+
+
+    // More general methods (not used for now)
 
     // Method for assignment via code
     public void AssignObjectivesToAgent(RLAgentPlanning agent, List<GameObject> objectives, bool orderedObjectives = false)
@@ -72,15 +77,15 @@ public class ObjectiveAssigner : MonoBehaviour
         {
             // Set the orderedObjectives flag
             handler.orderedObjectives = orderedObjectives;
-            
+
             handler.SetObjectives(objectives);
-            
+
             var colorManager = environment.GetComponent<ObjectiveColorManager>();
             if (colorManager != null)
             {
                 colorManager.RegisterAgentObjectives(agent, objectives);
             }
-            
+
             string orderInfo = orderedObjectives ? " (ORDERED)" : " (ANY ORDER)";
             Debug.Log($"Assigned {objectives.Count} objectives to {agent.name} via code{orderInfo}");
         }

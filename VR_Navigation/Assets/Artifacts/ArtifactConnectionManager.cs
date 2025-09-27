@@ -1,6 +1,6 @@
 // ArtifactConnectionManager.cs
 // Manages connections between artifacts in the scene.
-// Supports 1:N, N:N, and N:1 relationships.
+// Supports 1:1, 1:N, N:N, and N:1 relationships.
 
 using System.Collections.Generic;
 using UnityEngine;

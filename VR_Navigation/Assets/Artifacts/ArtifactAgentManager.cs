@@ -1,3 +1,8 @@
+/*
+* Artifact Agent Manager
+* Manages interactions between agents and artifacts, including automatic mapping of interactions and handling observable properties.
+* Features include automatic generation of interaction mappings based on assigned artifacts, as well as the ability to observe and respond to changes in artifact properties.
+*/
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
