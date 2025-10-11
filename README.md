@@ -8,26 +8,39 @@
 [![Unity](https://img.shields.io/badge/Unity-%23000000.svg?logo=unity&logoColor=white)](https://unity.com/)
 
 ## Installation and Development Environment
+
 - **Tested Versions**:
-  - conda 24.11.3 for virtual environment
-  - Python 3.10.8 for PedPy
-  - Python 3.9.6 for ML-Agents
-  - Unity 2022.3.60f1 downloaded via Unity Hub (https://unity.com/download)
-
-- **Virtual Environment - Base Windows**
-  - conda create --name tesivenv python=3.9.6
-  - conda activate tesivenv
-  - pip install -r requirements.txt
+  - `conda 24.11.3` for virtual environments  
+  - `Python 3.10.8` for PedPy  
+  - `Python 3.9.6` for ML-Agents  
+  - `Unity 2022.3.60f1` downloaded via [Unity Hub](https://unity.com/download)
 
 
-- **Virtual Environment - Base MacOS**
-    - conda env create -f requirements_macos.yml
-    - conda activate stage
+### **Virtual Environment — Base (Windows)**
 
-- **Virtual Environment - PedPy (If needed)**
-  - conda create --name pedpyvenv python=3.10.8
-  - conda activate pedpyvenv
-  - pip install pedpy==1.2.0
+```bash
+conda create --name tesivenv python=3.9.6
+conda activate tesivenv
+pip install -r requirements.txt
+```
+
+
+### **Virtual Environment — Base (macOS)**
+
+```bash
+conda env create -f requirements_macos.yml
+conda activate stage
+```
+
+
+
+### **Virtual Environment — PedPy (if needed)**
+
+```bash
+conda create --name pedpyvenv python=3.10.8
+conda activate pedpyvenv
+pip install pedpy==1.2.0
+```
 
 
 ## Project Structure  
@@ -45,4 +58,4 @@ Several reorganized folders structure the project, most notably:
 
 
 ## Utility
-- Repository ML-Agents: https://github.com/Zeptogram/ML-Agents-Pedestrian/tree/main
+- Repository ML-Agents, used to train and test the models: https://github.com/Zeptogram/ML-Agents-Pedestrian/tree/main
