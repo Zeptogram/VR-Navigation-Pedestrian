@@ -1,5 +1,5 @@
 # VR-Navigation-Pedestrian
-> Unity project developed for master’s thesis focused on pedestrian dynamics.
+> Master's thesis project focused on implementing and expanding a Unity Project Tool made for research purposes on Pedestrian Dynamics using ML-Agents, trained following a Reinforcement Learning approach.
 
 > University Bicocca, Milan. Elio Gargiulo - 2025 - 110L.
 
