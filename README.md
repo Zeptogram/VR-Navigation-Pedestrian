@@ -9,11 +9,11 @@
 
 ## Installation and Development Environment
 
-- **Tested Versions**:
-  - `conda 24.11.3` for virtual environments  
-  - `Python 3.10.8` for PedPy  
-  - `Python 3.9.6` for ML-Agents  
-  - `Unity 2022.3.62f2` downloaded via [Unity Hub](https://unity.com/download)
+### **Tested Versions**
+- `conda 24.11.3` for virtual environments  
+- `Python 3.10.8` for PedPy  
+- `Python 3.9.6` for ML-Agents  
+- `Unity 2022.3.62f2` downloaded via [Unity Hub](https://unity.com/download)
 
 
 ### **Virtual Environment — Base (Windows)**
