@@ -51,7 +51,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 076937beb8763d94790d2e9cc1248ac8, type: 3}
-  m_Name: ARFoundationFeature Android
+  m_Name: ARSessionFeature Android
   m_EditorClassIdentifier: 
   m_enabled: 1
   nameUi: 'Meta Quest: AR Session'
