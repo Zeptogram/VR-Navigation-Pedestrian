@@ -5,7 +5,7 @@
 
 [![Download Thesis PDF](https://img.shields.io/badge/Download%20Thesis-PDF-lime.svg?style=for-the-badge)](https://drive.google.com/file/d/1-t5wmrhnKGqsVOo7JDbKnlWfradnqIpp/view?usp=drive_link)
 [![Download Presentation PDF](https://img.shields.io/badge/Download%20Presentation-PDF-orange.svg?style=for-the-badge)](https://drive.google.com/file/d/1HeeIvaD0P1M4nBi7Kxjfvlqx2ZYCoWtl/view?usp=drive_link)
-[![Unity](https://img.shields.io/badge/Unity-%23000000.svg?logo=unity&logoColor=white)](https://unity.com/)
+[![Unity](https://img.shields.io/badge/Unity-%23000000.svg?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
 
 ## Installation and Development Environment
 
